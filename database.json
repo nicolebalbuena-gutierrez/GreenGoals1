@@ -1,0 +1,217 @@
+{
+  "admins": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@greengoals.com",
+      "password": "$2a$10$k9iqnbbw57Pjh7oegdWR1e7QSy6w5NiUFp/BxIy6tyBaCEa.XbqcG",
+      "role": "super_admin",
+      "createdDate": "2025-12-01"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "firstName": "Alex",
+      "lastName": "Johnson",
+      "username": "eco_warrior",
+      "classYear": "2026",
+      "email": "warrior@greengoals.com",
+      "password": "$2a$10$examplehashedpassword1234567890",
+      "profilePicture": "🌿",
+      "bio": "Passionate about saving our planet one challenge at a time!",
+      "points": 150,
+      "totalCO2Saved": 24.5,
+      "joinedDate": "2025-12-01",
+      "teamId": 1,
+      "activeChallenges": [
+        2
+      ],
+      "completedChallenges": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": 2,
+      "firstName": "Maya",
+      "lastName": "Chen",
+      "username": "nature_lover",
+      "classYear": "2027",
+      "email": "nature@greengoals.com",
+      "password": "$2a$10$examplehashedpassword0987654321",
+      "profilePicture": "🌻",
+      "bio": "Environmental Studies major. Love hiking and sustainability!",
+      "points": 85,
+      "totalCO2Saved": 1.8,
+      "joinedDate": "2025-12-02",
+      "teamId": 1,
+      "activeChallenges": [
+        1
+      ],
+      "completedChallenges": [
+        3
+      ]
+    },
+    {
+      "id": 3,
+      "firstName": "Jordan",
+      "lastName": "Williams",
+      "username": "green_thumb",
+      "classYear": "2025",
+      "email": "green@greengoals.com",
+      "password": "$2a$10$examplehashedpassword5555555555",
+      "profilePicture": "🌳",
+      "bio": "Senior year = going all out for the environment! 🌍",
+      "points": 235,
+      "totalCO2Saved": 46.3,
+      "joinedDate": "2025-11-28",
+      "teamId": 2,
+      "activeChallenges": [],
+      "completedChallenges": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": 4,
+      "firstName": "Nicole",
+      "lastName": "Balbuena",
+      "username": "nicolebalbuena",
+      "classYear": "2026",
+      "email": "nicole.balbuena@trincoll.edu",
+      "password": "$2a$10$IDnRFnRYwT93Xa6omDNuEu0iUeHs7raD/OoGJF8cE8MT/BNMfkZqG",
+      "profilePicture": "",
+      "bio": "",
+      "points": 50,
+      "totalCO2Saved": 2.5,
+      "joinedDate": "2025-12-04",
+      "teamId": null,
+      "activeChallenges": [
+        2,
+        3,
+        4
+      ],
+      "completedChallenges": [
+        1
+      ]
+    },
+    {
+      "id": 5,
+      "firstName": "Maya",
+      "lastName": "Carnes",
+      "username": "mayacarnes",
+      "classYear": "2026",
+      "email": "maya.carnes@trincoll.edu",
+      "password": "$2a$10$IU.4Cg55eiwzPrzU9YpS5uebOCp4ejVHf8iwurHbI7Ev95K627Nya",
+      "profilePicture": "",
+      "bio": "",
+      "points": 0,
+      "totalCO2Saved": 0,
+      "joinedDate": "2025-12-05",
+      "teamId": null,
+      "activeChallenges": [
+        1,
+        2,
+        3
+      ],
+      "completedChallenges": []
+    }
+  ],
+  "teams": [
+    {
+      "id": 1,
+      "name": "Planet Savers",
+      "description": "Making Earth greener one challenge at a time",
+      "members": [
+        1,
+        2
+      ],
+      "totalPoints": 235,
+      "createdDate": "2025-12-01"
+    },
+    {
+      "id": 2,
+      "name": "Eco Champions",
+      "description": "Champions of sustainability",
+      "members": [
+        3
+      ],
+      "totalPoints": 235,
+      "createdDate": "2025-11-28"
+    }
+  ],
+  "challenges": [
+    {
+      "id": 1,
+      "name": "No plastic for 3 days",
+      "description": "Avoid single-use plastics for 3 consecutive days",
+      "points": 50,
+      "co2Saved": 2.5,
+      "difficulty": "Medium",
+      "category": "Reduce",
+      "duration": "3 days"
+    },
+    {
+      "id": 2,
+      "name": "Plant a tree",
+      "description": "Plant a tree in your community",
+      "points": 100,
+      "co2Saved": 22,
+      "difficulty": "Hard",
+      "category": "Nature",
+      "duration": "1 day"
+    },
+    {
+      "id": 3,
+      "name": "Bike to work",
+      "description": "Use a bike instead of a car for your commute",
+      "points": 35,
+      "co2Saved": 1.8,
+      "difficulty": "Easy",
+      "category": "Transport",
+      "duration": "1 day"
+    },
+    {
+      "id": 4,
+      "name": "Meatless Monday",
+      "description": "Go vegetarian for an entire day",
+      "points": 25,
+      "co2Saved": 3.6,
+      "difficulty": "Easy",
+      "category": "Food",
+      "duration": "1 day"
+    },
+    {
+      "id": 5,
+      "name": "Zero waste week",
+      "description": "Produce zero landfill waste for 7 days",
+      "points": 150,
+      "co2Saved": 8.2,
+      "difficulty": "Hard",
+      "category": "Reduce",
+      "duration": "7 days"
+    },
+    {
+      "id": 6,
+      "name": "Cold shower challenge",
+      "description": "Take cold showers for 5 days to save energy",
+      "points": 40,
+      "co2Saved": 2.1,
+      "difficulty": "Medium",
+      "category": "Energy",
+      "duration": "5 days"
+    },
+    {
+      "id": 7,
+      "name": "Clean sheets",
+      "description": "XXXX",
+      "points": 10,
+      "co2Saved": 3,
+      "difficulty": "Easy",
+      "category": "Reduce",
+      "duration": "5"
+    }
+  ]
+}

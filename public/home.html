@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="auth-check.js"></script>
+    <style>
+        .welcome-section {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 800px) {
+            .welcome-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 50%, var(--sage) 100%);
+            border-radius: 24px;
+            padding: 40px;
+            color: var(--cream);
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-banner::before {
+            content: '🌍';
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 8rem;
+            opacity: 0.2;
+        }
+        .welcome-banner h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        .welcome-banner p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            max-width: 500px;
+        }
+        .your-progress-card {
+            background: linear-gradient(135deg, var(--forest-light) 0%, var(--sage) 100%);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 10px 40px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .your-progress-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: var(--cream);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .progress-stat {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .progress-stat:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .progress-icon {
+            font-size: 1.8rem;
+        }
+        .progress-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .progress-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--cream);
+        }
+        .progress-label {
+            font-size: 0.8rem;
+            color: var(--mint);
+        }
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 800px) {
+            .impact-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 500px) {
+            .impact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .impact-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 10px 40px var(--shadow);
+            transition: transform 0.3s;
+        }
+        .impact-card:hover {
+            transform: translateY(-5px);
+        }
+        .impact-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .impact-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--forest);
+            font-family: 'Playfair Display', serif;
+        }
+        .impact-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .impact-change {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            background: rgba(135, 168, 120, 0.2);
+            color: var(--forest);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--cream);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 900px) {
+            .articles-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .article-card {
+            background: var(--cream);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px var(--shadow);
+            transition: transform 0.3s;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .article-image {
+            height: 160px;
+            background: linear-gradient(135deg, var(--sage), var(--mint));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+        .article-content {
+            padding: 24px;
+        }
+        .article-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--mint);
+            color: var(--forest);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .article-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .article-excerpt {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .article-link {
+            color: var(--forest);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .article-link:hover {
+            text-decoration: underline;
+        }
+        .updates-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 10px 40px var(--shadow);
+            margin-bottom: 28px;
+        }
+        .updates-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .update-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--sand);
+        }
+        .update-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .update-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--mint);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .update-content h4 {
+            color: var(--text-dark);
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .update-content p {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .update-time {
+            color: var(--sage);
+            font-size: 0.75rem;
+            margin-top: 6px;
+        }
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        .quick-action-btn {
+            padding: 14px 24px;
+            background: var(--gold);
+            color: var(--forest);
+            text-decoration: none;
+            border-radius: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 168, 83, 0.4);
+        }
+        .quick-action-btn.secondary {
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .quick-action-btn.secondary:hover {
+            background: rgba(255,255,255,0.25);
+            box-shadow: none;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab-link {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .tab-link:hover, .tab-link.active {
+            background: var(--gold);
+            color: var(--forest);
+        }
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--cream);
+            border: 1px solid rgba(224, 122, 95, 0.5);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: var(--coral);
+            color: white;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-welcome {
+            color: var(--mint);
+            font-size: 0.9rem;
+        }
+        .tip-of-day {
+            background: linear-gradient(135deg, var(--gold), #e6b95e);
+            border-radius: 15px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .tip-icon {
+            font-size: 2.5rem;
+        }
+        .tip-content {
+            flex: 1;
+        }
+        .tip-content strong {
+            color: var(--forest);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tip-content p {
+            color: var(--forest);
+            margin-top: 4px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+    </div>
+
+    <div class="container dashboard-container">
+        <div class="dashboard-header">
+            <div class="logo">
+                <span class="logo-icon">🌍</span>
+                <h1>GreenGoals</h1>
+            </div>
+            <div class="header-right">
+                <span class="user-welcome" id="userWelcome"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="tab-bar">
+            <a href="home.html" class="tab-link active">Home</a>
+            <a href="challenges.html" class="tab-link">Challenges</a>
+            <a href="leaderboard.html" class="tab-link">Leaderboard</a>
+            <a href="profile.html" class="tab-link">Profile</a>
+        </div>
+
+        <!-- Welcome Section with Progress -->
+        <div class="welcome-section">
+            <div class="welcome-banner">
+                <h1 id="welcomeMessage">Welcome back!</h1>
+                <p>Together we're making Trinity College more sustainable, one challenge at a time.</p>
+                <div class="quick-actions">
+                    <a href="challenges.html" class="quick-action-btn">⚡ Start a Challenge</a>
+                    <a href="leaderboard.html" class="quick-action-btn secondary">🏆 View Leaderboard</a>
+                </div>
+            </div>
+            <div class="your-progress-card">
+                <h3>Your Progress</h3>
+                <div class="progress-stat">
+                    <span class="progress-icon">⭐</span>
+                    <div class="progress-info">
+                        <span class="progress-value" id="userPoints">0</span>
+                        <span class="progress-label">Points</span>
+                    </div>
+                </div>
+                <div class="progress-stat">
+                    <span class="progress-icon">🌱</span>
+                    <div class="progress-info">
+                        <span class="progress-value" id="userCO2">0</span>
+                        <span class="progress-label">kg CO₂ Saved</span>
+                    </div>
+                </div>
+                <div class="progress-stat">
+                    <span class="progress-icon">🌳</span>
+                    <div class="progress-info">
+                        <span class="progress-value" id="treesEquivalent">0</span>
+                        <span class="progress-label">Tree-days equivalent</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tip of the Day -->
+        <div class="tip-of-day">
+            <span class="tip-icon">💡</span>
+            <div class="tip-content">
+                <strong>Eco Tip of the Day</strong>
+                <p id="tipOfDay">Unplug electronics when not in use – even in standby mode, they consume energy!</p>
+            </div>
+        </div>
+
+        <!-- Impact Stats -->
+        <h2 class="section-title"> Campus Sustainability Impact</h2>
+        <div class="impact-grid">
+            <div class="impact-card">
+                <div class="impact-icon">🌍</div>
+                <div class="impact-value" id="totalCO2">-</div>
+                <div class="impact-label">kg CO₂ Saved</div>
+                <span class="impact-change"> This semester</span>
+            </div>
+            <div class="impact-card">
+                <div class="impact-icon">👥</div>
+                <div class="impact-value" id="totalUsers">-</div>
+                <div class="impact-label">Eco Warriors</div>
+                <span class="impact-change">Growing community</span>
+            </div>
+            <div class="impact-card">
+                <div class="impact-icon">✅</div>
+                <div class="impact-value" id="totalChallengesCompleted">-</div>
+                <div class="impact-label">Challenges Completed</div>
+                <span class="impact-change"> Keep it up!</span>
+            </div>
+            <div class="impact-card">
+                <div class="impact-icon">🏆</div>
+                <div class="impact-value" id="totalTeams">-</div>
+                <div class="impact-label">Active Teams</div>
+                <span class="impact-change"> Join one!</span>
+            </div>
+        </div>
+
+        <!-- Campus Updates -->
+        <div class="updates-card">
+            <h3>📢 Campus Sustainability Updates</h3>
+            <div class="update-item">
+                <div class="update-icon">♻️</div>
+                <div class="update-content">
+                    <h4>New Recycling Bins on Campus</h4>
+                    <p>Trinity has installed 20 new recycling stations across campus. Look for the green bins near all academic buildings!</p>
+                    <div class="update-time">2 days ago</div>
+                </div>
+            </div>
+            <div class="update-item">
+                <div class="update-icon">🚲</div>
+                <div class="update-content">
+                    <h4>Bike Share Program Launches</h4>
+                    <p>Free bike rentals are now available for students. Pick up at the library and return to any campus station.</p>
+                    <div class="update-time">1 week ago</div>
+                </div>
+            </div>
+            <div class="update-item">
+                <div class="update-icon">🌱</div>
+                <div class="update-content">
+                    <h4>Community Garden Open for Spring</h4>
+                    <p>Sign up to get your own plot in the campus community garden. Fresh veggies and good vibes await!</p>
+                    <div class="update-time">2 weeks ago</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sustainability Articles -->
+        <h2 class="section-title">📰 Sustainability News & Tips</h2>
+        <div class="articles-grid">
+            <div class="article-card">
+                <div class="article-image">🌊</div>
+                <div class="article-content">
+                    <span class="article-tag">Ocean</span>
+                    <h3 class="article-title">How Reducing Plastic Saves Marine Life</h3>
+                    <p class="article-excerpt">Every piece of plastic avoided is a step toward cleaner oceans. Learn how small changes make a big impact.</p>
+                    <a href="https://www.nationalgeographic.com/environment/article/plastic-pollution" target="_blank" class="article-link">Read More →</a>
+                </div>
+            </div>
+            <div class="article-card">
+                <div class="article-image">🥗</div>
+                <div class="article-content">
+                    <span class="article-tag">Food</span>
+                    <h3 class="article-title">The Environmental Impact of Your Diet</h3>
+                    <p class="article-excerpt">What you eat matters for the planet. Discover how plant-based meals can reduce your carbon footprint.</p>
+                    <a href="https://www.bbc.com/future/article/20200211-why-the-vegan-diet-is-not-always-green" target="_blank" class="article-link">Read More →</a>
+                </div>
+            </div>
+            <div class="article-card">
+                <div class="article-image">⚡</div>
+                <div class="article-content">
+                    <span class="article-tag">Energy</span>
+                    <h3 class="article-title">Simple Ways to Save Energy in Your Dorm</h3>
+                    <p class="article-excerpt">From LED bulbs to smart power strips, easy tips to reduce your energy consumption and save money.</p>
+                    <a href="https://www.energy.gov/energysaver/energy-saver" target="_blank" class="article-link">Read More →</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        // Eco tips array
+        const ecoTips = [
+            "Unplug electronics when not in use – even in standby mode, they consume energy!",
+            "Bring a reusable water bottle to class instead of buying plastic bottles.",
+            "Take shorter showers – every minute saves about 2.5 gallons of water!",
+            "Use both sides of paper before recycling it.",
+            "Walk or bike to class instead of driving – it's healthier too!",
+            "Turn off lights when you leave a room.",
+            "Use a reusable shopping bag instead of plastic bags.",
+            "Eat locally grown food when possible to reduce transportation emissions.",
+            "Air dry your clothes instead of using a dryer.",
+            "Start composting food scraps – it reduces methane from landfills!"
+        ];
+
+        // Show random tip
+        const randomTip = ecoTips[Math.floor(Math.random() * ecoTips.length)];
+        document.getElementById('tipOfDay').textContent = randomTip;
+
+        // Show user info
+        const user = getCurrentUser();
+        if (user) {
+            document.getElementById('userWelcome').textContent = `Hi, ${user.username}! 👋`;
+            // Fetch full user data to get first name
+            fetch(`${API_URL}/user/${user.id}`)
+                .then(res => res.json())
+                .then(userData => {
+                    const firstName = userData.firstName || user.username;
+                    document.getElementById('welcomeMessage').textContent = `Welcome back, ${firstName}!`;
+                })
+                .catch(() => {
+                    document.getElementById('welcomeMessage').textContent = `Welcome back, ${user.username}!`;
+                });
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const statsRes = await fetch(`${API_URL}/stats`);
+                const stats = await statsRes.json();
+                
+                document.getElementById('totalCO2').textContent = stats.totalCO2Saved;
+                document.getElementById('totalUsers').textContent = stats.totalUsers;
+                document.getElementById('totalTeams').textContent = stats.totalTeams;
+                
+                // Calculate total challenges completed
+                const usersRes = await fetch(`${API_URL}/users`);
+                const users = await usersRes.json();
+                const totalCompleted = users.reduce((sum, u) => sum + u.completedChallenges.length, 0);
+                document.getElementById('totalChallengesCompleted').textContent = totalCompleted;
+
+                // Load user's personal stats
+                if (user) {
+                    const userRes = await fetch(`${API_URL}/user/${user.id}`);
+                    const userData = await userRes.json();
+                    document.getElementById('userPoints').textContent = userData.points;
+                    document.getElementById('userCO2').textContent = userData.totalCO2Saved;
+                    // 1 tree absorbs about 22kg CO2 per year, so ~0.06kg per day
+                    const treeDays = Math.round(userData.totalCO2Saved / 0.06);
+                    document.getElementById('treesEquivalent').textContent = treeDays;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        loadStats();
+    </script>
+</body>
+</html>
+

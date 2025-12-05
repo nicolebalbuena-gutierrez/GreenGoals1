@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - Eco Challenges with Friends</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+        <div class="leaf leaf-4">🌿</div>
+        <div class="leaf leaf-5">🍃</div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🌍</span>
+                <h1>GreenGoals</h1>
+            </div>
+            <p class="tagline">Social Eco-Challenges with Friends</p>
+        </header>
+
+        <!-- Auth Card -->
+        <div class="auth-card">
+            <!-- Tab Switcher -->
+            <div class="tab-switcher">
+                <button class="tab-btn active" data-tab="login">Sign In</button>
+                <button class="tab-btn" data-tab="register">Join Us</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="you@example.com" required>
+                    <span class="input-icon">📧</span>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                    <span class="input-icon">🔒</span>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <span>Sign In</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <div style="display: flex; gap: 12px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="registerFirstName">First Name</label>
+                        <input type="text" id="registerFirstName" placeholder="Nicole" required>
+                        <span class="input-icon">👤</span>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="registerLastName">Last Name</label>
+                        <input type="text" id="registerLastName" placeholder="Balbuena" required>
+                        <span class="input-icon">👤</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <div class="form-group" style="flex: 2;">
+                        <label for="registerUsername">Username</label>
+                        <input type="text" id="registerUsername" placeholder="eco_warrior" required>
+                        <span class="input-icon">🏷️</span>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="registerClassYear">Class Year</label>
+                        <select id="registerClassYear" required style="width: 100%; padding: 16px 20px; border: 2px solid var(--sand); border-radius: 14px; font-family: 'Outfit', sans-serif; font-size: 1rem; color: var(--text-dark); background: white;">
+                            <option value="">Year</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" placeholder="you@trincoll.edu" required>
+                    <span class="input-icon">📧</span>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" placeholder="••••••••" required>
+                    <span class="input-icon">🔒</span>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <span>Create Account</span>
+                    <span class="btn-icon">🌱</span>
+                </button>
+            </form>
+
+            <!-- Message Display -->
+            <div id="message" class="message"></div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-icon">🌳</span>
+                <span class="stat-value" id="userCount">-</span>
+                <span class="stat-label">Eco Warriors</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">⚡</span>
+                <span class="stat-value" id="challengeCount">-</span>
+                <span class="stat-label">Challenges</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">🌍</span>
+                <span class="stat-value">26kg</span>
+                <span class="stat-label">CO₂ Saved</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

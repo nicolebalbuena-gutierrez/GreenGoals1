@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(165deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .admin-badge {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 12px;
+        }
+        .admin-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .admin-nav-btn {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .admin-nav-btn:hover, .admin-nav-btn.active {
+            background: #e94560;
+            color: white;
+            border-color: #e94560;
+        }
+        .admin-section {
+            display: none;
+        }
+        .admin-section.active {
+            display: block;
+        }
+        .admin-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        .admin-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        .btn-primary {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+        .btn-secondary {
+            padding: 8px 16px;
+            background: #eee;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover {
+            background: #ddd;
+        }
+        .btn-danger {
+            padding: 8px 16px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-danger:hover {
+            background: #ff3344;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .data-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: 600;
+        }
+        .data-table tr:hover td {
+            background: #f8f8f8;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+        .stat-card-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+        }
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: #e94560;
+            border-color: #e94560;
+        }
+        .json-preview {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        .json-preview pre {
+            color: #7fdbca;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-easy { background: #d4edda; color: #155724; }
+        .badge-medium { background: #fff3cd; color: #856404; }
+        .badge-hard { background: #f8d7da; color: #721c24; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #1a1a2e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container dashboard-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="logo">
+                <span class="logo-icon">🔐</span>
+                <h1>Admin Dashboard</h1>
+                <span class="admin-badge">Admin</span>
+            </div>
+            <button class="logout-btn" onclick="adminLogout()">Logout</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="stat-card-value" id="statUsers">-</div>
+                <div class="stat-card-label">Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value" id="statChallenges">-</div>
+                <div class="stat-card-label">Challenges</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value" id="statTeams">-</div>
+                <div class="stat-card-label">Teams</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value" id="statCO2">-</div>
+                <div class="stat-card-label">CO₂ Saved</div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="admin-nav">
+            <button class="admin-nav-btn active" data-section="challenges">⚡ Challenges</button>
+            <button class="admin-nav-btn" data-section="users">👥 Users</button>
+            <button class="admin-nav-btn" data-section="database">📊 Database</button>
+        </div>
+
+        <!-- Challenges Section -->
+        <div class="admin-section active" id="section-challenges">
+            <div class="admin-card">
+                <h3>➕ Add New Challenge</h3>
+                <form id="addChallengeForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Challenge Name</label>
+                            <input type="text" id="challengeName" required placeholder="e.g., Meatless Monday">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="challengeCategory" required>
+                                <option value="Reduce">♻️ Reduce</option>
+                                <option value="Nature">🌳 Nature</option>
+                                <option value="Transport">🚲 Transport</option>
+                                <option value="Food">🥗 Food</option>
+                                <option value="Energy">⚡ Energy</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="challengeDescription" rows="2" required placeholder="Describe what the user needs to do..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Points</label>
+                            <input type="number" id="challengePoints" required placeholder="50">
+                        </div>
+                        <div class="form-group">
+                            <label>CO₂ Saved (kg)</label>
+                            <input type="number" step="0.1" id="challengeCO2" required placeholder="2.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Duration</label>
+                            <input type="text" id="challengeDuration" required placeholder="3 days">
+                        </div>
+                        <div class="form-group">
+                            <label>Difficulty</label>
+                            <select id="challengeDifficulty" required>
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Challenge</button>
+                </form>
+            </div>
+
+            <div class="admin-card">
+                <h3>📋 All Challenges</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Points</th>
+                            <th>CO₂</th>
+                            <th>Difficulty</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="challengesTableBody">
+                        <tr><td colspan="7">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div class="admin-section" id="section-users">
+            <div class="admin-card">
+                <h3>👥 All Users</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Class</th>
+                            <th>Points</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="7">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Database Section -->
+        <div class="admin-section" id="section-database">
+            <div class="admin-card">
+                <h3>🗄️ Raw Database</h3>
+                <button class="btn-secondary" onclick="loadDatabase()" style="margin-bottom: 16px;">🔄 Refresh</button>
+                <div class="json-preview">
+                    <pre id="rawDatabase">Loading...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal">
+            <h3>✏️ Edit User</h3>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="editFirstName">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="editLastName">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="editUsername">
+                    </div>
+                    <div class="form-group">
+                        <label>Class Year</label>
+                        <input type="text" id="editClassYear">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editEmail">
+                </div>
+                <div class="form-group">
+                    <label>Points</label>
+                    <input type="number" id="editPoints">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Challenge Modal -->
+    <div class="modal-overlay" id="editChallengeModal">
+        <div class="modal">
+            <h3>✏️ Edit Challenge</h3>
+            <form id="editChallengeForm">
+                <input type="hidden" id="editChallengeId">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="editChallengeName">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editChallengeDescription" rows="2"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Points</label>
+                        <input type="number" id="editChallengePoints">
+                    </div>
+                    <div class="form-group">
+                        <label>CO₂ (kg)</label>
+                        <input type="number" step="0.1" id="editChallengeCO2">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="editChallengeCategory">
+                            <option value="Reduce">Reduce</option>
+                            <option value="Nature">Nature</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Food">Food</option>
+                            <option value="Energy">Energy</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Difficulty</label>
+                        <select id="editChallengeDifficulty">
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('editChallengeModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        // Check admin auth
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+            window.location.href = 'admin.html';
+        }
+
+        function getAdminToken() {
+            return localStorage.getItem('adminToken');
+        }
+
+        function adminLogout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('admin');
+            window.location.href = 'admin.html';
+        }
+
+        // Navigation
+        document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(`section-${btn.dataset.section}`).classList.add('active');
+            });
+        });
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/stats`);
+                const stats = await res.json();
+                document.getElementById('statUsers').textContent = stats.totalUsers;
+                document.getElementById('statChallenges').textContent = stats.totalChallenges;
+                document.getElementById('statTeams').textContent = stats.totalTeams;
+                document.getElementById('statCO2').textContent = stats.totalCO2Saved + 'kg';
+            } catch (e) {
+                console.error('Error loading stats');
+            }
+        }
+
+        // Load challenges
+        async function loadChallenges() {
+            try {
+                const res = await fetch(`${API_URL}/challenges`);
+                const challenges = await res.json();
+                
+                const tbody = document.getElementById('challengesTableBody');
+                tbody.innerHTML = challenges.map(c => `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.name}</td>
+                        <td>${c.category}</td>
+                        <td>${c.points}</td>
+                        <td>${c.co2Saved}kg</td>
+                        <td><span class="badge badge-${c.difficulty.toLowerCase()}">${c.difficulty}</span></td>
+                        <td class="actions">
+                            <button class="btn-secondary" onclick="editChallenge(${c.id})">Edit</button>
+                            <button class="btn-danger" onclick="deleteChallenge(${c.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading challenges');
+            }
+        }
+
+        // Add challenge
+        document.getElementById('addChallengeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const challenge = {
+                name: document.getElementById('challengeName').value,
+                description: document.getElementById('challengeDescription').value,
+                category: document.getElementById('challengeCategory').value,
+                points: document.getElementById('challengePoints').value,
+                co2Saved: document.getElementById('challengeCO2').value,
+                duration: document.getElementById('challengeDuration').value,
+                difficulty: document.getElementById('challengeDifficulty').value
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/admin/challenges`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getAdminToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(challenge)
+                });
+                
+                if (res.ok) {
+                    alert('✅ Challenge added!');
+                    e.target.reset();
+                    loadChallenges();
+                    loadStats();
+                } else {
+                    const data = await res.json();
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        });
+
+        // Edit challenge
+        let allChallenges = [];
+        async function editChallenge(id) {
+            const res = await fetch(`${API_URL}/challenges`);
+            allChallenges = await res.json();
+            const c = allChallenges.find(ch => ch.id === id);
+            if (!c) return;
+
+            document.getElementById('editChallengeId').value = c.id;
+            document.getElementById('editChallengeName').value = c.name;
+            document.getElementById('editChallengeDescription').value = c.description;
+            document.getElementById('editChallengePoints').value = c.points;
+            document.getElementById('editChallengeCO2').value = c.co2Saved;
+            document.getElementById('editChallengeCategory').value = c.category;
+            document.getElementById('editChallengeDifficulty').value = c.difficulty;
+            
+            document.getElementById('editChallengeModal').classList.add('active');
+        }
+
+        document.getElementById('editChallengeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editChallengeId').value;
+            
+            const data = {
+                name: document.getElementById('editChallengeName').value,
+                description: document.getElementById('editChallengeDescription').value,
+                points: document.getElementById('editChallengePoints').value,
+                co2Saved: document.getElementById('editChallengeCO2').value,
+                category: document.getElementById('editChallengeCategory').value,
+                difficulty: document.getElementById('editChallengeDifficulty').value
+            };
+
+            const res = await fetch(`${API_URL}/admin/challenges/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${getAdminToken()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert('✅ Challenge updated!');
+                closeModal('editChallengeModal');
+                loadChallenges();
+            }
+        });
+
+        // Delete challenge
+        async function deleteChallenge(id) {
+            if (!confirm('Are you sure you want to delete this challenge?')) return;
+            
+            const res = await fetch(`${API_URL}/admin/challenges/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+            });
+            
+            if (res.ok) {
+                alert('✅ Challenge deleted!');
+                loadChallenges();
+                loadStats();
+            }
+        }
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_URL}/admin/users`, {
+                    headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+                });
+                const users = await res.json();
+                
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${u.firstName} ${u.lastName}</td>
+                        <td>@${u.username}</td>
+                        <td>${u.email}</td>
+                        <td>${u.classYear || '-'}</td>
+                        <td>${u.points}</td>
+                        <td class="actions">
+                            <button class="btn-secondary" onclick="editUser(${u.id})">Edit</button>
+                            <button class="btn-danger" onclick="deleteUser(${u.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading users');
+            }
+        }
+
+        // Edit user
+        let allUsers = [];
+        async function editUser(id) {
+            const res = await fetch(`${API_URL}/admin/users`, {
+                headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+            });
+            allUsers = await res.json();
+            const u = allUsers.find(user => user.id === id);
+            if (!u) return;
+
+            document.getElementById('editUserId').value = u.id;
+            document.getElementById('editFirstName').value = u.firstName;
+            document.getElementById('editLastName').value = u.lastName;
+            document.getElementById('editUsername').value = u.username;
+            document.getElementById('editEmail').value = u.email;
+            document.getElementById('editClassYear').value = u.classYear || '';
+            document.getElementById('editPoints').value = u.points;
+            
+            document.getElementById('editUserModal').classList.add('active');
+        }
+
+        document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editUserId').value;
+            
+            const data = {
+                firstName: document.getElementById('editFirstName').value,
+                lastName: document.getElementById('editLastName').value,
+                username: document.getElementById('editUsername').value,
+                email: document.getElementById('editEmail').value,
+                classYear: document.getElementById('editClassYear').value,
+                points: document.getElementById('editPoints').value
+            };
+
+            const res = await fetch(`${API_URL}/admin/users/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${getAdminToken()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert('✅ User updated!');
+                closeModal('editUserModal');
+                loadUsers();
+            }
+        });
+
+        // Delete user
+        async function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
+            
+            const res = await fetch(`${API_URL}/admin/users/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+            });
+            
+            if (res.ok) {
+                alert('✅ User deleted!');
+                loadUsers();
+                loadStats();
+            }
+        }
+
+        // Load database
+        async function loadDatabase() {
+            try {
+                const res = await fetch(`${API_URL}/database/raw`);
+                const data = await res.json();
+                document.getElementById('rawDatabase').textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                document.getElementById('rawDatabase').textContent = 'Error loading database';
+            }
+        }
+
+        // Modal helpers
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Initial load
+        loadStats();
+        loadChallenges();
+        loadUsers();
+        loadDatabase();
+    </script>
+</body>
+</html>
+
+

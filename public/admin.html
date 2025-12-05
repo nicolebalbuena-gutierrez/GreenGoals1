@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - Admin Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(165deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+        }
+        .admin-badge {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        .auth-card {
+            border: 2px solid rgba(233, 69, 96, 0.3);
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+        }
+        .submit-btn:hover {
+            box-shadow: 0 12px 32px rgba(233, 69, 96, 0.4);
+        }
+        .back-link {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .back-link:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🔐</span>
+                <h1>GreenGoals</h1>
+            </div>
+            <span class="admin-badge">Admin Portal</span>
+            <p class="tagline">Manage challenges, users, and more</p>
+        </header>
+
+        <div class="auth-card">
+            <form id="adminLoginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="adminEmail">Admin Email</label>
+                    <input type="email" id="adminEmail" placeholder="admin@greengoals.com" required>
+                    <span class="input-icon">📧</span>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" placeholder="••••••••" required>
+                    <span class="input-icon">🔒</span>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <span>Admin Login</span>
+                    <span class="btn-icon">🔐</span>
+                </button>
+            </form>
+            <div id="message" class="message"></div>
+        </div>
+
+        <a href="index.html" class="back-link">← Back to User Login</a>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        // Check if already logged in as admin
+        const adminToken = localStorage.getItem('adminToken');
+        if (adminToken) {
+            window.location.href = 'admin-dashboard.html';
+        }
+
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const messageDiv = document.getElementById('message');
+            
+            try {
+                const response = await fetch(`${API_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    messageDiv.textContent = '✅ Login successful! Redirecting...';
+                    messageDiv.className = 'message success';
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('admin', JSON.stringify(data.admin));
+                    setTimeout(() => {
+                        window.location.href = 'admin-dashboard.html';
+                    }, 800);
+                } else {
+                    messageDiv.textContent = '❌ ' + data.error;
+                    messageDiv.className = 'message error';
+                }
+            } catch (error) {
+                messageDiv.textContent = '❌ Could not connect to server. Run: npm start';
+                messageDiv.className = 'message error';
+            }
+        });
+    </script>
+</body>
+</html>
+
+

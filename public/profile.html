@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - My Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="auth-check.js"></script>
+    <style>
+        .profile-card {
+            background: var(--cream);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px var(--shadow);
+            margin-bottom: 24px;
+        }
+        .profile-header {
+            background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+            padding: 40px 32px;
+            text-align: center;
+            color: var(--cream);
+            position: relative;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            margin: 0 auto 16px;
+            border: 4px solid rgba(255,255,255,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .edit-avatar-btn {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .profile-avatar:hover .edit-avatar-btn {
+            opacity: 1;
+        }
+        .profile-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+        .profile-username {
+            opacity: 0.9;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .profile-class-year {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        .profile-bio {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-style: italic;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .edit-profile-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .edit-profile-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .profile-stat {
+            text-align: center;
+        }
+        .profile-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .profile-stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+        .profile-body {
+            padding: 32px;
+        }
+        .section-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .challenge-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .challenge-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: var(--sand);
+            border-radius: 14px;
+            transition: all 0.3s;
+        }
+        .challenge-item:hover {
+            background: #ebe5db;
+        }
+        .challenge-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .challenge-item-icon {
+            font-size: 1.5rem;
+        }
+        .challenge-item-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .challenge-item-meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        .complete-btn {
+            padding: 10px 20px;
+            background: var(--sage);
+            color: var(--forest);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .complete-btn:hover {
+            background: var(--forest);
+            color: var(--cream);
+        }
+        .evidence-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--gold), #e6b95e);
+            color: var(--forest);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .evidence-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(212, 168, 83, 0.4);
+        }
+        .in-progress-badge {
+            padding: 6px 12px;
+            background: rgba(212, 168, 83, 0.2);
+            color: var(--gold);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .upload-area {
+            border: 2px dashed var(--sage);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: var(--forest);
+            background: rgba(135, 168, 120, 0.1);
+        }
+        .upload-area.dragover {
+            border-color: var(--forest);
+            background: rgba(135, 168, 120, 0.2);
+        }
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .upload-text {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+        .upload-text strong {
+            color: var(--forest);
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .verification-status {
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .verification-status.pending {
+            background: rgba(212, 168, 83, 0.2);
+            color: var(--text-dark);
+        }
+        .verification-status.approved {
+            background: rgba(135, 168, 120, 0.2);
+            color: var(--forest);
+        }
+        .verification-status.rejected {
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--coral);
+        }
+        .completed-badge {
+            padding: 8px 16px;
+            background: rgba(135, 168, 120, 0.2);
+            color: var(--forest);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .team-card {
+            background: linear-gradient(135deg, var(--gold) 0%, #e6b95e 100%);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .team-info h4 {
+            color: var(--forest);
+            font-size: 1.2rem;
+            margin: 0 0 4px;
+        }
+        .team-info p {
+            color: var(--forest);
+            opacity: 0.8;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        .logout-btn {
+            padding: 12px 24px;
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--cream);
+            border: 1px solid rgba(224, 122, 95, 0.5);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: var(--coral);
+            color: white;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab-link {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .tab-link:hover, .tab-link.active {
+            background: var(--gold);
+            color: var(--forest);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-light);
+        }
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: var(--cream);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--text-dark);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--sand);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            color: var(--text-dark);
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--sage);
+        }
+        .avatar-picker {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .avatar-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            background: var(--sand);
+        }
+        .avatar-option:hover, .avatar-option.selected {
+            border-color: var(--forest);
+            transform: scale(1.1);
+        }
+        .avatar-option img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .save-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+            color: var(--cream);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+        .or-divider {
+            text-align: center;
+            color: var(--text-light);
+            margin: 12px 0;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+    </div>
+
+    <div class="container dashboard-container">
+        <div class="dashboard-header">
+            <div class="logo">
+                <span class="logo-icon">👤</span>
+                <h1>My Profile</h1>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <!-- Navigation -->
+        <div class="tab-bar">
+            <a href="home.html" class="tab-link">Home</a>
+            <a href="challenges.html" class="tab-link">Challenges</a>
+            <a href="leaderboard.html" class="tab-link">Leaderboard</a>
+            <a href="profile.html" class="tab-link">Profile</a>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <button class="edit-profile-btn" onclick="openEditModal()">✏️ Edit Profile</button>
+                <div class="profile-avatar" id="profileAvatar">
+                    🌿
+                </div>
+                <h2 class="profile-name" id="profileName">Loading...</h2>
+                <p class="profile-username" id="profileUsername"></p>
+                <span class="profile-class-year" id="profileClassYear" style="display: none;"></span>
+                <div class="profile-bio" id="profileBio" style="display: none;"></div>
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profilePoints">0</div>
+                        <div class="profile-stat-label">Points</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profileCO2">0kg</div>
+                        <div class="profile-stat-label">CO₂ Saved</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profileChallengesCount">0</div>
+                        <div class="profile-stat-label">Completed</div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-body">
+                <!-- Team Section -->
+                <div id="teamSection"></div>
+
+                <!-- In Progress Challenges -->
+                <div class="section-label">🔄 In Progress</div>
+                <div class="challenge-list" id="activeChallenges">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <p>No challenges in progress. <a href="challenges.html">Accept one!</a></p>
+                    </div>
+                </div>
+
+                <!-- Completed Challenges -->
+                <div class="section-label" style="margin-top: 32px;">✅ Completed Challenges</div>
+                <div class="challenge-list" id="completedChallenges">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏆</div>
+                        <p>No completed challenges yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h2>✏️ Edit Profile</h2>
+            
+            <div class="form-group">
+                <label>Choose Avatar</label>
+                <div class="avatar-picker" id="avatarPicker">
+                    <div class="avatar-option" data-avatar="🌿">🌿</div>
+                    <div class="avatar-option" data-avatar="🌱">🌱</div>
+                    <div class="avatar-option" data-avatar="🌳">🌳</div>
+                    <div class="avatar-option" data-avatar="🌻">🌻</div>
+                    <div class="avatar-option" data-avatar="🦋">🦋</div>
+                    <div class="avatar-option" data-avatar="🐝">🐝</div>
+                    <div class="avatar-option" data-avatar="🌊">🌊</div>
+                    <div class="avatar-option" data-avatar="🌈">🌈</div>
+                    <div class="avatar-option" data-avatar="⭐">⭐</div>
+                    <div class="avatar-option" data-avatar="🔥">🔥</div>
+                </div>
+                <div class="or-divider">— or use an image URL —</div>
+                <input type="url" id="editProfilePicture" placeholder="https://example.com/your-photo.jpg">
+            </div>
+
+            <div class="form-group">
+                <label>Class Year</label>
+                <select id="editClassYear">
+                    <option value="">Select Year</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Bio</label>
+                <textarea id="editBio" placeholder="Tell us about yourself and your eco journey..."></textarea>
+            </div>
+
+            <button class="save-btn" onclick="saveProfile()">Save Changes</button>
+            <button class="save-btn" style="background: var(--sand); color: var(--text-dark); margin-top: 12px;" onclick="closeEditModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Evidence Upload Modal -->
+    <div class="modal-overlay" id="evidenceModal">
+        <div class="modal">
+            <h2>📸 Submit Evidence</h2>
+            <p style="color: var(--text-light); margin-bottom: 20px;" id="evidenceChallengeName">Upload a photo to verify you completed the challenge</p>
+            
+            <input type="hidden" id="evidenceChallengeId">
+            
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('evidenceFile').click()">
+                <div class="upload-icon">📷</div>
+                <p class="upload-text"><strong>Click to upload</strong> or drag and drop</p>
+                <p class="upload-text" style="font-size: 0.8rem; margin-top: 8px;">PNG, JPG up to 10MB</p>
+            </div>
+            
+            <input type="file" id="evidenceFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+            
+            <div id="imagePreview" style="display: none; text-align: center;">
+                <img id="previewImg" class="preview-image" src="" alt="Preview">
+                <button onclick="clearImage()" style="background: none; border: none; color: var(--coral); cursor: pointer; font-size: 0.9rem;">✕ Remove image</button>
+            </div>
+            
+            <div id="verificationStatus" class="verification-status" style="display: none;"></div>
+            
+            <button class="save-btn" id="submitEvidenceBtn" onclick="submitEvidence()" disabled style="opacity: 0.5;">
+                🔍 Verify & Submit Evidence
+            </button>
+            <button class="save-btn" style="background: var(--sand); color: var(--text-dark); margin-top: 12px;" onclick="closeEvidenceModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let currentUserData = null;
+        let selectedAvatar = '';
+        
+        const categoryIcons = {
+            'Reduce': '♻️',
+            'Nature': '🌳',
+            'Transport': '🚲',
+            'Food': '🥗',
+            'Energy': '⚡'
+        };
+
+        async function loadProfile() {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            try {
+                const res = await fetch(`${API_URL}/user/${user.id}`);
+                const fullUser = await res.json();
+                currentUserData = fullUser;
+
+                // Update profile header
+                const fullName = fullUser.firstName && fullUser.lastName 
+                    ? `${fullUser.firstName} ${fullUser.lastName}` 
+                    : fullUser.username;
+                document.getElementById('profileName').textContent = fullName;
+                document.getElementById('profileUsername').textContent = `@${fullUser.username}`;
+                document.getElementById('profilePoints').textContent = fullUser.points;
+                document.getElementById('profileCO2').textContent = fullUser.totalCO2Saved + 'kg';
+                document.getElementById('profileChallengesCount').textContent = fullUser.completedChallenges.length;
+
+                // Profile picture
+                const avatarEl = document.getElementById('profileAvatar');
+                if (fullUser.profilePicture) {
+                    if (fullUser.profilePicture.startsWith('http')) {
+                        avatarEl.innerHTML = `<img src="${fullUser.profilePicture}" alt="Profile">`;
+                    } else {
+                        avatarEl.innerHTML = fullUser.profilePicture;
+                    }
+                }
+
+                // Class year
+                if (fullUser.classYear) {
+                    const classYearEl = document.getElementById('profileClassYear');
+                    classYearEl.textContent = `Class of ${fullUser.classYear}`;
+                    classYearEl.style.display = 'inline-block';
+                }
+
+                // Bio
+                if (fullUser.bio) {
+                    const bioEl = document.getElementById('profileBio');
+                    bioEl.textContent = `"${fullUser.bio}"`;
+                    bioEl.style.display = 'block';
+                }
+
+                // Team section
+                if (fullUser.team) {
+                    document.getElementById('teamSection').innerHTML = `
+                        <div class="team-card">
+                            <div class="team-info">
+                                <h4>👥 ${fullUser.team.name}</h4>
+                                <p>Team Member</p>
+                            </div>
+                            <span style="font-size: 2rem;">🏆</span>
+                        </div>
+                    `;
+                }
+
+                // Active challenges (In Progress)
+                if (fullUser.activeChallenges.length > 0) {
+                    document.getElementById('activeChallenges').innerHTML = fullUser.activeChallenges.map(c => `
+                        <div class="challenge-item">
+                            <div class="challenge-item-info">
+                                <span class="challenge-item-icon">${categoryIcons[c.category] || '🌱'}</span>
+                                <div>
+                                    <div class="challenge-item-name">${c.name}</div>
+                                    <div class="challenge-item-meta">${c.points} pts · ${c.co2Saved}kg CO₂</div>
+                                </div>
+                            </div>
+                            <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name}')">
+                                📸 Upload Evidence
+                            </button>
+                        </div>
+                    `).join('');
+                }
+
+                // Completed challenges
+                if (fullUser.completedChallenges.length > 0) {
+                    document.getElementById('completedChallenges').innerHTML = fullUser.completedChallenges.map(c => `
+                        <div class="challenge-item">
+                            <div class="challenge-item-info">
+                                <span class="challenge-item-icon">${categoryIcons[c.category] || '🌱'}</span>
+                                <div>
+                                    <div class="challenge-item-name">${c.name}</div>
+                                    <div class="challenge-item-meta">${c.points} pts · ${c.co2Saved}kg CO₂</div>
+                                </div>
+                            </div>
+                            <span class="completed-badge">✓ Completed</span>
+                        </div>
+                    `).join('');
+                }
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        function openEditModal() {
+            document.getElementById('editModal').classList.add('active');
+            
+            // Pre-fill current values
+            if (currentUserData) {
+                document.getElementById('editClassYear').value = currentUserData.classYear || '';
+                document.getElementById('editBio').value = currentUserData.bio || '';
+                
+                if (currentUserData.profilePicture && currentUserData.profilePicture.startsWith('http')) {
+                    document.getElementById('editProfilePicture').value = currentUserData.profilePicture;
+                } else if (currentUserData.profilePicture) {
+                    selectedAvatar = currentUserData.profilePicture;
+                    document.querySelectorAll('.avatar-option').forEach(opt => {
+                        opt.classList.toggle('selected', opt.dataset.avatar === selectedAvatar);
+                    });
+                }
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        // Avatar picker
+        document.querySelectorAll('.avatar-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedAvatar = option.dataset.avatar;
+                document.getElementById('editProfilePicture').value = ''; // Clear URL input
+            });
+        });
+
+        async function saveProfile() {
+            const token = getToken();
+            const profilePicture = document.getElementById('editProfilePicture').value || selectedAvatar;
+            const classYear = document.getElementById('editClassYear').value;
+            const bio = document.getElementById('editBio').value;
+
+            try {
+                const res = await fetch(`${API_URL}/user/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ profilePicture, classYear, bio })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('✅ Profile updated!');
+                    closeEditModal();
+                    loadProfile();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        }
+
+        async function completeChallenge(id) {
+            const token = getToken();
+            try {
+                const res = await fetch(`${API_URL}/challenges/${id}/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('🎉 ' + data.message);
+                    const user = getCurrentUser();
+                    user.points = data.user.points;
+                    user.totalCO2Saved = data.user.totalCO2Saved;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    loadProfile();
+                } else {
+                    alert('⚠️ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editModal') {
+                closeEditModal();
+            }
+        });
+
+        // ============================================
+        // EVIDENCE UPLOAD FUNCTIONS
+        // ============================================
+        
+        let selectedImageBase64 = null;
+
+        function openEvidenceModal(challengeId, challengeName) {
+            document.getElementById('evidenceChallengeId').value = challengeId;
+            document.getElementById('evidenceChallengeName').textContent = `Upload a photo showing you completed: "${challengeName}"`;
+            document.getElementById('evidenceModal').classList.add('active');
+            clearImage();
+        }
+
+        function closeEvidenceModal() {
+            document.getElementById('evidenceModal').classList.remove('active');
+            clearImage();
+            document.getElementById('verificationStatus').style.display = 'none';
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File too large. Please select an image under 10MB.');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result.split(',')[1];
+                    selectedImageBase64 = base64;
+                    
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    document.getElementById('uploadArea').style.display = 'none';
+                    document.getElementById('submitEvidenceBtn').disabled = false;
+                    document.getElementById('submitEvidenceBtn').style.opacity = '1';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearImage() {
+            selectedImageBase64 = null;
+            document.getElementById('evidenceFile').value = '';
+            document.getElementById('previewImg').src = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('uploadArea').style.display = 'block';
+            document.getElementById('submitEvidenceBtn').disabled = true;
+            document.getElementById('submitEvidenceBtn').style.opacity = '0.5';
+        }
+
+        async function submitEvidence() {
+            const challengeId = document.getElementById('evidenceChallengeId').value;
+            const token = getToken();
+            const statusDiv = document.getElementById('verificationStatus');
+            const submitBtn = document.getElementById('submitEvidenceBtn');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '🔄 Verifying with AI...';
+            statusDiv.className = 'verification-status pending';
+            statusDiv.innerHTML = '⏳ AI is analyzing your image...';
+            statusDiv.style.display = 'block';
+
+            try {
+                const res = await fetch(`${API_URL}/challenges/${challengeId}/submit-evidence`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ imageBase64: selectedImageBase64 })
+                });
+                
+                const data = await res.json();
+                
+                if (data.approved) {
+                    statusDiv.className = 'verification-status approved';
+                    statusDiv.innerHTML = `
+                        <div style="font-size: 2rem; margin-bottom: 8px;">🎉</div>
+                        <strong>${data.message}</strong>
+                        <p style="margin-top: 8px; font-size: 0.9rem;">${data.reason || ''}</p>
+                        ${data.pointsEarned ? `<p style="margin-top: 8px;"><strong>+${data.pointsEarned} points earned!</strong></p>` : ''}
+                    `;
+                    
+                    // Update local storage
+                    const user = getCurrentUser();
+                    if (data.pointsEarned) {
+                        user.points = (user.points || 0) + data.pointsEarned;
+                        localStorage.setItem('user', JSON.stringify(user));
+                    }
+                    
+                    // Close modal after 3 seconds and reload
+                    setTimeout(() => {
+                        closeEvidenceModal();
+                        loadProfile();
+                    }, 3000);
+                } else {
+                    statusDiv.className = 'verification-status rejected';
+                    statusDiv.innerHTML = `
+                        <div style="font-size: 2rem; margin-bottom: 8px;">❌</div>
+                        <strong>${data.message}</strong>
+                        <p style="margin-top: 8px; font-size: 0.9rem;">${data.reason || ''}</p>
+                        <p style="margin-top: 12px; font-size: 0.85rem;">Please try again with a clearer image.</p>
+                    `;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '🔍 Verify & Submit Evidence';
+                }
+            } catch (error) {
+                statusDiv.className = 'verification-status rejected';
+                statusDiv.innerHTML = '❌ Error connecting to server. Please try again.';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '🔍 Verify & Submit Evidence';
+            }
+        }
+
+        // Drag and drop support
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                document.getElementById('evidenceFile').files = e.dataTransfer.files;
+                handleFileSelect({ target: { files: [file] } });
+            }
+        });
+
+        // Close evidence modal on outside click
+        document.getElementById('evidenceModal').addEventListener('click', (e) => {
+            if (e.target.id === 'evidenceModal') {
+                closeEvidenceModal();
+            }
+        });
+
+        loadProfile();
+    </script>
+</body>
+</html>

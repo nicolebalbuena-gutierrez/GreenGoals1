@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="auth-check.js"></script>
+    <style>
+        .leaderboard-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 15px 50px var(--shadow);
+            margin-bottom: 24px;
+        }
+        .leaderboard-header {
+            background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+            padding: 24px 28px;
+            color: var(--cream);
+        }
+        .leaderboard-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .leaderboard-list {
+            padding: 16px 0;
+        }
+        .rank-item {
+            display: flex;
+            align-items: center;
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--sand);
+            transition: background 0.2s;
+        }
+        .rank-item:last-child { border-bottom: none; }
+        .rank-item:hover { background: var(--sand); }
+        .rank-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-right: 16px;
+            background: var(--sand);
+            color: var(--text-light);
+        }
+        .rank-1 .rank-number { background: linear-gradient(135deg, #FFD700, #FFA500); color: white; font-size: 1.3rem; }
+        .rank-2 .rank-number { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: white; }
+        .rank-3 .rank-number { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; }
+        .rank-info { flex: 1; }
+        .rank-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+        .rank-realname {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-style: italic;
+            margin-top: 2px;
+        }
+        .rank-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--sand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 16px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .class-badge {
+            background: var(--sage);
+            color: var(--forest);
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        .rank-stats {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+        .rank-points {
+            text-align: right;
+        }
+        .rank-points-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--forest);
+        }
+        .rank-points-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab-link {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .tab-link:hover, .tab-link.active {
+            background: var(--gold);
+            color: var(--forest);
+        }
+        .co2-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(135, 168, 120, 0.2);
+            color: var(--forest);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--cream);
+            border: 1px solid rgba(224, 122, 95, 0.5);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: var(--coral);
+            color: white;
+        }
+        .user-welcome {
+            color: var(--mint);
+            font-size: 0.9rem;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        /* Users Table Styles */
+        .users-card {
+            background: var(--cream);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px var(--shadow);
+            margin-bottom: 24px;
+        }
+        .users-card-header {
+            background: var(--sage);
+            padding: 20px 28px;
+            color: var(--forest);
+        }
+        .users-card-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            margin: 0;
+        }
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .users-table th {
+            background: var(--sand);
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        .users-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--sand);
+            color: var(--text-dark);
+        }
+        .users-table tr:last-child td {
+            border-bottom: none;
+        }
+        .users-table tr:hover td {
+            background: rgba(135, 168, 120, 0.1);
+        }
+        .points-badge {
+            background: linear-gradient(135deg, var(--gold), #e6b95e);
+            color: var(--forest);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .year-badge {
+            background: var(--mint);
+            color: var(--forest);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+    </div>
+
+    <div class="container dashboard-container">
+        <div class="dashboard-header">
+            <div class="logo">
+                <span class="logo-icon"></span>
+                <h1>Leaderboard</h1>
+            </div>
+            <div class="header-right">
+                <span class="user-welcome" id="userWelcome"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="tab-bar">
+            <a href="home.html" class="tab-link">Home</a>
+            <a href="challenges.html" class="tab-link">Challenges</a>
+            <a href="leaderboard.html" class="tab-link active">Leaderboard</a>
+            <a href="profile.html" class="tab-link">Profile</a>
+        </div>
+
+
+        <!-- User Leaderboard -->
+        <div class="leaderboard-card">
+            <div class="leaderboard-header">
+                <h2>🏆 Top Eco Warriors</h2>
+            </div>
+            <div class="leaderboard-list" id="userLeaderboard">
+                <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
+            </div>
+        </div>
+
+        <!-- Team Leaderboard -->
+        <div class="leaderboard-card">
+            <div class="leaderboard-header">
+                <h2>👥 Top Teams</h2>
+            </div>
+            <div class="leaderboard-list" id="teamLeaderboard">
+                <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
+            </div>
+        </div>
+
+        <!-- All Users Table -->
+        <div class="users-card">
+            <div class="users-card-header">
+                <h2>📋 All Participants</h2>
+            </div>
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Class Year</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr><td colspan="4">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        // Show username
+        const user = getCurrentUser();
+        if (user) {
+            document.getElementById('userWelcome').textContent = `Hi, ${user.username}! 👋`;
+        }
+
+        async function loadLeaderboards() {
+            try {
+                // Load user leaderboard
+                const usersRes = await fetch(`${API_URL}/leaderboard`);
+                const users = await usersRes.json();
+                
+                const userList = document.getElementById('userLeaderboard');
+                userList.innerHTML = users.map((user, index) => {
+                    let avatarContent = '🌿';
+                    if (user.profilePicture) {
+                        if (user.profilePicture.startsWith('http')) {
+                            avatarContent = `<img src="${user.profilePicture}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                        } else {
+                            avatarContent = user.profilePicture;
+                        }
+                    }
+                    const classYearBadge = user.classYear ? `<span class="class-badge">'${user.classYear.slice(-2)}</span>` : '';
+                    
+                    return `
+                    <div class="rank-item rank-${index + 1}">
+                        <div class="rank-number">${index === 0 ? '👑' : index + 1}</div>
+                        <div class="rank-avatar">${avatarContent}</div>
+                        <div class="rank-info">
+                            <div class="rank-name">${user.username} ${classYearBadge}</div>
+                            <div class="rank-realname">${user.firstName} ${user.lastName}</div>
+                            <div class="rank-stats">
+                                ${user.completedChallenges} challenges completed
+                                <span class="co2-badge">🌱 ${user.totalCO2Saved}kg CO₂</span>
+                            </div>
+                        </div>
+                        <div class="rank-points">
+                            <div class="rank-points-value">${user.points}</div>
+                            <div class="rank-points-label">points</div>
+                        </div>
+                    </div>
+                `}).join('');
+
+                // Load all users table
+                const usersTableBody = document.getElementById('usersTableBody');
+                usersTableBody.innerHTML = users.map(u => `
+                    <tr>
+                        <td><strong>${u.firstName}</strong></td>
+                        <td>${u.lastName}</td>
+                        <td>${u.classYear ? `<span class="year-badge">Class of ${u.classYear}</span>` : '-'}</td>
+                        <td><span class="points-badge">${u.points} pts</span></td>
+                    </tr>
+                `).join('');
+
+                // Load team leaderboard
+                const teamsRes = await fetch(`${API_URL}/leaderboard/teams`);
+                const teams = await teamsRes.json();
+                
+                const teamList = document.getElementById('teamLeaderboard');
+                if (teams.length > 0) {
+                    teamList.innerHTML = teams.map((team, index) => `
+                        <div class="rank-item rank-${index + 1}">
+                            <div class="rank-number">${index === 0 ? '🏆' : index + 1}</div>
+                            <div class="rank-info">
+                                <div class="rank-name">${team.name}</div>
+                                <div class="rank-stats">${team.memberCount} members</div>
+                            </div>
+                            <div class="rank-points">
+                                <div class="rank-points-value">${team.totalPoints}</div>
+                                <div class="rank-points-label">points</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    teamList.innerHTML = '<div class="rank-item"><span style="color: var(--text-light);">No teams yet</span></div>';
+                }
+
+            } catch (error) {
+                document.getElementById('userLeaderboard').innerHTML = `
+                    <div class="rank-item" style="color: var(--coral);">
+                        ❌ Server not running. Run: npm start
+                    </div>
+                `;
+            }
+        }
+
+        loadLeaderboards();
+    </script>
+</body>
+</html>
