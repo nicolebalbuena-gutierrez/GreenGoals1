@@ -20,12 +20,12 @@
         }
         .leaderboard-header {
             background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
-            padding: 24px 28px;
+            padding: 20px 24px;
             color: var(--cream);
         }
         .leaderboard-header h2 {
             font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             margin: 0;
             display: flex;
             align-items: center;
@@ -37,7 +37,7 @@
         .rank-item {
             display: flex;
             align-items: center;
-            padding: 24px 28px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--sand);
             transition: background 0.2s;
         }
@@ -115,9 +115,9 @@
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
-            flex-wrap: wrap;
         }
         .tab-link {
+            flex: 1;
             padding: 12px 24px;
             background: rgba(255,255,255,0.15);
             color: var(--cream);
@@ -126,6 +126,7 @@
             font-weight: 500;
             transition: all 0.3s;
             border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
         }
         .tab-link:hover, .tab-link.active {
             background: var(--gold);
@@ -224,6 +225,20 @@
             border-radius: 20px;
             font-size: 0.85rem;
         }
+        .leaderboards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) {
+            .leaderboards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .leaderboards-grid .leaderboard-card {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -250,29 +265,33 @@
             <a href="home.html" class="tab-link">Home</a>
             <a href="challenges.html" class="tab-link">Challenges</a>
             <a href="leaderboard.html" class="tab-link active">Leaderboard</a>
+            <a href="teams.html" class="tab-link">Teams</a>
             <a href="profile.html" class="tab-link">Profile</a>
         </div>
 
 
-        <!-- User Leaderboard -->
-        <div class="leaderboard-card">
-            <div class="leaderboard-header">
-                <h2>🏆 Top Eco Warriors</h2>
+        <!-- Leaderboards Side by Side -->
+        <div class="leaderboards-grid">
+            <!-- User Leaderboard -->
+            <div class="leaderboard-card">
+                <div class="leaderboard-header">
+                    <h2> Top Eco Warriors</h2>
+                </div>
+                <div class="leaderboard-list" id="userLeaderboard">
+                    <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
+                </div>
             </div>
-            <div class="leaderboard-list" id="userLeaderboard">
-                <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
-            </div>
-        </div>
 
-        <!-- Team Leaderboard -->
-        <div class="leaderboard-card">
-            <div class="leaderboard-header">
-                <h2>👥 Top Teams</h2>
+            <!-- Team Leaderboard -->
+            <div class="leaderboard-card">
+                <div class="leaderboard-header">
+                    <h2> Top Teams</h2>
+                </div>
+                <div class="leaderboard-list" id="teamLeaderboard">
+                    <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
+                </div>
             </div>
-            <div class="leaderboard-list" id="teamLeaderboard">
-                <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
-            </div>
-        </div>
+        </div><!-- End leaderboards-grid -->
 
         <!-- All Users Table -->
         <div class="users-card">
@@ -301,7 +320,7 @@
         // Show username
         const user = getCurrentUser();
         if (user) {
-            document.getElementById('userWelcome').textContent = `Hi, ${user.username}! 👋`;
+            document.getElementById('userWelcome').textContent = `Hi, ${user.username}! `;
         }
 
         async function loadLeaderboards() {
@@ -324,7 +343,7 @@
                     
                     return `
                     <div class="rank-item rank-${index + 1}">
-                        <div class="rank-number">${index === 0 ? '👑' : index + 1}</div>
+                        <div class="rank-number">${index === 0 ? '1' : index + 1}</div>
                         <div class="rank-avatar">${avatarContent}</div>
                         <div class="rank-info">
                             <div class="rank-name">${user.username} ${classYearBadge}</div>
@@ -360,7 +379,7 @@
                 if (teams.length > 0) {
                     teamList.innerHTML = teams.map((team, index) => `
                         <div class="rank-item rank-${index + 1}">
-                            <div class="rank-number">${index === 0 ? '🏆' : index + 1}</div>
+                            <div class="rank-number">${index === 0 ? '' : index + 1}</div>
                             <div class="rank-info">
                                 <div class="rank-name">${team.name}</div>
                                 <div class="rank-stats">${team.memberCount} members</div>

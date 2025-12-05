@@ -72,7 +72,7 @@ function authenticateToken(req, res, next) {
     });
 }
 
-// Admin middleware
+// Admin middleware - works with both regular token and admin token
 function authenticateAdmin(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -81,19 +81,19 @@ function authenticateAdmin(req, res, next) {
         return res.status(401).json({ error: 'Access denied' });
     }
     
-    jwt.verify(token, JWT_SECRET, (err, user) => {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
         if (err) {
             return res.status(403).json({ error: 'Invalid token' });
         }
         
         const db = readDatabase();
-        const adminUser = db.users.find(u => u.id === user.userId);
+        const adminUser = db.users.find(u => u.id === decoded.userId);
         
         if (!adminUser || adminUser.role !== 'super_admin') {
             return res.status(403).json({ error: 'Admin access required' });
         }
         
-        req.user = user;
+        req.user = decoded;
         next();
     });
 }
@@ -156,7 +156,8 @@ app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     const db = readDatabase();
     
-    const user = db.users.find(u => u.username === username);
+    // Check both username and email
+    const user = db.users.find(u => u.username === username || u.email === username);
     if (!user) {
         return res.status(400).json({ error: 'User not found' });
     }
@@ -176,7 +177,8 @@ app.post('/api/login', async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             classYear: user.classYear,
-            points: user.points 
+            points: user.points,
+            isAdmin: user.role === 'super_admin'
         } 
     });
 });
@@ -217,15 +219,16 @@ app.get('/api/users', (req, res) => {
     const users = db.users.map(u => ({
         id: u.id,
         username: u.username,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        classYear: u.classYear,
-        profilePicture: u.profilePicture,
-        bio: u.bio,
-        points: u.points,
-        totalCO2Saved: u.totalCO2Saved,
-        completedChallenges: u.completedChallenges.length,
-        teamId: u.teamId
+        firstName: u.firstName || '',
+        lastName: u.lastName || '',
+        classYear: u.classYear || '',
+        profilePicture: u.profilePicture || '',
+        bio: u.bio || '',
+        points: u.points || 0,
+        totalCO2Saved: u.totalCO2Saved || 0,
+        completedChallenges: Array.isArray(u.completedChallenges) ? u.completedChallenges.length : 0,
+        teamId: u.teamId || null,
+        role: u.role || 'user'
     }));
     res.json(users);
 });
@@ -373,9 +376,9 @@ app.post('/api/challenges/:id/complete', authenticateToken, (req, res) => {
     });
 });
 
-// Submit evidence for a challenge (with AI verification)
+// Submit evidence for a challenge (sends to admin for approval)
 app.post('/api/challenges/:id/submit-evidence', authenticateToken, async (req, res) => {
-    const { imageUrl, imageBase64 } = req.body;
+    const { imageBase64 } = req.body;
     const db = readDatabase();
     const challengeId = parseInt(req.params.id);
     const userId = req.user.userId;
@@ -391,136 +394,204 @@ app.post('/api/challenges/:id/submit-evidence', authenticateToken, async (req, r
         return res.status(400).json({ error: 'Challenge not in progress' });
     }
 
-    // Prepare the image for OpenAI
-    let imageContent;
-    if (imageBase64) {
-        imageContent = { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } };
-    } else if (imageUrl) {
-        imageContent = { type: 'image_url', image_url: { url: imageUrl } };
-    } else {
+    if (!imageBase64) {
         return res.status(400).json({ error: 'Please provide an image' });
     }
 
-    // Create verification prompt based on challenge
-    const verificationPrompts = {
-        'No plastic for 3 days': 'Does this image show evidence of avoiding single-use plastics, such as using reusable containers, bags, or bottles? Look for reusable items or plastic-free alternatives.',
-        'Plant a tree': 'Does this image show someone planting a tree or a newly planted tree/seedling in the ground?',
-        'Bike to work': 'Does this image show a bicycle, someone biking, or evidence of cycling as transportation?',
-        'Meatless Monday': 'Does this image show a vegetarian or plant-based meal without any meat?',
-        'Zero waste week': 'Does this image show zero-waste practices like composting, recycling, reusable items, or minimal waste?',
-        'Cold shower challenge': 'Does this image show a cold shower setting, temperature display showing cold water, or related evidence?'
+    // Initialize pendingEvidence array if it doesn't exist
+    if (!db.pendingEvidence) {
+        db.pendingEvidence = [];
+    }
+
+    // Check if user already submitted evidence for this challenge
+    const existingSubmission = db.pendingEvidence.find(
+        e => e.userId === userId && e.challengeId === challengeId && e.status === 'pending'
+    );
+    
+    if (existingSubmission) {
+        return res.status(400).json({ error: 'You already have a pending submission for this challenge. Please wait for admin review.' });
+    }
+
+    // Create new evidence submission
+    const newEvidence = {
+        id: db.pendingEvidence.length > 0 ? Math.max(...db.pendingEvidence.map(e => e.id)) + 1 : 1,
+        userId: userId,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        challengeId: challengeId,
+        challengeName: challenge.name,
+        challengePoints: challenge.points,
+        challengeCO2: challenge.co2Saved,
+        imageBase64: imageBase64,
+        status: 'pending', // pending, approved, rejected
+        submittedAt: new Date().toISOString(),
+        reviewedAt: null,
+        reviewNotes: null
     };
 
-    const prompt = verificationPrompts[challenge.name] || `Does this image show evidence of completing the challenge: "${challenge.name}" - ${challenge.description}?`;
+    db.pendingEvidence.push(newEvidence);
+    writeDatabase(db);
 
-    try {
-        // Call OpenAI Vision API
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a helpful assistant that verifies if images show evidence of completing eco-friendly challenges. Respond with a JSON object containing: { "approved": true/false, "confidence": "high"/"medium"/"low", "reason": "brief explanation" }. Be encouraging but fair. If the image reasonably shows effort toward the challenge, approve it.'
-                    },
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: prompt },
-                            imageContent
-                        ]
-                    }
-                ],
-                max_tokens: 300
-            })
-        });
+    return res.json({
+        pending: true,
+        message: `📤 Evidence submitted! Your submission for "${challenge.name}" is now pending admin approval.`,
+        submissionId: newEvidence.id
+    });
+});
 
-        const aiResult = await response.json();
-        
-        if (aiResult.error) {
-            // If OpenAI fails, auto-approve with a note (for demo purposes)
-            console.log('OpenAI Error:', aiResult.error);
-            return res.json({
-                approved: true,
-                message: 'Evidence submitted! Challenge completed (auto-approved).',
-                reason: 'AI verification unavailable - evidence accepted.',
-                challengeCompleted: true
-            });
-        }
-
-        // Parse AI response
-        let verification;
-        try {
-            const aiMessage = aiResult.choices[0].message.content;
-            verification = JSON.parse(aiMessage);
-        } catch (e) {
-            // If can't parse, try to extract approval from text
-            const aiMessage = aiResult.choices[0].message.content.toLowerCase();
-            verification = {
-                approved: aiMessage.includes('approved') || aiMessage.includes('yes') || aiMessage.includes('true'),
-                confidence: 'medium',
-                reason: aiResult.choices[0].message.content
-            };
-        }
-
-        if (verification.approved) {
-            // Complete the challenge
-            user.activeChallenges = user.activeChallenges.filter(id => id !== challengeId);
-            user.completedChallenges.push(challengeId);
-            user.points += challenge.points;
-            user.totalCO2Saved += challenge.co2Saved;
-
-            // Update team points
-            if (user.teamId) {
-                const team = db.teams.find(t => t.id === user.teamId);
-                if (team) {
-                    team.totalPoints += challenge.points;
-                }
-            }
-
-            writeDatabase(db);
-
-            return res.json({
-                approved: true,
-                message: `🎉 Evidence approved! You completed "${challenge.name}" and earned ${challenge.points} points!`,
-                reason: verification.reason,
-                confidence: verification.confidence,
-                challengeCompleted: true,
-                pointsEarned: challenge.points,
-                co2Saved: challenge.co2Saved
-            });
-        } else {
-            return res.json({
-                approved: false,
-                message: 'Evidence not approved. Please try again with a clearer image.',
-                reason: verification.reason,
-                confidence: verification.confidence,
-                challengeCompleted: false
-            });
-        }
-
-    } catch (error) {
-        console.error('Error verifying evidence:', error);
-        // Auto-approve on error for demo purposes
-        user.activeChallenges = user.activeChallenges.filter(id => id !== challengeId);
-        user.completedChallenges.push(challengeId);
-        user.points += challenge.points;
-        user.totalCO2Saved += challenge.co2Saved;
-        writeDatabase(db);
-
-        return res.json({
-            approved: true,
-            message: `Evidence submitted! Challenge "${challenge.name}" completed!`,
-            reason: 'Evidence accepted.',
-            challengeCompleted: true,
-            pointsEarned: challenge.points
-        });
+// Get user's pending evidence submissions
+app.get('/api/user/pending-evidence', authenticateToken, (req, res) => {
+    const db = readDatabase();
+    const userId = req.user.userId;
+    
+    if (!db.pendingEvidence) {
+        return res.json([]);
     }
+    
+    const userEvidence = db.pendingEvidence.filter(e => e.userId === userId);
+    // Don't send the full image back, just metadata
+    const safeEvidence = userEvidence.map(e => ({
+        id: e.id,
+        challengeId: e.challengeId,
+        challengeName: e.challengeName,
+        status: e.status,
+        submittedAt: e.submittedAt,
+        reviewedAt: e.reviewedAt,
+        reviewNotes: e.reviewNotes
+    }));
+    
+    res.json(safeEvidence);
+});
+
+// Admin: Get all pending evidence
+app.get('/api/admin/pending-evidence', authenticateAdmin, (req, res) => {
+    const db = readDatabase();
+    
+    if (!db.pendingEvidence) {
+        return res.json([]);
+    }
+    
+    // Return pending submissions (with images for admin review)
+    const pendingOnly = db.pendingEvidence.filter(e => e.status === 'pending');
+    res.json(pendingOnly);
+});
+
+// Admin: Get all evidence (including reviewed)
+app.get('/api/admin/all-evidence', authenticateAdmin, (req, res) => {
+    const db = readDatabase();
+    
+    if (!db.pendingEvidence) {
+        return res.json([]);
+    }
+    
+    // Return all submissions without images (for history)
+    const allEvidence = db.pendingEvidence.map(e => ({
+        ...e,
+        imageBase64: e.status === 'pending' ? e.imageBase64 : '[ARCHIVED]'
+    }));
+    res.json(allEvidence);
+});
+
+// Admin: Approve evidence
+app.post('/api/admin/evidence/:id/approve', authenticateAdmin, (req, res) => {
+    const { notes } = req.body;
+    const db = readDatabase();
+    const evidenceId = parseInt(req.params.id);
+    
+    if (!db.pendingEvidence) {
+        return res.status(404).json({ error: 'No evidence found' });
+    }
+    
+    const evidence = db.pendingEvidence.find(e => e.id === evidenceId);
+    if (!evidence) {
+        return res.status(404).json({ error: 'Evidence not found' });
+    }
+    
+    if (evidence.status !== 'pending') {
+        return res.status(400).json({ error: 'Evidence already reviewed' });
+    }
+    
+    // Find user and challenge
+    const user = db.users.find(u => u.id === evidence.userId);
+    const challenge = db.challenges.find(c => c.id === evidence.challengeId);
+    
+    if (!user || !challenge) {
+        return res.status(404).json({ error: 'User or challenge not found' });
+    }
+    
+    // Complete the challenge for the user
+    user.activeChallenges = user.activeChallenges.filter(id => id !== evidence.challengeId);
+    if (!user.completedChallenges.includes(evidence.challengeId)) {
+        user.completedChallenges.push(evidence.challengeId);
+    }
+    user.points += challenge.points;
+    user.totalCO2Saved += challenge.co2Saved;
+    
+    // Update team points
+    if (user.teamId) {
+        const team = db.teams.find(t => t.id === user.teamId);
+        if (team) {
+            team.totalPoints += challenge.points;
+        }
+    }
+    
+    // Update evidence status
+    evidence.status = 'approved';
+    evidence.reviewedAt = new Date().toISOString();
+    evidence.reviewNotes = notes || 'Approved by admin';
+    // Clear the image data to save space
+    evidence.imageBase64 = '[APPROVED - IMAGE ARCHIVED]';
+    
+    writeDatabase(db);
+    
+    res.json({ 
+        message: `Approved! ${user.firstName || user.username} earned ${challenge.points} points for "${challenge.name}"`,
+        evidence: {
+            id: evidence.id,
+            status: evidence.status,
+            reviewedAt: evidence.reviewedAt
+        }
+    });
+});
+
+// Admin: Reject evidence
+app.post('/api/admin/evidence/:id/reject', authenticateAdmin, (req, res) => {
+    const { notes } = req.body;
+    const db = readDatabase();
+    const evidenceId = parseInt(req.params.id);
+    
+    if (!db.pendingEvidence) {
+        return res.status(404).json({ error: 'No evidence found' });
+    }
+    
+    const evidence = db.pendingEvidence.find(e => e.id === evidenceId);
+    if (!evidence) {
+        return res.status(404).json({ error: 'Evidence not found' });
+    }
+    
+    if (evidence.status !== 'pending') {
+        return res.status(400).json({ error: 'Evidence already reviewed' });
+    }
+    
+    // Update evidence status (challenge stays in progress so user can try again)
+    evidence.status = 'rejected';
+    evidence.reviewedAt = new Date().toISOString();
+    evidence.reviewNotes = notes || 'Rejected by admin';
+    // Clear the image data
+    evidence.imageBase64 = '[REJECTED - IMAGE ARCHIVED]';
+    
+    writeDatabase(db);
+    
+    res.json({ 
+        message: `Evidence rejected. User can submit new evidence.`,
+        evidence: {
+            id: evidence.id,
+            status: evidence.status,
+            reviewedAt: evidence.reviewedAt,
+            reviewNotes: evidence.reviewNotes
+        }
+    });
 });
 
 // Get user's challenges
@@ -625,6 +696,46 @@ app.post('/api/teams/leave', authenticateToken, (req, res) => {
     res.json({ message: 'Left team successfully' });
 });
 
+// Add member to team (team leader can add users)
+app.post('/api/teams/:id/add-member', authenticateToken, (req, res) => {
+    const { userId } = req.body;
+    const db = readDatabase();
+    const teamId = parseInt(req.params.id);
+    const requesterId = req.user.userId;
+
+    const requester = db.users.find(u => u.id === requesterId);
+    const team = db.teams.find(t => t.id === teamId);
+    const userToAdd = db.users.find(u => u.id === userId);
+
+    if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+    }
+
+    if (!userToAdd) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if requester is team leader or member of the team
+    if (requester.teamId !== teamId) {
+        return res.status(403).json({ error: 'You must be a team member to add others' });
+    }
+
+    if (userToAdd.teamId) {
+        return res.status(400).json({ error: 'User is already in a team' });
+    }
+
+    // Add user to team
+    userToAdd.teamId = teamId;
+    team.totalPoints = (team.totalPoints || 0) + (userToAdd.points || 0);
+    
+    writeDatabase(db);
+
+    res.json({ 
+        message: `${userToAdd.firstName || userToAdd.username} has been added to ${team.name}!`,
+        team 
+    });
+});
+
 // ============================================
 // LEADERBOARD & STATS
 // ============================================
@@ -667,10 +778,16 @@ app.get('/api/leaderboard/teams', (req, res) => {
 // Get platform stats
 app.get('/api/stats', (req, res) => {
     const db = readDatabase();
-    const totalUsers = db.users.length;
-    const totalCO2Saved = db.users.reduce((sum, u) => sum + u.totalCO2Saved, 0);
-    const totalChallengesCompleted = db.users.reduce((sum, u) => sum + u.completedChallenges.length, 0);
-    const totalTeams = db.teams.length;
+    const totalUsers = db.users.filter(u => u.role !== 'super_admin').length;
+    const totalCO2Saved = db.users.reduce((sum, u) => sum + (u.totalCO2Saved || 0), 0);
+    const totalChallengesCompleted = db.users.reduce((sum, u) => {
+        const completed = u.completedChallenges;
+        if (Array.isArray(completed)) {
+            return sum + completed.length;
+        }
+        return sum + (completed || 0);
+    }, 0);
+    const totalTeams = db.teams ? db.teams.length : 0;
     
     res.json({
         totalUsers,
@@ -791,6 +908,113 @@ app.delete('/api/admin/users/:id', authenticateAdmin, (req, res) => {
     writeDatabase(db);
     
     res.json({ message: 'User deleted!' });
+});
+
+// Admin: Get all teams
+app.get('/api/admin/teams', authenticateAdmin, (req, res) => {
+    const db = readDatabase();
+    const teams = db.teams.map(t => {
+        // Get leader info
+        const leader = db.users.find(u => u.id === t.leaderId);
+        // Get member info
+        const members = t.members.map(memberId => {
+            const user = db.users.find(u => u.id === memberId);
+            return user ? {
+                id: user.id,
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+                username: user.username
+            } : null;
+        }).filter(m => m !== null);
+        
+        return {
+            id: t.id,
+            name: t.name,
+            description: t.description || '',
+            leaderId: t.leaderId,
+            leaderName: leader ? `${leader.firstName || ''} ${leader.lastName || ''}`.trim() : 'Unknown',
+            leaderUsername: leader ? leader.username : 'unknown',
+            members: members,
+            memberCount: members.length,
+            totalPoints: t.totalPoints || 0,
+            createdAt: t.createdAt
+        };
+    });
+    res.json(teams);
+});
+
+// Admin: Update team
+app.put('/api/admin/teams/:id', authenticateAdmin, (req, res) => {
+    const db = readDatabase();
+    const teamId = parseInt(req.params.id);
+    const { name, description } = req.body;
+    
+    const team = db.teams.find(t => t.id === teamId);
+    if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+    }
+    
+    if (name) team.name = name;
+    if (description !== undefined) team.description = description;
+    
+    writeDatabase(db);
+    res.json({ message: 'Team updated!', team });
+});
+
+// Admin: Delete team
+app.delete('/api/admin/teams/:id', authenticateAdmin, (req, res) => {
+    const db = readDatabase();
+    const teamId = parseInt(req.params.id);
+    
+    const teamIndex = db.teams.findIndex(t => t.id === teamId);
+    if (teamIndex === -1) {
+        return res.status(404).json({ error: 'Team not found' });
+    }
+    
+    const team = db.teams[teamIndex];
+    
+    // Remove teamId from all members
+    team.members.forEach(memberId => {
+        const user = db.users.find(u => u.id === memberId);
+        if (user) {
+            user.teamId = null;
+        }
+    });
+    
+    // Remove the team
+    db.teams.splice(teamIndex, 1);
+    writeDatabase(db);
+    
+    res.json({ message: 'Team deleted!' });
+});
+
+// Admin: Remove member from team
+app.post('/api/admin/teams/:id/remove-member', authenticateAdmin, (req, res) => {
+    const db = readDatabase();
+    const teamId = parseInt(req.params.id);
+    const { userId } = req.body;
+    
+    const team = db.teams.find(t => t.id === teamId);
+    if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+    }
+    
+    // Can't remove the leader
+    if (team.leaderId === userId) {
+        return res.status(400).json({ error: 'Cannot remove team leader. Delete the team instead.' });
+    }
+    
+    // Remove member from team
+    team.members = team.members.filter(id => id !== userId);
+    
+    // Update user's teamId
+    const user = db.users.find(u => u.id === userId);
+    if (user) {
+        user.teamId = null;
+    }
+    
+    writeDatabase(db);
+    res.json({ message: 'Member removed from team!' });
 });
 
 // ============================================

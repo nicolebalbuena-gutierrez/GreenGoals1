@@ -63,20 +63,20 @@ function hideMessage() {
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const email = document.getElementById('loginEmail').value;
+    const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
     
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ username, password })
         });
         
         const data = await response.json();
         
         if (response.ok) {
-            showMessage(`🌟 Welcome back, ${data.user.username}!`, 'success');
+            showMessage(` Welcome back, ${data.user.username}!`, 'success');
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             // Redirect to home

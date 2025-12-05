@@ -156,6 +156,278 @@
             border: 2px solid var(--gold);
             box-shadow: 0 4px 20px rgba(212, 168, 83, 0.2);
         }
+        .evidence-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--gold), #e6b95e);
+            color: var(--forest);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .evidence-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(212, 168, 83, 0.4);
+        }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: var(--cream);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--forest);
+            margin-bottom: 8px;
+        }
+        .upload-area {
+            border: 2px dashed var(--sage);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: var(--forest);
+            background: rgba(135, 168, 120, 0.1);
+        }
+        .upload-area.dragover {
+            border-color: var(--forest);
+            background: rgba(135, 168, 120, 0.2);
+        }
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .upload-text {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+        .upload-text strong {
+            color: var(--forest);
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .verification-status {
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .verification-status.pending {
+            background: rgba(212, 168, 83, 0.2);
+            color: var(--text-dark);
+        }
+        .verification-status.approved {
+            background: rgba(135, 168, 120, 0.2);
+            color: var(--forest);
+        }
+        .verification-status.rejected {
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--coral);
+        }
+        .modal-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 12px;
+        }
+        .modal-btn.primary {
+            background: linear-gradient(135deg, var(--forest), #45654f);
+            color: var(--cream);
+        }
+        .modal-btn.primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(87, 117, 96, 0.4);
+        }
+        .modal-btn.primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .modal-btn.secondary {
+            background: var(--sand);
+            color: var(--text-dark);
+        }
+        .modal-btn.secondary:hover {
+            background: #d4c4a8;
+        }
+        .challenge-preview {
+            background: rgba(135, 168, 120, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .challenge-preview-icon {
+            font-size: 2rem;
+        }
+        .challenge-preview-info h4 {
+            color: var(--forest);
+            margin: 0 0 4px 0;
+        }
+        .challenge-preview-info p {
+            color: var(--text-light);
+            margin: 0;
+            font-size: 0.85rem;
+        }
+        /* Admin Controls */
+        .admin-controls {
+            display: none;
+        }
+        .admin-controls.visible {
+            display: block;
+        }
+        .add-challenge-btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--coral), #e88a7a);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .add-challenge-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(224, 122, 95, 0.4);
+        }
+        .admin-badge-card {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(233, 69, 96, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        .card-admin-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--sand);
+        }
+        .edit-btn, .delete-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .edit-btn {
+            background: var(--sand);
+            color: var(--text-dark);
+        }
+        .edit-btn:hover {
+            background: var(--gold);
+        }
+        .delete-btn {
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--coral);
+        }
+        .delete-btn:hover {
+            background: var(--coral);
+            color: white;
+        }
+        .admin-form-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px var(--shadow);
+            border: 2px solid var(--coral);
+        }
+        .admin-form-card h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--forest);
+            margin-bottom: 16px;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--sand);
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--forest);
+        }
+        .form-submit-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--forest), #45654f);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .form-submit-btn:hover {
+            transform: translateY(-2px);
+        }
         .accept-btn:disabled {
             background: var(--sand);
             color: var(--text-light);
@@ -166,9 +438,9 @@
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
-            flex-wrap: wrap;
         }
         .tab-link {
+            flex: 1;
             padding: 12px 24px;
             background: rgba(255,255,255,0.15);
             color: var(--cream);
@@ -177,6 +449,7 @@
             font-weight: 500;
             transition: all 0.3s;
             border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
         }
         .tab-link:hover, .tab-link.active {
             background: var(--gold);
@@ -270,16 +543,69 @@
             <a href="home.html" class="tab-link">Home</a>
             <a href="challenges.html" class="tab-link active">Challenges</a>
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
+            <a href="teams.html" class="tab-link">Teams</a>
             <a href="profile.html" class="tab-link">Profile</a>
         </div>
 
         <!-- In Progress Section -->
         <div id="inProgressSection" style="display: none;">
             <div class="section-header">
-                <h2 class="section-title" style="margin-bottom: 0;">🔄 In Progress</h2>
+                <h2 class="section-title" style="margin-bottom: 0;"> In Progress</h2>
             </div>
-            <p style="color: var(--mint); margin-bottom: 16px; font-size: 0.9rem;">Upload evidence on your Profile page to complete these challenges</p>
+            <p style="color: var(--mint); margin-bottom: 16px; font-size: 0.9rem;">Click "Upload Evidence" to submit proof and complete your challenge!</p>
             <div class="challenges-grid" id="inProgressGrid"></div>
+        </div>
+
+        <!-- Admin: Add Challenge Form (hidden for regular users) -->
+        <div class="admin-controls" id="adminAddChallenge">
+            <div class="admin-form-card">
+                <h3>➕ Add New Challenge</h3>
+                <form id="addChallengeForm">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label>Challenge Name</label>
+                            <input type="text" id="newChallengeName" required placeholder="e.g., Bike to Campus">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="newChallengeCategory" required>
+                                <option value="Reduce">♻️ Reduce</option>
+                                <option value="Nature">🌳 Nature</option>
+                                <option value="Transport">🚲 Transport</option>
+                                <option value="Food">🥗 Food</option>
+                                <option value="Energy">⚡ Energy</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="newChallengeDesc" rows="2" required placeholder="What does the user need to do?"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Points</label>
+                            <input type="number" id="newChallengePoints" required placeholder="50">
+                        </div>
+                        <div class="form-group">
+                            <label>CO₂ Saved (kg)</label>
+                            <input type="number" step="0.1" id="newChallengeCO2" required placeholder="2.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Duration</label>
+                            <input type="text" id="newChallengeDuration" required placeholder="3 days">
+                        </div>
+                        <div class="form-group">
+                            <label>Difficulty</label>
+                            <select id="newChallengeDifficulty" required>
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="form-submit-btn">➕ Add Challenge</button>
+                </form>
+            </div>
         </div>
 
         <!-- Available Challenges Section -->
@@ -303,6 +629,44 @@
         </div>
     </div>
 
+    <!-- Evidence Upload Modal -->
+    <div class="modal-overlay" id="evidenceModal">
+        <div class="modal">
+            <h2>Upload Evidence</h2>
+            <p style="color: var(--text-light); margin-bottom: 16px;" id="evidenceModalDesc">Upload a photo to verify you completed the challenge</p>
+            
+            <input type="hidden" id="evidenceChallengeId">
+            
+            <div class="challenge-preview" id="challengePreview">
+                <span class="challenge-preview-icon" id="previewIcon">🌱</span>
+                <div class="challenge-preview-info">
+                    <h4 id="previewName">Challenge Name</h4>
+                    <p id="previewPoints">0 points · 0kg CO₂</p>
+                </div>
+            </div>
+            
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('evidenceFile').click()">
+                <div class="upload-icon"></div>
+                <p class="upload-text"><strong>Click to upload</strong> or drag and drop</p>
+                <p class="upload-text" style="font-size: 0.8rem; margin-top: 8px;">PNG, JPG up to 10MB</p>
+            </div>
+            
+            <input type="file" id="evidenceFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+            
+            <div id="imagePreview" style="display: none; text-align: center;">
+                <img id="previewImg" class="preview-image" src="" alt="Preview">
+                <button onclick="clearImage()" style="background: none; border: none; color: var(--coral); cursor: pointer; font-size: 0.9rem;">✕ Remove image</button>
+            </div>
+            
+            <div id="verificationStatus" class="verification-status" style="display: none;"></div>
+            
+            <button class="modal-btn primary" id="submitEvidenceBtn" onclick="submitEvidence()" disabled>
+                 Submit for Review
+            </button>
+            <button class="modal-btn secondary" onclick="closeEvidenceModal()">Cancel</button>
+        </div>
+    </div>
+
     <script>
         const API_URL = 'http://localhost:3000/api';
         let allChallenges = [];
@@ -310,7 +674,7 @@
         // Show username
         const user = getCurrentUser();
         if (user) {
-            document.getElementById('userWelcome').textContent = `Hi, ${user.username}! 👋`;
+            document.getElementById('userWelcome').textContent = `Hi, ${user.username}! `;
         }
         
         const categoryIcons = {
@@ -349,15 +713,20 @@
         }
 
         function renderChallenges(challenges) {
+            const userIsAdmin = isAdmin();
+            
             // Separate challenges into in-progress and available
             const inProgressChallenges = challenges.filter(c => userActiveChallenges.includes(c.id));
             const availableChallenges = challenges.filter(c => !userActiveChallenges.includes(c.id) && !userCompletedChallenges.includes(c.id));
             
-            // Render In Progress section
+            // For admin, show ALL challenges (not just available ones)
+            const challengesToShow = userIsAdmin ? challenges : availableChallenges;
+            
+            // Render In Progress section (only for non-admins or show differently)
             const inProgressSection = document.getElementById('inProgressSection');
             const inProgressGrid = document.getElementById('inProgressGrid');
             
-            if (inProgressChallenges.length > 0) {
+            if (!userIsAdmin && inProgressChallenges.length > 0) {
                 inProgressSection.style.display = 'block';
                 inProgressGrid.innerHTML = inProgressChallenges.map(c => `
                     <div class="challenge-card in-progress-card" data-category="${c.category}">
@@ -377,7 +746,7 @@
                                 <span class="points-value">${c.points}</span>
                                 <span class="points-label">points</span>
                             </div>
-                            <a href="profile.html" class="accept-btn" style="text-decoration: none;">📸 Upload Evidence</a>
+                            <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.category}', ${c.points}, ${c.co2Saved})">📸 Upload Evidence</button>
                         </div>
                     </div>
                 `).join('');
@@ -385,12 +754,13 @@
                 inProgressSection.style.display = 'none';
             }
             
-            // Render Available challenges
+            // Render challenges
             const grid = document.getElementById('challengesGrid');
             
-            if (availableChallenges.length > 0) {
-                grid.innerHTML = availableChallenges.map(c => `
+            if (challengesToShow.length > 0) {
+                grid.innerHTML = challengesToShow.map(c => `
                     <div class="challenge-card" data-category="${c.category}">
+                        ${userIsAdmin ? '<span class="admin-badge-card">ADMIN</span>' : ''}
                         <span class="challenge-category cat-${c.category}">${c.category}</span>
                         <div class="challenge-icon">${categoryIcons[c.category] || '🌱'}</div>
                         <h3 class="challenge-name">
@@ -407,8 +777,16 @@
                                 <span class="points-value">${c.points}</span>
                                 <span class="points-label">points</span>
                             </div>
-                            <button class="accept-btn" onclick="acceptChallenge(${c.id})">Accept Challenge</button>
+                            ${userIsAdmin ? '' : `<button class="accept-btn" onclick="acceptChallenge(${c.id})">Accept Challenge</button>`}
                         </div>
+                        ${userIsAdmin ? `
+                        <div class="card-admin-actions">
+                            <button class="edit-btn" onclick="editChallenge(${c.id})">✏️ Edit</button>
+                            <button class="delete-btn" onclick="deleteChallenge(${c.id})">🗑️ Delete</button>
+                        </div>
+                        ` : ''}
+
+
                     </div>
                 `).join('');
             } else {
@@ -457,6 +835,244 @@
                 }
             });
         });
+
+        // ============================================
+        // EVIDENCE UPLOAD FUNCTIONS
+        // ============================================
+        
+        let selectedImageBase64 = null;
+
+        function openEvidenceModal(challengeId, challengeName, category, points, co2Saved) {
+            document.getElementById('evidenceChallengeId').value = challengeId;
+            document.getElementById('evidenceModalDesc').textContent = `Upload a photo showing you completed: "${challengeName}"`;
+            document.getElementById('previewIcon').textContent = categoryIcons[category] || '🌱';
+            document.getElementById('previewName').textContent = challengeName;
+            document.getElementById('previewPoints').textContent = `${points} points · ${co2Saved}kg CO₂`;
+            document.getElementById('evidenceModal').classList.add('active');
+            clearImage();
+        }
+
+        function closeEvidenceModal() {
+            document.getElementById('evidenceModal').classList.remove('active');
+            clearImage();
+            document.getElementById('verificationStatus').style.display = 'none';
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File too large. Please select an image under 10MB.');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result.split(',')[1];
+                    selectedImageBase64 = base64;
+                    
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    document.getElementById('uploadArea').style.display = 'none';
+                    document.getElementById('submitEvidenceBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearImage() {
+            selectedImageBase64 = null;
+            document.getElementById('evidenceFile').value = '';
+            document.getElementById('previewImg').src = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('uploadArea').style.display = 'block';
+            document.getElementById('submitEvidenceBtn').disabled = true;
+        }
+
+        async function submitEvidence() {
+            const challengeId = document.getElementById('evidenceChallengeId').value;
+            const token = getToken();
+            const statusDiv = document.getElementById('verificationStatus');
+            const submitBtn = document.getElementById('submitEvidenceBtn');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Uploading...';
+            statusDiv.className = 'verification-status pending';
+            statusDiv.innerHTML = 'Submitting your evidence...';
+            statusDiv.style.display = 'block';
+
+            try {
+                const res = await fetch(`${API_URL}/challenges/${challengeId}/submit-evidence`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ imageBase64: selectedImageBase64 })
+                });
+                
+                const data = await res.json();
+                
+                if (data.pending) {
+                    // Evidence submitted for admin review
+                    statusDiv.className = 'verification-status approved';
+                    statusDiv.innerHTML = `
+                        <div style="font-size: 2rem; margin-bottom: 8px;"></div>
+                        <strong>${data.message}</strong>
+                        <p style="margin-top: 8px; font-size: 0.9rem;">An admin will review your submission soon.</p>
+                        <p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-light);">You'll receive points once approved!</p>
+                    `;
+                    
+                    // Close modal after 3 seconds
+                    setTimeout(() => {
+                        closeEvidenceModal();
+                        loadChallenges();
+                    }, 3000);
+                } else if (data.error) {
+                    statusDiv.className = 'verification-status rejected';
+                    statusDiv.innerHTML = `
+                        <div style="font-size: 2rem; margin-bottom: 8px;"></div>
+                        <strong>${data.error}</strong>
+                    `;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '📤 Submit for Review';
+                } else {
+                    statusDiv.className = 'verification-status rejected';
+                    statusDiv.innerHTML = `
+                        <div style="font-size: 2rem; margin-bottom: 8px;">❌</div>
+                        <strong>Something went wrong. Please try again.</strong>
+                    `;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = ' Submit for Review';
+                }
+            } catch (error) {
+                statusDiv.className = 'verification-status rejected';
+                statusDiv.innerHTML = '❌ Error connecting to server. Please try again.';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = ' Submit for Review';
+            }
+        }
+
+        // Drag and drop support
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                document.getElementById('evidenceFile').files = e.dataTransfer.files;
+                handleFileSelect({ target: { files: [file] } });
+            }
+        });
+
+        // Close modal on outside click
+        document.getElementById('evidenceModal').addEventListener('click', (e) => {
+            if (e.target.id === 'evidenceModal') {
+                closeEvidenceModal();
+            }
+        });
+
+        // ============================================
+        // ADMIN FUNCTIONS
+        // ============================================
+        
+        // Show admin controls if user is admin
+        if (isAdmin()) {
+            document.getElementById('adminAddChallenge').classList.add('visible');
+        }
+        
+        // Add challenge form
+        document.getElementById('addChallengeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const challenge = {
+                name: document.getElementById('newChallengeName').value,
+                description: document.getElementById('newChallengeDesc').value,
+                category: document.getElementById('newChallengeCategory').value,
+                points: document.getElementById('newChallengePoints').value,
+                co2Saved: document.getElementById('newChallengeCO2').value,
+                duration: document.getElementById('newChallengeDuration').value,
+                difficulty: document.getElementById('newChallengeDifficulty').value
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/admin/challenges`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(challenge)
+                });
+                
+                if (res.ok) {
+                    alert(' Challenge added!');
+                    e.target.reset();
+                    loadChallenges();
+                } else {
+                    const data = await res.json();
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert(' Could not connect to server');
+            }
+        });
+        
+        // Edit challenge
+        function editChallenge(id) {
+            const challenge = allChallenges.find(c => c.id === id);
+            if (!challenge) return;
+            
+            const newName = prompt('Challenge Name:', challenge.name);
+            if (newName === null) return;
+            
+            const newPoints = prompt('Points:', challenge.points);
+            if (newPoints === null) return;
+            
+            const newCO2 = prompt('CO₂ Saved (kg):', challenge.co2Saved);
+            if (newCO2 === null) return;
+            
+            fetch(`${API_URL}/admin/challenges/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: newName,
+                    points: parseInt(newPoints),
+                    co2Saved: parseFloat(newCO2)
+                })
+            }).then(res => {
+                if (res.ok) {
+                    alert(' Challenge updated!');
+                    loadChallenges();
+                }
+            });
+        }
+        
+        // Delete challenge
+        function deleteChallenge(id) {
+            if (!confirm('Delete this challenge? This cannot be undone.')) return;
+            
+            fetch(`${API_URL}/admin/challenges/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            }).then(res => {
+                if (res.ok) {
+                    alert(' Challenge deleted!');
+                    loadChallenges();
+                }
+            });
+        }
 
         loadChallenges();
     </script>

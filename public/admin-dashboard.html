@@ -228,6 +228,142 @@
         .badge-easy { background: #d4edda; color: #155724; }
         .badge-medium { background: #fff3cd; color: #856404; }
         .badge-hard { background: #f8d7da; color: #721c24; }
+        .evidence-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 2px solid #eee;
+            transition: all 0.3s ease;
+        }
+        .evidence-card.pending {
+            border-color: #ffc107;
+        }
+        .evidence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .evidence-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .evidence-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        .evidence-user-info h4 {
+            margin: 0 0 4px 0;
+            color: #1a1a2e;
+        }
+        .evidence-user-info p {
+            margin: 0;
+            color: #888;
+            font-size: 0.85rem;
+        }
+        .evidence-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .evidence-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .evidence-challenge {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .evidence-challenge-icon {
+            font-size: 2rem;
+        }
+        .evidence-challenge-info h5 {
+            margin: 0 0 4px 0;
+            color: #333;
+        }
+        .evidence-challenge-info p {
+            margin: 0;
+            color: #888;
+            font-size: 0.85rem;
+        }
+        .evidence-image-container {
+            margin-bottom: 16px;
+        }
+        .evidence-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .evidence-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn-approve {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        .btn-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        .btn-reject {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #dc3545, #ff6b6b);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        .btn-reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+        .no-evidence {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .no-evidence-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .pending-count {
+            background: #e94560;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
         .modal-overlay {
             display: none;
             position: fixed;
@@ -272,6 +408,10 @@
 
         <!-- Stats -->
         <div class="stat-cards">
+            <div class="stat-card" style="border-color: #ffc107;">
+                <div class="stat-card-value" id="statPending" style="color: #ffc107;">-</div>
+                <div class="stat-card-label">Pending Review</div>
+            </div>
             <div class="stat-card">
                 <div class="stat-card-value" id="statUsers">-</div>
                 <div class="stat-card-label">Users</div>
@@ -292,13 +432,25 @@
 
         <!-- Navigation -->
         <div class="admin-nav">
-            <button class="admin-nav-btn active" data-section="challenges">⚡ Challenges</button>
+            <button class="admin-nav-btn active" data-section="evidence"> Pending Evidence</button>
+            <button class="admin-nav-btn" data-section="challenges">⚡ Challenges</button>
             <button class="admin-nav-btn" data-section="users">👥 Users</button>
             <button class="admin-nav-btn" data-section="database">📊 Database</button>
         </div>
 
+        <!-- Pending Evidence Section -->
+        <div class="admin-section active" id="section-evidence">
+            <div class="admin-card">
+                <h3> Pending Evidence Review</h3>
+                <p style="color: #666; margin-bottom: 20px;">Review user-submitted evidence for challenge completion.</p>
+                <div id="pendingEvidenceList">
+                    <p style="color: #888;">Loading pending submissions...</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Challenges Section -->
-        <div class="admin-section active" id="section-challenges">
+        <div class="admin-section" id="section-challenges">
             <div class="admin-card">
                 <h3>➕ Add New Challenge</h3>
                 <form id="addChallengeForm">
@@ -395,7 +547,7 @@
         <!-- Database Section -->
         <div class="admin-section" id="section-database">
             <div class="admin-card">
-                <h3>🗄️ Raw Database</h3>
+                <h3> Raw Database</h3>
                 <button class="btn-secondary" onclick="loadDatabase()" style="margin-bottom: 16px;">🔄 Refresh</button>
                 <div class="json-preview">
                     <pre id="rawDatabase">Loading...</pre>
@@ -449,7 +601,7 @@
     <!-- Edit Challenge Modal -->
     <div class="modal-overlay" id="editChallengeModal">
         <div class="modal">
-            <h3>✏️ Edit Challenge</h3>
+            <h3>✏ Edit Challenge</h3>
             <form id="editChallengeForm">
                 <input type="hidden" id="editChallengeId">
                 <div class="form-group">
@@ -536,6 +688,13 @@
                 document.getElementById('statChallenges').textContent = stats.totalChallenges;
                 document.getElementById('statTeams').textContent = stats.totalTeams;
                 document.getElementById('statCO2').textContent = stats.totalCO2Saved + 'kg';
+                
+                // Load pending evidence count
+                const evidenceRes = await fetch(`${API_URL}/admin/pending-evidence`, {
+                    headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+                });
+                const evidence = await evidenceRes.json();
+                document.getElementById('statPending').textContent = evidence.length;
             } catch (e) {
                 console.error('Error loading stats');
             }
@@ -592,7 +751,7 @@
                 });
                 
                 if (res.ok) {
-                    alert('✅ Challenge added!');
+                    alert('Challenge added!');
                     e.target.reset();
                     loadChallenges();
                     loadStats();
@@ -601,7 +760,7 @@
                     alert('❌ ' + data.error);
                 }
             } catch (error) {
-                alert('❌ Could not connect to server');
+                alert('Could not connect to server');
             }
         });
 
@@ -647,7 +806,7 @@
             });
 
             if (res.ok) {
-                alert('✅ Challenge updated!');
+                alert('Challenge updated!');
                 closeModal('editChallengeModal');
                 loadChallenges();
             }
@@ -663,7 +822,7 @@
             });
             
             if (res.ok) {
-                alert('✅ Challenge deleted!');
+                alert('Challenge deleted!');
                 loadChallenges();
                 loadStats();
             }
@@ -741,7 +900,7 @@
             });
 
             if (res.ok) {
-                alert('✅ User updated!');
+                alert('User updated!');
                 closeModal('editUserModal');
                 loadUsers();
             }
@@ -757,7 +916,7 @@
             });
             
             if (res.ok) {
-                alert('✅ User deleted!');
+                alert('User deleted!');
                 loadUsers();
                 loadStats();
             }
@@ -788,8 +947,147 @@
             });
         });
 
+        // Load pending evidence
+        async function loadPendingEvidence() {
+            try {
+                const res = await fetch(`${API_URL}/admin/pending-evidence`, {
+                    headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+                });
+                const evidence = await res.json();
+                
+                const container = document.getElementById('pendingEvidenceList');
+                
+                if (evidence.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-evidence">
+                            <div class="no-evidence-icon"></div>
+                            <p>No pending evidence to review!</p>
+                            <p style="font-size: 0.85rem;">All submissions have been processed.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const categoryIcons = {
+                    'Reduce': '♻️',
+                    'Nature': '🌳',
+                    'Transport': '🚲',
+                    'Food': '🥗',
+                    'Energy': '⚡'
+                };
+                
+                container.innerHTML = evidence.map(e => `
+                    <div class="evidence-card pending" id="evidence-${e.id}">
+                        <div class="evidence-header">
+                            <div class="evidence-user">
+                                <div class="evidence-avatar">${(e.firstName || e.username).charAt(0).toUpperCase()}</div>
+                                <div class="evidence-user-info">
+                                    <h4>${e.firstName || ''} ${e.lastName || ''}</h4>
+                                    <p>@${e.username} · Submitted ${new Date(e.submittedAt).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <span class="evidence-badge pending"> Pending Review</span>
+                        </div>
+                        
+                        <div class="evidence-challenge">
+                            <span class="evidence-challenge-icon">${categoryIcons[e.challengeCategory] || '🌱'}</span>
+                            <div class="evidence-challenge-info">
+                                <h5>${e.challengeName}</h5>
+                                <p>${e.challengePoints} points · ${e.challengeCO2}kg CO₂</p>
+                            </div>
+                        </div>
+                        
+                        <div class="evidence-image-container">
+                            <img src="data:image/jpeg;base64,${e.imageBase64}" class="evidence-image" alt="Evidence photo">
+                        </div>
+                        
+                        <div class="evidence-actions">
+                            <button class="btn-approve" onclick="approveEvidence(${e.id}, '${e.firstName || e.username}', '${e.challengeName}')">
+                                ✓ Approve
+                            </button>
+                            <button class="btn-reject" onclick="rejectEvidence(${e.id})">
+                                ✕ Reject
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (e) {
+                console.error('Error loading evidence:', e);
+                document.getElementById('pendingEvidenceList').innerHTML = `
+                    <p style="color: #dc3545;">Error loading pending evidence. Make sure you're logged in as admin.</p>
+                `;
+            }
+        }
+        
+        async function approveEvidence(id, userName, challengeName) {
+            if (!confirm(`Approve ${userName}'s submission for "${challengeName}"?`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/evidence/${id}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getAdminToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ notes: 'Approved by admin' })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert(' ' + data.message);
+                    // Remove the card with animation
+                    const card = document.getElementById(`evidence-${id}`);
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(100px)';
+                    setTimeout(() => {
+                        loadPendingEvidence();
+                        loadStats();
+                    }, 300);
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (e) {
+                alert('❌ Error approving evidence');
+            }
+        }
+        
+        async function rejectEvidence(id) {
+            const reason = prompt('Reason for rejection (optional):');
+            if (reason === null) return; // User cancelled
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/evidence/${id}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getAdminToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ notes: reason || 'Rejected by admin' })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('Evidence rejected. User can submit new evidence.');
+                    const card = document.getElementById(`evidence-${id}`);
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(-100px)';
+                    setTimeout(() => {
+                        loadPendingEvidence();
+                    }, 300);
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (e) {
+                alert('❌ Error rejecting evidence');
+            }
+        }
+
         // Initial load
         loadStats();
+        loadPendingEvidence();
         loadChallenges();
         loadUsers();
         loadDatabase();

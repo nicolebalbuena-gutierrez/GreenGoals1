@@ -49,7 +49,7 @@
     <div class="container">
         <header class="header">
             <div class="logo">
-                <span class="logo-icon">🔐</span>
+                <span class="logo-icon"></span>
                 <h1>GreenGoals</h1>
             </div>
             <span class="admin-badge">Admin Portal</span>
@@ -66,11 +66,11 @@
                 <div class="form-group">
                     <label for="adminPassword">Password</label>
                     <input type="password" id="adminPassword" placeholder="••••••••" required>
-                    <span class="input-icon">🔒</span>
+                    <span class="input-icon"></span>
                 </div>
                 <button type="submit" class="submit-btn">
                     <span>Admin Login</span>
-                    <span class="btn-icon">🔐</span>
+                    <span class="btn-icon"></span>
                 </button>
             </form>
             <div id="message" class="message"></div>
@@ -105,7 +105,7 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    messageDiv.textContent = '✅ Login successful! Redirecting...';
+                    messageDiv.textContent = 'Login successful! Redirecting...';
                     messageDiv.className = 'message success';
                     localStorage.setItem('adminToken', data.token);
                     localStorage.setItem('admin', JSON.stringify(data.admin));
@@ -117,12 +117,13 @@
                     messageDiv.className = 'message error';
                 }
             } catch (error) {
-                messageDiv.textContent = '❌ Could not connect to server. Run: npm start';
+                messageDiv.textContent = 'Could not connect to server. Run: npm start';
                 messageDiv.className = 'message error';
             }
         });
     </script>
 </body>
 </html>
+
 
 
