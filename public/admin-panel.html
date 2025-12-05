@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="auth-check.js"></script>
+    <style>
+        .admin-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .admin-nav-btn {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .admin-nav-btn:hover, .admin-nav-btn.active {
+            background: var(--coral);
+            color: white;
+            border-color: var(--coral);
+        }
+        .admin-section {
+            display: none;
+        }
+        .admin-section.active {
+            display: block;
+        }
+        .admin-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 15px 50px var(--shadow);
+        }
+        .admin-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--forest);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--sand);
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            background: white;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--forest);
+        }
+        .btn-primary {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--forest), #45654f);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(87, 117, 96, 0.4);
+        }
+        .btn-secondary {
+            padding: 8px 16px;
+            background: var(--sand);
+            color: var(--text-dark);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover {
+            background: #d4c4a8;
+        }
+        .btn-danger {
+            padding: 8px 16px;
+            background: var(--coral);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-danger:hover {
+            background: #d35f47;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--sand);
+        }
+        .data-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        .data-table tr:hover td {
+            background: rgba(135, 168, 120, 0.1);
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--cream);
+        }
+        .stat-card-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-easy { background: #d4edda; color: #155724; }
+        .badge-medium { background: #fff3cd; color: #856404; }
+        .badge-hard { background: #f8d7da; color: #721c24; }
+        
+        /* Evidence styles */
+        .evidence-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 2px solid var(--sand);
+            transition: all 0.3s ease;
+        }
+        .evidence-card.pending {
+            border-color: var(--gold);
+        }
+        .evidence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .evidence-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .evidence-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--forest), var(--sage));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        .evidence-user-info h4 {
+            margin: 0 0 4px 0;
+            color: var(--text-dark);
+        }
+        .evidence-user-info p {
+            margin: 0;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        .evidence-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .evidence-badge.pending {
+            background: rgba(212, 168, 83, 0.2);
+            color: #856404;
+        }
+        .evidence-challenge {
+            background: var(--sand);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .evidence-challenge-icon {
+            font-size: 2rem;
+        }
+        .evidence-challenge-info h5 {
+            margin: 0 0 4px 0;
+            color: var(--text-dark);
+        }
+        .evidence-challenge-info p {
+            margin: 0;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        .evidence-image-container {
+            margin-bottom: 16px;
+        }
+        .evidence-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+        .evidence-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn-approve {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--sage), #a8c99a);
+            color: var(--forest);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        .btn-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(135, 168, 120, 0.4);
+        }
+        .btn-reject {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--coral), #e88a7a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        .btn-reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(224, 122, 95, 0.4);
+        }
+        .no-evidence {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        .no-evidence-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .access-denied-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 0;
+        }
+        .tab-link {
+            flex: 1;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        .tab-link:hover, .tab-link.active {
+            background: var(--gold);
+            color: var(--forest);
+        }
+        .admin-badge {
+            background: linear-gradient(135deg, var(--coral), #e88a7a);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+    </div>
+
+    <div class="container dashboard-container">
+        <!-- Access Denied (shown if not admin) -->
+        <div id="accessDenied" class="access-denied" style="display: none;">
+            <div class="access-denied-icon"></div>
+            <h2 style="color: var(--cream); margin-bottom: 12px;">Admin Access Required</h2>
+            <p style="color: var(--mint); margin-bottom: 24px;">You don't have permission to view this page.</p>
+            <a href="home.html" class="btn-primary" style="text-decoration: none;">← Back to Home</a>
+        </div>
+
+        <!-- Admin Content (shown if admin) -->
+        <div id="adminContent" style="display: none;">
+            <div class="dashboard-header">
+                <div class="logo">
+                    <span class="logo-icon"></span>
+                    <h1>Admin Panel</h1>
+                    <span class="admin-badge">Admin</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <!-- Navigation -->
+            <div class="tab-bar">
+                <a href="home.html" class="tab-link">Home</a>
+                <a href="challenges.html" class="tab-link">Challenges</a>
+                <a href="leaderboard.html" class="tab-link">Leaderboard</a>
+                <a href="teams.html" class="tab-link">Teams</a>
+                <a href="profile.html" class="tab-link">Profile</a>
+                <a href="admin-panel.html" class="tab-link active" style="background: rgba(233, 69, 96, 0.3); border-color: rgba(233, 69, 96, 0.5);"> Admin</a>
+            </div>
+
+            <!-- Stats -->
+            <div class="stat-cards">
+                <div class="stat-card" style="border-color: var(--gold);">
+                    <div class="stat-card-value" id="statPending" style="color: var(--gold);">-</div>
+                    <div class="stat-card-label">Pending Review</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="statUsers">-</div>
+                    <div class="stat-card-label">Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="statTeams">-</div>
+                    <div class="stat-card-label">Teams</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="statChallenges">-</div>
+                    <div class="stat-card-label">Challenges</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="statCO2">-</div>
+                    <div class="stat-card-label">CO₂ Saved</div>
+                </div>
+            </div>
+
+            <!-- Admin Sub-Navigation -->
+            <div class="admin-nav">
+                <button class="admin-nav-btn active" data-section="evidence">Evidence Review</button>
+                <button class="admin-nav-btn" data-section="challenges">Manage Challenges</button>
+                <button class="admin-nav-btn" data-section="users">Manage Users</button>
+                <button class="admin-nav-btn" data-section="teams">Manage Teams</button>
+            </div>
+
+            <!-- Evidence Section -->
+            <div class="admin-section active" id="section-evidence">
+                <div class="admin-card">
+                    <h3> Pending Evidence</h3>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">Review user submissions and approve or reject them.</p>
+                    <div id="pendingEvidenceList">
+                        <p style="color: var(--text-light);">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Challenges Section -->
+            <div class="admin-section" id="section-challenges">
+                <div class="admin-card">
+                    <h3>➕ Add New Challenge</h3>
+                    <form id="addChallengeForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Challenge Name</label>
+                                <input type="text" id="challengeName" required placeholder="e.g., Meatless Monday">
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="challengeCategory" required>
+                                    <option value="Reduce">♻️ Reduce</option>
+                                    <option value="Nature">🌳 Nature</option>
+                                    <option value="Transport">🚲 Transport</option>
+                                    <option value="Food">🥗 Food</option>
+                                    <option value="Energy">⚡ Energy</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="challengeDescription" rows="2" required placeholder="Describe what the user needs to do..."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Points</label>
+                                <input type="number" id="challengePoints" required placeholder="50">
+                            </div>
+                            <div class="form-group">
+                                <label>CO₂ Saved (kg)</label>
+                                <input type="number" step="0.1" id="challengeCO2" required placeholder="2.5">
+                            </div>
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <input type="text" id="challengeDuration" required placeholder="3 days">
+                            </div>
+                            <div class="form-group">
+                                <label>Difficulty</label>
+                                <select id="challengeDifficulty" required>
+                                    <option value="Easy">Easy</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Hard">Hard</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Challenge</button>
+                    </form>
+                </div>
+
+                <div class="admin-card">
+                    <h3>All Challenges</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Points</th>
+                                    <th>CO₂</th>
+                                    <th>Difficulty</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="challengesTableBody">
+                                <tr><td colspan="6">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div class="admin-section" id="section-users">
+                <div class="admin-card">
+                    <h3>All Users</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Class</th>
+                                    <th>Points</th>
+                                    <th>Challenges</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr><td colspan="6">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teams Section -->
+            <div class="admin-section" id="section-teams">
+                <div class="admin-card">
+                    <h3>All Teams</h3>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">View and manage all teams in the system.</p>
+                    <div id="teamsContainer">
+                        <p style="color: var(--text-light);">Loading teams...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        // Check if user is admin
+        const user = getCurrentUser();
+        if (!user || !user.isAdmin) {
+            document.getElementById('accessDenied').style.display = 'block';
+        } else {
+            document.getElementById('adminContent').style.display = 'block';
+            initAdmin();
+        }
+
+        function initAdmin() {
+            // Admin sub-navigation
+            document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(`section-${btn.dataset.section}`).classList.add('active');
+                });
+            });
+
+            // Load data
+            loadStats();
+            loadPendingEvidence();
+            loadChallenges();
+            loadUsers();
+            loadTeams();
+        }
+
+        const categoryIcons = {
+            'Reduce': '♻️',
+            'Nature': '🌳',
+            'Transport': '🚲',
+            'Food': '🥗',
+            'Energy': '⚡'
+        };
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/stats`);
+                const stats = await res.json();
+                document.getElementById('statUsers').textContent = stats.totalUsers;
+                document.getElementById('statChallenges').textContent = stats.totalChallengesCompleted;
+                document.getElementById('statCO2').textContent = stats.totalCO2Saved + 'kg';
+                
+                // Load pending count
+                const evidenceRes = await fetch(`${API_URL}/admin/pending-evidence`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const evidence = await evidenceRes.json();
+                document.getElementById('statPending').textContent = evidence.length || 0;
+                
+                // Load teams count
+                const teamsRes = await fetch(`${API_URL}/teams`);
+                const teams = await teamsRes.json();
+                document.getElementById('statTeams').textContent = teams.length || 0;
+            } catch (e) {
+                console.error('Error loading stats');
+            }
+        }
+
+        // Load pending evidence
+        async function loadPendingEvidence() {
+            try {
+                const res = await fetch(`${API_URL}/admin/pending-evidence`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const evidence = await res.json();
+                
+                const container = document.getElementById('pendingEvidenceList');
+                
+                if (!evidence.length) {
+                    container.innerHTML = `
+                        <div class="no-evidence">
+                            <div class="no-evidence-icon"></div>
+                            <p>No pending evidence to review!</p>
+                            <p style="font-size: 0.85rem;">All submissions have been processed.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = evidence.map(e => `
+                    <div class="evidence-card pending" id="evidence-${e.id}">
+                        <div class="evidence-header">
+                            <div class="evidence-user">
+                                <div class="evidence-avatar">${(e.firstName || e.username).charAt(0).toUpperCase()}</div>
+                                <div class="evidence-user-info">
+                                    <h4>${e.firstName || ''} ${e.lastName || ''}</h4>
+                                    <p>@${e.username} · ${new Date(e.submittedAt).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <span class="evidence-badge pending">⏳ Pending</span>
+                        </div>
+                        
+                        <div class="evidence-challenge">
+                            <span class="evidence-challenge-icon">${categoryIcons[e.challengeCategory] || '🌱'}</span>
+                            <div class="evidence-challenge-info">
+                                <h5>${e.challengeName}</h5>
+                                <p>${e.challengePoints} points · ${e.challengeCO2}kg CO₂</p>
+                            </div>
+                        </div>
+                        
+                        <div class="evidence-image-container">
+                            <img src="data:image/jpeg;base64,${e.imageBase64}" class="evidence-image" alt="Evidence">
+                        </div>
+                        
+                        <div class="evidence-actions">
+                            <button class="btn-approve" onclick="approveEvidence(${e.id}, '${e.firstName || e.username}', '${e.challengeName}')">✓ Approve</button>
+                            <button class="btn-reject" onclick="rejectEvidence(${e.id})">✕ Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading evidence:', e);
+            }
+        }
+        
+        async function approveEvidence(id, userName, challengeName) {
+            if (!confirm(`Approve ${userName}'s submission for "${challengeName}"?`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/evidence/${id}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ notes: 'Approved' })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    alert('✅ ' + data.message);
+                    loadPendingEvidence();
+                    loadStats();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (e) {
+                alert('❌ Error approving evidence');
+            }
+        }
+        
+        async function rejectEvidence(id) {
+            const reason = prompt('Reason for rejection (optional):');
+            if (reason === null) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/evidence/${id}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ notes: reason || 'Rejected' })
+                });
+                
+                if (res.ok) {
+                    alert('Evidence rejected.');
+                    loadPendingEvidence();
+                }
+            } catch (e) {
+                alert('❌ Error rejecting evidence');
+            }
+        }
+
+        // Load challenges
+        async function loadChallenges() {
+            try {
+                const res = await fetch(`${API_URL}/challenges`);
+                const challenges = await res.json();
+                
+                document.getElementById('challengesTableBody').innerHTML = challenges.map(c => `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td>${categoryIcons[c.category] || ''} ${c.category}</td>
+                        <td>${c.points}</td>
+                        <td>${c.co2Saved}kg</td>
+                        <td><span class="badge badge-${c.difficulty.toLowerCase()}">${c.difficulty}</span></td>
+                        <td class="actions">
+                            <button class="btn-danger" onclick="deleteChallenge(${c.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading challenges');
+            }
+        }
+
+        // Add challenge
+        document.getElementById('addChallengeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const challenge = {
+                name: document.getElementById('challengeName').value,
+                description: document.getElementById('challengeDescription').value,
+                category: document.getElementById('challengeCategory').value,
+                points: document.getElementById('challengePoints').value,
+                co2Saved: document.getElementById('challengeCO2').value,
+                duration: document.getElementById('challengeDuration').value,
+                difficulty: document.getElementById('challengeDifficulty').value
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/admin/challenges`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(challenge)
+                });
+                
+                if (res.ok) {
+                    alert('✅ Challenge added!');
+                    e.target.reset();
+                    loadChallenges();
+                    loadStats();
+                } else {
+                    const data = await res.json();
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        });
+
+        // Delete challenge
+        async function deleteChallenge(id) {
+            if (!confirm('Delete this challenge?')) return;
+            
+            const res = await fetch(`${API_URL}/admin/challenges/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            
+            if (res.ok) {
+                alert('✅ Challenge deleted!');
+                loadChallenges();
+            }
+        }
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_URL}/admin/users`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const users = await res.json();
+                
+                document.getElementById('usersTableBody').innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.firstName} ${u.lastName}</td>
+                        <td>@${u.username}</td>
+                        <td>${u.classYear || '-'}</td>
+                        <td>${u.points}</td>
+                        <td>${u.completedChallenges || 0}</td>
+                        <td class="actions">
+                            ${u.role !== 'super_admin' ? `<button class="btn-danger" onclick="deleteUser(${u.id})">Delete</button>` : '<span style="color: var(--text-light);">Admin</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading users');
+            }
+        }
+
+        // Delete user
+        async function deleteUser(id) {
+            if (!confirm('Delete this user? This cannot be undone.')) return;
+            
+            const res = await fetch(`${API_URL}/admin/users/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            
+            if (res.ok) {
+                alert('User deleted!');
+                loadUsers();
+                loadStats();
+            }
+        }
+
+        // Load teams
+        async function loadTeams() {
+            try {
+                const res = await fetch(`${API_URL}/admin/teams`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const teams = await res.json();
+                
+                const container = document.getElementById('teamsContainer');
+                
+                if (!teams.length) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                            <p style="font-size: 2rem; margin-bottom: 12px;">No teams yet</p>
+                            <p>Users haven't created any teams.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = teams.map(team => `
+                    <div class="team-admin-card" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid var(--sand);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div>
+                                <h4 style="margin: 0 0 4px 0; color: var(--forest); font-size: 1.2rem;" id="team-name-${team.id}">${team.name}</h4>
+                                <p style="margin: 0; color: var(--text-light); font-size: 0.85rem;">
+                                    Leader: ${team.leaderName} (@${team.leaderUsername})
+                                </p>
+                                <p style="margin: 4px 0 0 0; color: var(--text-light); font-size: 0.85rem;">
+                                    ${team.memberCount} members · ${team.totalPoints} points
+                                </p>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-secondary" onclick="editTeam(${team.id}, '${team.name.replace(/'/g, "\\'")}', '${(team.description || '').replace(/'/g, "\\'")}')">Edit</button>
+                                <button class="btn-danger" onclick="deleteTeam(${team.id}, '${team.name.replace(/'/g, "\\'")}')">Delete</button>
+                            </div>
+                        </div>
+                        
+                        <div style="background: var(--sand); border-radius: 12px; padding: 14px;">
+                            <p style="margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; color: var(--text-light); font-weight: 600;">Team Members</p>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${team.members.map(m => `
+                                    <div style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                                        <span>${m.firstName} ${m.lastName}</span>
+                                        ${m.id !== team.leaderId ? `
+                                            <button onclick="removeMember(${team.id}, ${m.id}, '${m.firstName}')" style="background: var(--coral); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; cursor: pointer; line-height: 1;">×</button>
+                                        ` : '<span style="font-size: 0.7rem; color: var(--sage);">(Leader)</span>'}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading teams:', e);
+                document.getElementById('teamsContainer').innerHTML = '<p style="color: var(--coral);">Error loading teams.</p>';
+            }
+        }
+
+        // Edit team
+        async function editTeam(id, currentName, currentDescription) {
+            const newName = prompt('Team Name:', currentName);
+            if (newName === null) return;
+            
+            const newDescription = prompt('Team Description:', currentDescription);
+            if (newDescription === null) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/teams/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: newName, description: newDescription })
+                });
+                
+                if (res.ok) {
+                    alert('Team updated!');
+                    loadTeams();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error updating team');
+            }
+        }
+
+        // Delete team
+        async function deleteTeam(id, teamName) {
+            if (!confirm(`Delete team "${teamName}"? All members will be removed from this team.`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/teams/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                
+                if (res.ok) {
+                    alert('Team deleted!');
+                    loadTeams();
+                    loadStats();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error deleting team');
+            }
+        }
+
+        // Remove member from team
+        async function removeMember(teamId, userId, memberName) {
+            if (!confirm(`Remove ${memberName} from this team?`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/teams/${teamId}/remove-member`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId })
+                });
+                
+                if (res.ok) {
+                    alert('Member removed!');
+                    loadTeams();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error removing member');
+            }
+        }
+    </script>
+</body>
+</html>
+

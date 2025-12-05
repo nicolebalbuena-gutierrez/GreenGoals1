@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - Teams</title>
+    <link rel="pentonnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="auth-check.js"></script>
+    <style>
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .tab-link {
+            flex: 1;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        .tab-link:hover, .tab-link.active {
+            background: var(--gold);
+            color: var(--forest);
+        }
+        .teams-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 800px) {
+            .teams-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        .team-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 40px var(--shadow);
+        }
+        .team-card h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--forest);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .my-team-banner {
+            background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+            border-radius: 20px;
+            padding: 32px;
+            color: var(--cream);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .my-team-banner::before {
+            content: '👥';
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 6rem;
+            opacity: 0.2;
+        }
+        .my-team-banner h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        .my-team-banner p {
+            opacity: 0.9;
+            margin-bottom: 16px;
+        }
+        .team-stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+        }
+        .team-stat {
+            text-align: center;
+        }
+        .team-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .team-stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--sand);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--forest);
+        }
+        .btn-primary {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--forest), #45654f);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(87, 117, 96, 0.4);
+        }
+        .btn-danger {
+            padding: 12px 24px;
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--coral);
+            border: 1px solid var(--coral);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-danger:hover {
+            background: var(--coral);
+            color: white;
+        }
+        .btn-join {
+            padding: 10px 20px;
+            background: var(--gold);
+            color: var(--forest);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-join:hover {
+            transform: scale(1.05);
+        }
+        .available-team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--sand);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .available-team:last-child {
+            margin-bottom: 0;
+        }
+        .team-info h4 {
+            color: var(--text-dark);
+            margin: 0 0 4px 0;
+        }
+        .team-info p {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        .team-members {
+            margin-top: 16px;
+        }
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--sand);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--sage);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .member-info h5 {
+            margin: 0 0 2px 0;
+            color: var(--text-dark);
+        }
+        .member-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        .leader-badge {
+            background: var(--gold);
+            color: var(--forest);
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+        .no-team-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        .no-team-message h3 {
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+        .invite-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--sand);
+        }
+        .invite-code {
+            background: var(--sand);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .invite-code-value {
+            font-family: monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--forest);
+            letter-spacing: 2px;
+        }
+        .invite-code-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+        .copy-btn {
+            padding: 10px 20px;
+            background: var(--forest);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            width: 100%;
+        }
+        .copy-btn:hover {
+            opacity: 0.9;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--sand);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--forest);
+        }
+        .user-to-add {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--sand);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .user-to-add:last-child {
+            margin-bottom: 0;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--sage);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .user-details {
+            flex: 1;
+        }
+        .user-details h5 {
+            margin: 0 0 2px 0;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+        .user-details p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        .btn-add {
+            padding: 8px 16px;
+            background: var(--forest);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-add:hover {
+            background: #45654f;
+        }
+        .no-users-message {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light);
+        }
+        .autocomplete-container {
+            position: relative;
+        }
+        .autocomplete-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--sand);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .autocomplete-input:focus {
+            outline: none;
+            border-color: var(--forest);
+        }
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--forest);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--sand);
+        }
+        .autocomplete-item:last-child {
+            border-bottom: none;
+            border-radius: 0 0 10px 10px;
+        }
+        .autocomplete-item:hover {
+            background: var(--mint);
+        }
+        .autocomplete-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--sage);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .autocomplete-info {
+            flex: 1;
+        }
+        .autocomplete-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+        .autocomplete-username {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        .autocomplete-add {
+            color: var(--forest);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .no-results {
+            padding: 16px;
+            text-align: center;
+            color: var(--text-light);
+        }
+        .success-message {
+            background: rgba(135, 168, 120, 0.2);
+            color: var(--forest);
+            padding: 12px 16px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--cream);
+            border: 1px solid rgba(224, 122, 95, 0.5);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: var(--coral);
+            color: white;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-welcome {
+            color: var(--mint);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+    </div>
+
+    <div class="container dashboard-container">
+        <div class="dashboard-header">
+            <div class="logo">
+                <span class="logo-icon">👥</span>
+                <h1>Teams</h1>
+            </div>
+            <div class="header-right">
+                <span class="user-welcome" id="userWelcome"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="tab-bar">
+            <a href="home.html" class="tab-link">Home</a>
+            <a href="challenges.html" class="tab-link">Challenges</a>
+            <a href="leaderboard.html" class="tab-link">Leaderboard</a>
+            <a href="teams.html" class="tab-link active">Teams</a>
+            <a href="profile.html" class="tab-link">Profile</a>
+        </div>
+
+        <!-- My Team Section (shown when user has a team) -->
+        <div id="myTeamSection" style="display: none;">
+            <div class="my-team-banner">
+                <h2 id="myTeamName">My Team</h2>
+                <p id="myTeamDescription">Team description here</p>
+                <div class="team-stats">
+                    <div class="team-stat">
+                        <div class="team-stat-value" id="myTeamPoints">0</div>
+                        <div class="team-stat-label">Team Points</div>
+                    </div>
+                    <div class="team-stat">
+                        <div class="team-stat-value" id="myTeamMembers">0</div>
+                        <div class="team-stat-label">Members</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="teams-layout">
+                <!-- Team Members -->
+                <div class="team-card">
+                    <h3>Team Members</h3>
+                    <div id="teamMembersList">
+                        <p style="color: var(--text-light);">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Add Members -->
+                <div class="team-card">
+                    <h3>Add Team Members</h3>
+                    <p style="color: var(--text-light); margin-bottom: 16px;">Search for GreenGoals users to add to your team:</p>
+                    
+                    <div class="autocomplete-container">
+                        <input type="text" id="searchUsers" class="autocomplete-input" placeholder="Type a name or username..." autocomplete="off">
+                        <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                    </div>
+                    
+                    <div id="addedMessage" style="margin-top: 12px; display: none;"></div>
+                    
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--sand);">
+                        <p style="color: var(--text-light); font-size: 0.85rem; margin-bottom: 12px;">Or share your team name "<strong id="shareTeamName"></strong>" so friends can join!</p>
+                        <button class="btn-danger" onclick="leaveTeam()">Leave Team</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Team Section (shown when user has no team) -->
+        <div id="noTeamSection" style="display: none;">
+            <div class="teams-layout">
+                <!-- Create Team -->
+                <div class="team-card">
+                    <h3>Create a Team</h3>
+                    <form id="createTeamForm">
+                        <div class="form-group">
+                            <label>Team Name</label>
+                            <input type="text" id="teamName" required placeholder="e.g., Green Warriors">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="teamDescription" rows="3" placeholder="What's your team about?"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Create Team</button>
+                    </form>
+                </div>
+
+                <!-- Join Team -->
+                <div class="team-card">
+                    <h3>Join a Team</h3>
+                    <p style="color: var(--text-light); margin-bottom: 16px;">Browse available teams and join one!</p>
+                    <div id="availableTeams">
+                        <p style="color: var(--text-light);">Loading teams...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let currentUser = null;
+        let allUsers = [];
+
+        // Show username
+        const user = getCurrentUser();
+        if (user) {
+            document.getElementById('userWelcome').textContent = `Hi, ${user.username}!`;
+        }
+
+        async function loadTeamsPage() {
+            try {
+                // Get current user's full data
+                const userRes = await fetch(`${API_URL}/user/${user.id}`);
+                currentUser = await userRes.json();
+                
+                // Get all users for member lists
+                const usersRes = await fetch(`${API_URL}/users`);
+                allUsers = await usersRes.json();
+                
+                if (currentUser.teamId) {
+                    // User has a team - show my team section
+                    document.getElementById('myTeamSection').style.display = 'block';
+                    document.getElementById('noTeamSection').style.display = 'none';
+                    loadMyTeam();
+                } else {
+                    // User has no team - show join/create section
+                    document.getElementById('myTeamSection').style.display = 'none';
+                    document.getElementById('noTeamSection').style.display = 'block';
+                    loadAvailableTeams();
+                }
+            } catch (error) {
+                console.error('Error loading teams:', error);
+            }
+        }
+
+        async function loadMyTeam() {
+            try {
+                const teamsRes = await fetch(`${API_URL}/teams`);
+                const teams = await teamsRes.json();
+                const myTeam = teams.find(t => t.id === currentUser.teamId);
+                
+                if (myTeam) {
+                    document.getElementById('myTeamName').textContent = myTeam.name;
+                    document.getElementById('myTeamDescription').textContent = myTeam.description || 'No description';
+                    document.getElementById('myTeamPoints').textContent = myTeam.totalPoints || 0;
+                    document.getElementById('myTeamMembers').textContent = myTeam.memberCount || 0;
+                    document.getElementById('inviteTeamName').textContent = myTeam.name;
+                    
+                    // Load team members
+                    const teamMembers = allUsers.filter(u => u.teamId === myTeam.id);
+                    const membersList = document.getElementById('teamMembersList');
+                    
+                    if (teamMembers.length > 0) {
+                        membersList.innerHTML = teamMembers.map(m => `
+                            <div class="member-item">
+                                <div class="member-avatar">${(m.firstName || m.username).charAt(0).toUpperCase()}</div>
+                                <div class="member-info">
+                                    <h5>${m.firstName || ''} ${m.lastName || ''}</h5>
+                                    <p>@${m.username} · ${m.points} pts</p>
+                                </div>
+                                ${m.id === myTeam.leaderId ? '<span class="leader-badge">Leader</span>' : ''}
+                            </div>
+                        `).join('');
+                    } else {
+                        membersList.innerHTML = '<p style="color: var(--text-light);">No members yet</p>';
+                    }
+                    
+                    // Load users that can be added
+                    loadAvailableUsersToAdd();
+                }
+            } catch (error) {
+                console.error('Error loading team:', error);
+            }
+        }
+
+        async function loadAvailableTeams() {
+            try {
+                const res = await fetch(`${API_URL}/teams`);
+                const teams = await res.json();
+                
+                const container = document.getElementById('availableTeams');
+                
+                if (teams.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-team-message">
+                            <h3>No teams yet!</h3>
+                            <p>Be the first to create a team.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = teams.map(t => `
+                    <div class="available-team">
+                        <div class="team-info">
+                            <h4>${t.name}</h4>
+                            <p>${t.memberCount || 0} members · ${t.totalPoints || 0} pts</p>
+                        </div>
+                        <button class="btn-join" onclick="joinTeam(${t.id})">Join</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading teams:', error);
+                document.getElementById('availableTeams').innerHTML = '<p style="color: var(--coral);">Error loading teams</p>';
+            }
+        }
+
+        // Create team
+        document.getElementById('createTeamForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('teamName').value;
+            const description = document.getElementById('teamDescription').value;
+            
+            try {
+                const res = await fetch(`${API_URL}/teams`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('🎉 Team created! You are now the team leader.');
+                    loadTeamsPage();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        });
+
+        // Join team
+        async function joinTeam(teamId) {
+            try {
+                const res = await fetch(`${API_URL}/teams/${teamId}/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('🎉 ' + data.message);
+                    loadTeamsPage();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        }
+
+        // Leave team
+        async function leaveTeam() {
+            if (!confirm('Are you sure you want to leave this team?')) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/teams/leave`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('You have left the team.');
+                    loadTeamsPage();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        }
+
+        // Autocomplete for adding team members
+        let usersWithoutTeam = [];
+        const searchInput = document.getElementById('searchUsers');
+        const dropdown = document.getElementById('autocompleteDropdown');
+        
+        function loadAvailableUsersToAdd() {
+            // Filter users who are not in any team and not admin
+            usersWithoutTeam = allUsers.filter(u => 
+                (u.teamId === null || u.teamId === undefined || !u.teamId) && 
+                u.role !== 'super_admin' && 
+                u.id !== currentUser.id
+            );
+            
+            console.log('Available users to add:', usersWithoutTeam); // Debug log
+            
+            // Set team name for sharing
+            const shareEl = document.getElementById('shareTeamName');
+            if (shareEl && currentUser.teamId) {
+                const teamsData = fetch(`${API_URL}/teams`).then(r => r.json()).then(teams => {
+                    const myTeam = teams.find(t => t.id === currentUser.teamId);
+                    if (myTeam && shareEl) {
+                        shareEl.textContent = myTeam.name;
+                    }
+                });
+            }
+        }
+        
+        // Search input event listener
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                if (searchTerm.length === 0) {
+                    dropdown.classList.remove('show');
+                    return;
+                }
+                
+                const filtered = usersWithoutTeam.filter(u => 
+                    (u.firstName && u.firstName.toLowerCase().includes(searchTerm)) ||
+                    (u.lastName && u.lastName.toLowerCase().includes(searchTerm)) ||
+                    (u.username && u.username.toLowerCase().includes(searchTerm)) ||
+                    (`${u.firstName} ${u.lastName}`.toLowerCase().includes(searchTerm))
+                );
+                
+                showDropdown(filtered);
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.autocomplete-container')) {
+                    dropdown.classList.remove('show');
+                }
+            });
+            
+            // Focus shows dropdown if there's text
+            searchInput.addEventListener('focus', function() {
+                if (this.value.trim().length > 0) {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    const filtered = usersWithoutTeam.filter(u => 
+                        (u.firstName && u.firstName.toLowerCase().includes(searchTerm)) ||
+                        (u.lastName && u.lastName.toLowerCase().includes(searchTerm)) ||
+                        (u.username && u.username.toLowerCase().includes(searchTerm))
+                    );
+                    showDropdown(filtered);
+                }
+            });
+        }
+        
+        function showDropdown(users) {
+            if (users.length === 0) {
+                dropdown.innerHTML = '<div class="no-results">No users found</div>';
+                dropdown.classList.add('show');
+                return;
+            }
+            
+            dropdown.innerHTML = users.slice(0, 8).map(u => `
+                <div class="autocomplete-item" onclick="addUserToTeam(${u.id}, '${(u.firstName || u.username).replace(/'/g, "\\'")}')">
+                    <div class="autocomplete-avatar">${(u.firstName || u.username).charAt(0).toUpperCase()}</div>
+                    <div class="autocomplete-info">
+                        <div class="autocomplete-name">${u.firstName || ''} ${u.lastName || ''}</div>
+                        <div class="autocomplete-username">@${u.username} · ${u.points || 0} pts</div>
+                    </div>
+                    <span class="autocomplete-add">+ Add</span>
+                </div>
+            `).join('');
+            
+            dropdown.classList.add('show');
+        }
+        
+        async function addUserToTeam(userId, userName) {
+            try {
+                const res = await fetch(`${API_URL}/teams/${currentUser.teamId}/add-member`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    // Show success message
+                    const msgEl = document.getElementById('addedMessage');
+                    msgEl.innerHTML = `<div class="success-message">✓ ${userName} has been added to your team!</div>`;
+                    msgEl.style.display = 'block';
+                    
+                    // Clear search and hide dropdown
+                    searchInput.value = '';
+                    dropdown.classList.remove('show');
+                    
+                    // Reload team members
+                    setTimeout(() => {
+                        loadTeamsPage();
+                    }, 1500);
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        }
+
+        // Initial load
+        loadTeamsPage();
+    </script>
+</body>
+</html>
+
