@@ -187,9 +187,10 @@
             color: var(--cream);
         }
         .evidence-btn {
-            padding: 10px 20px;
+            padding: 8px 14px;
             background: linear-gradient(135deg, var(--gold), #e6b95e);
             color: var(--forest);
+            font-size: 0.85rem;
             border: none;
             border-radius: 10px;
             font-family: 'Outfit', sans-serif;
@@ -304,10 +305,18 @@
             background: var(--coral);
             color: white;
         }
+        /* Ensure consistent full width for all sections */
+        .container.dashboard-container {
+            max-width: 1000px;
+            width: 100%;
+        }
+        
         .tab-bar {
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .tab-link {
             flex: 1;
@@ -485,7 +494,7 @@
             <a href="challenges.html" class="tab-link">Challenges</a>
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
             <a href="teams.html" class="tab-link">Teams</a>
-            <a href="profile.html" class="tab-link">Profile</a>
+            <a href="profile.html" class="tab-link active">Profile</a>
         </div>
 
         <!-- Profile Card -->
@@ -519,7 +528,7 @@
                 <div id="teamSection"></div>
 
                 <!-- In Progress Challenges -->
-                <div class="section-label">🔄 In Progress</div>
+                <div class="section-label"> In Progress</div>
                 <div class="challenge-list" id="activeChallenges">
                     <div class="empty-state">
                         <div class="empty-state-icon">🎯</div>
@@ -528,7 +537,7 @@
                 </div>
 
                 <!-- Completed Challenges -->
-                <div class="section-label" style="margin-top: 32px;">✅ Completed Challenges</div>
+                <div class="section-label" style="margin-top: 32px;"> Completed Challenges</div>
                 <div class="challenge-list" id="completedChallenges">
                     <div class="empty-state">
                         <div class="empty-state-icon">🏆</div>
@@ -608,7 +617,7 @@
             <div id="verificationStatus" class="verification-status" style="display: none;"></div>
             
             <button class="save-btn" id="submitEvidenceBtn" onclick="submitEvidence()" disabled style="opacity: 0.5;">
-                🔍 Verify & Submit Evidence
+                Verify & Submit Evidence
             </button>
             <button class="save-btn" style="background: var(--sand); color: var(--text-dark); margin-top: 12px;" onclick="closeEvidenceModal()">Cancel</button>
         </div>
@@ -691,12 +700,16 @@
                                 <span class="challenge-item-icon">${categoryIcons[c.category] || '🌱'}</span>
                                 <div>
                                     <div class="challenge-item-name">${c.name}</div>
-                                    <div class="challenge-item-meta">${c.points} pts · ${c.co2Saved}kg CO₂</div>
+                                    <div class="challenge-item-meta">${c.co2Saved}kg CO₂</div>
                                 </div>
                             </div>
-                            <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name}')">
-                                📸 Upload Evidence
-                            </button>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--gold); line-height: 1;">${c.points}</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-light); text-transform: uppercase;">points</div>
+                                </div>
+                                <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name}')">Upload Evidence</button>
+                            </div>
                         </div>
                     `).join('');
                 }
@@ -774,14 +787,14 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    alert('✅ Profile updated!');
+                    alert('Profile updated!');
                     closeEditModal();
                     loadProfile();
                 } else {
-                    alert('❌ ' + data.error);
+                    alert(' ' + data.error);
                 }
             } catch (error) {
-                alert('❌ Could not connect to server');
+                alert('Could not connect to server');
             }
         }
 
@@ -808,7 +821,7 @@
                     alert('⚠️ ' + data.error);
                 }
             } catch (error) {
-                alert('❌ Could not connect to server');
+                alert('Could not connect to server');
             }
         }
 
@@ -879,9 +892,9 @@
             
             // Show loading state
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '🔄 Verifying with AI...';
+            submitBtn.innerHTML = 'Verifying with AI...';
             statusDiv.className = 'verification-status pending';
-            statusDiv.innerHTML = '⏳ AI is analyzing your image...';
+            statusDiv.innerHTML = 'AI is analyzing your image...';
             statusDiv.style.display = 'block';
 
             try {
@@ -920,19 +933,19 @@
                 } else {
                     statusDiv.className = 'verification-status rejected';
                     statusDiv.innerHTML = `
-                        <div style="font-size: 2rem; margin-bottom: 8px;">❌</div>
+                        <div style="font-size: 2rem; margin-bottom: 8px;"></div>
                         <strong>${data.message}</strong>
                         <p style="margin-top: 8px; font-size: 0.9rem;">${data.reason || ''}</p>
                         <p style="margin-top: 12px; font-size: 0.85rem;">Please try again with a clearer image.</p>
                     `;
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '🔍 Verify & Submit Evidence';
+                    submitBtn.innerHTML = 'Verify & Submit Evidence';
                 }
             } catch (error) {
                 statusDiv.className = 'verification-status rejected';
-                statusDiv.innerHTML = '❌ Error connecting to server. Please try again.';
+                statusDiv.innerHTML = 'Error connecting to server. Please try again.';
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '🔍 Verify & Submit Evidence';
+                submitBtn.innerHTML = 'Verify & Submit Evidence';
             }
         }
 
@@ -966,3 +979,4 @@
     </script>
 </body>
 </html>
+

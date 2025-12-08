@@ -3,34 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenGoals - Admin Panel</title>
+    <title>GreenGoals - Admin Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="auth-check.js"></script>
     <style>
+        body {
+            background: linear-gradient(135deg, #2d3436 0%, #4a5568 100%);
+            min-height: 100vh;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .admin-header h1 {
+            font-family: 'Playfair Display', serif;
+            color: white;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .admin-badge {
+            background: linear-gradient(135deg, var(--coral), #e88a7a);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
+        }
         .admin-nav {
             display: flex;
             gap: 8px;
             margin-bottom: 24px;
-            flex-wrap: wrap;
+            background: rgba(0,0,0,0.2);
+            padding: 8px;
+            border-radius: 16px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .admin-nav-btn {
-            padding: 12px 24px;
-            background: rgba(255,255,255,0.15);
-            color: var(--cream);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            border: none;
+            border-radius: 10px;
             font-family: 'Outfit', sans-serif;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s;
+            text-align: center;
         }
-        .admin-nav-btn:hover, .admin-nav-btn.active {
+        .admin-nav-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        .admin-nav-btn.active {
             background: var(--coral);
             color: white;
-            border-color: var(--coral);
         }
         .admin-section {
             display: none;
@@ -38,30 +77,138 @@
         .admin-section.active {
             display: block;
         }
+        
+        /* Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+        .dashboard-card.urgent {
+            border-color: var(--coral);
+            background: linear-gradient(135deg, white 0%, #fff5f3 100%);
+        }
+        .dashboard-card.urgent:hover {
+            border-color: var(--coral);
+        }
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+        .card-icon.pending { background: rgba(212, 168, 83, 0.2); }
+        .card-icon.users { background: rgba(135, 168, 120, 0.2); }
+        .card-icon.teams { background: rgba(87, 117, 96, 0.2); }
+        .card-icon.challenges { background: rgba(224, 122, 95, 0.2); }
+        .card-icon.co2 { background: rgba(182, 215, 168, 0.2); }
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        .card-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 12px;
+        }
+        .card-action {
+            font-size: 0.85rem;
+            color: var(--coral);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 800px) {
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .quick-action-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .quick-action-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        .quick-action-btn .icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        .quick-action-btn .label {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Admin Card */
         .admin-card {
-            background: var(--cream);
+            background: white;
             border-radius: 20px;
             padding: 28px;
             margin-bottom: 24px;
-            box-shadow: 0 15px 50px var(--shadow);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
         .admin-card h3 {
             font-family: 'Playfair Display', serif;
             font-size: 1.3rem;
             color: var(--forest);
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
+        
+        /* Form Styles */
         .form-row {
             display: flex;
             gap: 16px;
             margin-bottom: 16px;
         }
-        .form-row .form-group {
-            flex: 1;
-        }
+        .form-row .form-group { flex: 1; }
         .form-group {
             margin-bottom: 16px;
         }
@@ -86,6 +233,8 @@
             outline: none;
             border-color: var(--forest);
         }
+        
+        /* Buttons */
         .btn-primary {
             padding: 12px 24px;
             background: linear-gradient(135deg, var(--forest), #45654f);
@@ -112,9 +261,6 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        .btn-secondary:hover {
-            background: #d4c4a8;
-        }
         .btn-danger {
             padding: 8px 16px;
             background: var(--coral);
@@ -126,9 +272,30 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        .btn-danger:hover {
-            background: #d35f47;
+        .btn-approve {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--sage), #a8c99a);
+            color: var(--forest);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
         }
+        .btn-reject {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--coral), #e88a7a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        /* Table */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -151,30 +318,6 @@
             display: flex;
             gap: 8px;
         }
-        .stat-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-            margin-top: 24px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-        }
-        .stat-card-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--cream);
-        }
-        .stat-card-label {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.7);
-            text-transform: uppercase;
-        }
         .badge {
             padding: 4px 10px;
             border-radius: 20px;
@@ -185,17 +328,17 @@
         .badge-medium { background: #fff3cd; color: #856404; }
         .badge-hard { background: #f8d7da; color: #721c24; }
         
-        /* Evidence styles */
+        /* Evidence Card */
         .evidence-card {
-            background: white;
+            background: #f9f9f9;
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
             border: 2px solid var(--sand);
-            transition: all 0.3s ease;
         }
         .evidence-card.pending {
             border-color: var(--gold);
+            background: #fffef5;
         }
         .evidence-header {
             display: flex;
@@ -220,214 +363,188 @@
             font-weight: 600;
             font-size: 1.2rem;
         }
-        .evidence-user-info h4 {
-            margin: 0 0 4px 0;
-            color: var(--text-dark);
-        }
-        .evidence-user-info p {
-            margin: 0;
-            color: var(--text-light);
-            font-size: 0.85rem;
-        }
-        .evidence-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        .evidence-badge.pending {
-            background: rgba(212, 168, 83, 0.2);
-            color: #856404;
-        }
         .evidence-challenge {
-            background: var(--sand);
+            background: white;
             border-radius: 12px;
             padding: 14px;
             margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 12px;
-        }
-        .evidence-challenge-icon {
-            font-size: 2rem;
-        }
-        .evidence-challenge-info h5 {
-            margin: 0 0 4px 0;
-            color: var(--text-dark);
-        }
-        .evidence-challenge-info p {
-            margin: 0;
-            color: var(--text-light);
-            font-size: 0.85rem;
-        }
-        .evidence-image-container {
-            margin-bottom: 16px;
+            border: 1px solid var(--sand);
         }
         .evidence-image {
             max-width: 100%;
-            max-height: 400px;
+            max-height: 300px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px var(--shadow);
+            margin-bottom: 16px;
         }
         .evidence-actions {
             display: flex;
             gap: 12px;
         }
-        .btn-approve {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, var(--sage), #a8c99a);
-            color: var(--forest);
-            border: none;
+        
+        /* Recent Activity */
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--sand);
+        }
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        .activity-icon {
+            width: 40px;
+            height: 40px;
             border-radius: 10px;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
         }
-        .btn-approve:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(135, 168, 120, 0.4);
+        .activity-icon.new-user { background: rgba(135, 168, 120, 0.2); }
+        .activity-icon.new-team { background: rgba(87, 117, 96, 0.2); }
+        .activity-icon.evidence { background: rgba(212, 168, 83, 0.2); }
+        .activity-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 0.95rem;
+            color: var(--text-dark);
         }
-        .btn-reject {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, var(--coral), #e88a7a);
+        .activity-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(224, 122, 95, 0.2);
             color: white;
-            border: none;
-            border-radius: 10px;
+            border: 1px solid rgba(224, 122, 95, 0.5);
+            border-radius: 12px;
             font-family: 'Outfit', sans-serif;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s;
-            flex: 1;
         }
-        .btn-reject:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(224, 122, 95, 0.4);
+        .logout-btn:hover {
+            background: var(--coral);
         }
+        
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
         .no-evidence {
             text-align: center;
             padding: 40px;
             color: var(--text-light);
         }
-        .no-evidence-icon {
-            font-size: 3rem;
-            margin-bottom: 12px;
-        }
-        .access-denied {
-            text-align: center;
-            padding: 60px 20px;
-        }
-        .access-denied-icon {
-            font-size: 4rem;
-            margin-bottom: 16px;
-        }
-        .tab-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 0;
-        }
-        .tab-link {
-            flex: 1;
-            padding: 12px 24px;
-            background: rgba(255,255,255,0.15);
-            color: var(--cream);
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 500;
-            transition: all 0.3s;
-            border: 1px solid rgba(255,255,255,0.2);
-            text-align: center;
-        }
-        .tab-link:hover, .tab-link.active {
-            background: var(--gold);
-            color: var(--forest);
-        }
-        .admin-badge {
-            background: linear-gradient(135deg, var(--coral), #e88a7a);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-left: 12px;
-        }
     </style>
 </head>
 <body>
-    <div class="bg-animation">
-        <div class="leaf leaf-1">🌿</div>
-        <div class="leaf leaf-2">🍃</div>
-        <div class="leaf leaf-3">🌱</div>
-    </div>
-
     <div class="container dashboard-container">
-        <!-- Access Denied (shown if not admin) -->
+        <!-- Access Denied -->
         <div id="accessDenied" class="access-denied" style="display: none;">
-            <div class="access-denied-icon"></div>
-            <h2 style="color: var(--cream); margin-bottom: 12px;">Admin Access Required</h2>
-            <p style="color: var(--mint); margin-bottom: 24px;">You don't have permission to view this page.</p>
-            <a href="home.html" class="btn-primary" style="text-decoration: none;">← Back to Home</a>
+            <h2 style="color: white; margin-bottom: 12px;">Admin Access Required</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 24px;">You don't have permission to view this page.</p>
+            <a href="home.html" class="btn-primary" style="text-decoration: none;">Back to Home</a>
         </div>
 
-        <!-- Admin Content (shown if admin) -->
+        <!-- Admin Content -->
         <div id="adminContent" style="display: none;">
-            <div class="dashboard-header">
-                <div class="logo">
-                    <span class="logo-icon"></span>
-                    <h1>Admin Panel</h1>
+            <div class="admin-header">
+                <h1>
+                    Admin Dashboard
                     <span class="admin-badge">Admin</span>
-                </div>
+                </h1>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
 
-            <!-- Navigation -->
-            <div class="tab-bar">
-                <a href="home.html" class="tab-link">Home</a>
-                <a href="challenges.html" class="tab-link">Challenges</a>
-                <a href="leaderboard.html" class="tab-link">Leaderboard</a>
-                <a href="teams.html" class="tab-link">Teams</a>
-                <a href="profile.html" class="tab-link">Profile</a>
-                <a href="admin-panel.html" class="tab-link active" style="background: rgba(233, 69, 96, 0.3); border-color: rgba(233, 69, 96, 0.5);"> Admin</a>
-            </div>
-
-            <!-- Stats -->
-            <div class="stat-cards">
-                <div class="stat-card" style="border-color: var(--gold);">
-                    <div class="stat-card-value" id="statPending" style="color: var(--gold);">-</div>
-                    <div class="stat-card-label">Pending Review</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" id="statUsers">-</div>
-                    <div class="stat-card-label">Users</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" id="statTeams">-</div>
-                    <div class="stat-card-label">Teams</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" id="statChallenges">-</div>
-                    <div class="stat-card-label">Challenges</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" id="statCO2">-</div>
-                    <div class="stat-card-label">CO₂ Saved</div>
-                </div>
-            </div>
-
-            <!-- Admin Sub-Navigation -->
+            <!-- Admin Navigation -->
             <div class="admin-nav">
-                <button class="admin-nav-btn active" data-section="evidence">Evidence Review</button>
-                <button class="admin-nav-btn" data-section="challenges">Manage Challenges</button>
+                <button class="admin-nav-btn active" data-section="dashboard">Home</button>
+                <button class="admin-nav-btn" data-section="evidence">Evidence Review</button>
                 <button class="admin-nav-btn" data-section="users">Manage Users</button>
                 <button class="admin-nav-btn" data-section="teams">Manage Teams</button>
+                <button class="admin-nav-btn" data-section="challenges">Manage Challenges</button>
+                <button class="admin-nav-btn" data-section="updates">Campus Updates</button>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div class="admin-section active" id="section-dashboard">
+                <!-- Stats Cards -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card urgent" onclick="showSection('evidence')" style="text-align: center;">
+                        <div class="card-value" id="statPending">0</div>
+                        <div class="card-label">Pending Evidence</div>
+                        <div class="card-action">Review now →</div>
+                    </div>
+                    <div class="dashboard-card" onclick="showSection('users')" style="text-align: center;">
+                        <div class="card-value" id="statUsers">0</div>
+                        <div class="card-label">Total Users</div>
+                        <div class="card-action">Manage users →</div>
+                    </div>
+                    <div class="dashboard-card" onclick="showSection('teams')" style="text-align: center;">
+                        <div class="card-value" id="statTeams">0</div>
+                        <div class="card-label">Active Teams</div>
+                        <div class="card-action">Manage teams →</div>
+                    </div>
+                    <div class="dashboard-card" onclick="showSection('challenges')" style="text-align: center;">
+                        <div class="card-value" id="statChallenges">0</div>
+                        <div class="card-label">Challenges Created</div>
+                        <div class="card-action">Manage challenges →</div>
+                    </div>
+                    <div class="dashboard-card" style="text-align: center;">
+                        <div class="card-value" id="statCO2">0</div>
+                        <div class="card-label">Total CO₂ Saved (kg)</div>
+                        <div class="card-action">Community impact</div>
+                    </div>
+                    <div class="dashboard-card" style="text-align: center;">
+                        <div class="card-value" id="statCompleted">0</div>
+                        <div class="card-label">Challenges Completed</div>
+                        <div class="card-action">By all users</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <h3 style="color: white; margin-bottom: 16px; font-family: 'Playfair Display', serif;">Quick Actions</h3>
+                <div class="quick-actions">
+                    <div class="quick-action-btn" onclick="showSection('evidence')">
+                        <div class="icon">📋</div>
+                        <div class="label">Review Evidence</div>
+                    </div>
+                    <div class="quick-action-btn" onclick="showSection('challenges')">
+                        <div class="icon">➕</div>
+                        <div class="label">Add Challenge</div>
+                    </div>
+                    <div class="quick-action-btn" onclick="showSection('users')">
+                        <div class="icon">👤</div>
+                        <div class="label">View Users</div>
+                    </div>
+                    <div class="quick-action-btn" onclick="showSection('teams')">
+                        <div class="icon">🏅</div>
+                        <div class="label">View Teams</div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="admin-card">
+                    <h3>Recent Activity</h3>
+                    <div id="recentActivity">
+                        <p style="color: var(--text-light);">Loading activity...</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Evidence Section -->
-            <div class="admin-section active" id="section-evidence">
+            <div class="admin-section" id="section-evidence">
                 <div class="admin-card">
-                    <h3> Pending Evidence</h3>
+                    <h3>Pending Evidence Review</h3>
                     <p style="color: var(--text-light); margin-bottom: 20px;">Review user submissions and approve or reject them.</p>
                     <div id="pendingEvidenceList">
                         <p style="color: var(--text-light);">Loading...</p>
@@ -435,10 +552,46 @@
                 </div>
             </div>
 
+            <!-- Users Section -->
+            <div class="admin-section" id="section-users">
+                <div class="admin-card">
+                    <h3>All Users</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Class</th>
+                                    <th>Team</th>
+                                    <th>Points</th>
+                                    <th>Challenges</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr><td colspan="7">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teams Section -->
+            <div class="admin-section" id="section-teams">
+                <div class="admin-card">
+                    <h3>All Teams</h3>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">Manage all teams in the system.</p>
+                    <div id="teamsContainer">
+                        <p style="color: var(--text-light);">Loading teams...</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Challenges Section -->
             <div class="admin-section" id="section-challenges">
                 <div class="admin-card">
-                    <h3>➕ Add New Challenge</h3>
+                    <h3>Add New Challenge</h3>
                     <form id="addChallengeForm">
                         <div class="form-row">
                             <div class="form-group">
@@ -448,11 +601,11 @@
                             <div class="form-group">
                                 <label>Category</label>
                                 <select id="challengeCategory" required>
-                                    <option value="Reduce">♻️ Reduce</option>
-                                    <option value="Nature">🌳 Nature</option>
-                                    <option value="Transport">🚲 Transport</option>
-                                    <option value="Food">🥗 Food</option>
-                                    <option value="Energy">⚡ Energy</option>
+                                    <option value="Reduce">Reduce</option>
+                                    <option value="Nature">Nature</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Energy">Energy</option>
                                 </select>
                             </div>
                         </div>
@@ -508,38 +661,147 @@
                 </div>
             </div>
 
-            <!-- Users Section -->
-            <div class="admin-section" id="section-users">
+            <!-- Campus Updates Section -->
+            <div class="admin-section" id="section-updates">
                 <div class="admin-card">
-                    <h3>All Users</h3>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Username</th>
-                                    <th>Class</th>
-                                    <th>Points</th>
-                                    <th>Challenges</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody">
-                                <tr><td colspan="6">Loading...</td></tr>
-                            </tbody>
-                        </table>
+                    <h3>Add New Campus Update</h3>
+                    <form id="addUpdateForm">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 3;">
+                                <label>Title</label>
+                                <input type="text" id="updateTitle" required placeholder="e.g., New Recycling Bins on Campus">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Icon</label>
+                                <select id="updateIcon" required>
+                                    <option value="🌱">🌱 Plant</option>
+                                    <option value="♻️">♻️ Recycle</option>
+                                    <option value="🚲">🚲 Bike</option>
+                                    <option value="⚡">⚡ Energy</option>
+                                    <option value="💧">💧 Water</option>
+                                    <option value="🌍">🌍 Earth</option>
+                                    <option value="🌳">🌳 Tree</option>
+                                    <option value="🎉">🎉 Event</option>
+                                    <option value="📢">📢 Announcement</option>
+                                    <option value="🏆">🏆 Achievement</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Content</label>
+                            <textarea id="updateContent" rows="3" required placeholder="Write the update content here..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Update</button>
+                    </form>
+                </div>
+
+                <div class="admin-card">
+                    <h3>All Campus Updates</h3>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">These updates appear on the user's Home page.</p>
+                    <div id="updatesContainer">
+                        <p style="color: var(--text-light);">Loading updates...</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Teams Section -->
-            <div class="admin-section" id="section-teams">
-                <div class="admin-card">
-                    <h3>All Teams</h3>
-                    <p style="color: var(--text-light); margin-bottom: 20px;">View and manage all teams in the system.</p>
-                    <div id="teamsContainer">
-                        <p style="color: var(--text-light);">Loading teams...</p>
+            <!-- Edit Update Modal -->
+            <div id="editUpdateModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: none; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 20px; padding: 32px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3 style="margin: 0; color: var(--forest); font-family: 'Playfair Display', serif;">Edit Update</h3>
+                        <button onclick="closeEditUpdateModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-light);">×</button>
                     </div>
+                    <form id="editUpdateForm">
+                        <input type="hidden" id="editUpdateId">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 3;">
+                                <label>Title</label>
+                                <input type="text" id="editUpdateTitle" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Icon</label>
+                                <select id="editUpdateIcon" required>
+                                    <option value="🌱">🌱 Plant</option>
+                                    <option value="♻️">♻️ Recycle</option>
+                                    <option value="🚲">🚲 Bike</option>
+                                    <option value="⚡">⚡ Energy</option>
+                                    <option value="💧">💧 Water</option>
+                                    <option value="🌍">🌍 Earth</option>
+                                    <option value="🌳">🌳 Tree</option>
+                                    <option value="🎉">🎉 Event</option>
+                                    <option value="📢">📢 Announcement</option>
+                                    <option value="🏆">🏆 Achievement</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Content</label>
+                            <textarea id="editUpdateContent" rows="3" required></textarea>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="submit" class="btn-primary" style="flex: 1;">Save Changes</button>
+                            <button type="button" class="btn-secondary" onclick="closeEditUpdateModal()" style="flex: 1;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Edit Challenge Modal -->
+            <div id="editChallengeModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: none; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 20px; padding: 32px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3 style="margin: 0; color: var(--forest); font-family: 'Playfair Display', serif;">Edit Challenge</h3>
+                        <button onclick="closeEditModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-light);">×</button>
+                    </div>
+                    <form id="editChallengeForm">
+                        <input type="hidden" id="editChallengeId">
+                        <div class="form-group">
+                            <label>Challenge Name</label>
+                            <input type="text" id="editChallengeName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="editChallengeDescription" rows="3" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="editChallengeCategory" required>
+                                    <option value="Reduce">Reduce</option>
+                                    <option value="Nature">Nature</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Energy">Energy</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Difficulty</label>
+                                <select id="editChallengeDifficulty" required>
+                                    <option value="Easy">Easy</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Hard">Hard</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Points</label>
+                                <input type="number" id="editChallengePoints" required>
+                            </div>
+                            <div class="form-group">
+                                <label>CO₂ Saved (kg)</label>
+                                <input type="number" step="0.1" id="editChallengeCO2" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <input type="text" id="editChallengeDuration" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="submit" class="btn-primary" style="flex: 1;">Save Changes</button>
+                            <button type="button" class="btn-secondary" onclick="closeEditModal()" style="flex: 1;">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -561,19 +823,26 @@
             // Admin sub-navigation
             document.querySelectorAll('.admin-nav-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-                    btn.classList.add('active');
-                    document.getElementById(`section-${btn.dataset.section}`).classList.add('active');
+                    showSection(btn.dataset.section);
                 });
             });
 
-            // Load data
+            // Load all data
             loadStats();
             loadPendingEvidence();
             loadChallenges();
             loadUsers();
             loadTeams();
+            loadRecentActivity();
+            loadUpdates();
+        }
+
+        function showSection(sectionName) {
+            document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+            
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+            document.getElementById(`section-${sectionName}`).classList.add('active');
         }
 
         const categoryIcons = {
@@ -590,8 +859,9 @@
                 const res = await fetch(`${API_URL}/stats`);
                 const stats = await res.json();
                 document.getElementById('statUsers').textContent = stats.totalUsers;
-                document.getElementById('statChallenges').textContent = stats.totalChallengesCompleted;
-                document.getElementById('statCO2').textContent = stats.totalCO2Saved + 'kg';
+                document.getElementById('statChallenges').textContent = stats.totalChallenges || 0;
+                document.getElementById('statCO2').textContent = stats.totalCO2Saved || 0;
+                document.getElementById('statCompleted').textContent = stats.totalChallengesCompleted || 0;
                 
                 // Load pending count
                 const evidenceRes = await fetch(`${API_URL}/admin/pending-evidence`, {
@@ -605,7 +875,72 @@
                 const teams = await teamsRes.json();
                 document.getElementById('statTeams').textContent = teams.length || 0;
             } catch (e) {
-                console.error('Error loading stats');
+                console.error('Error loading stats:', e);
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            try {
+                const [usersRes, teamsRes, evidenceRes] = await Promise.all([
+                    fetch(`${API_URL}/admin/users`, { headers: { 'Authorization': `Bearer ${getToken()}` } }),
+                    fetch(`${API_URL}/teams`),
+                    fetch(`${API_URL}/admin/pending-evidence`, { headers: { 'Authorization': `Bearer ${getToken()}` } })
+                ]);
+                
+                const users = await usersRes.json();
+                const teams = await teamsRes.json();
+                const evidence = await evidenceRes.json();
+                
+                const activities = [];
+                
+                // Add recent users (last 5)
+                users.slice(-3).reverse().forEach(u => {
+                    activities.push({
+                        type: 'user',
+                        title: `${u.firstName} ${u.lastName} joined`,
+                        subtitle: `@${u.username}`,
+                        icon: '👤'
+                    });
+                });
+                
+                // Add recent teams
+                teams.slice(-2).reverse().forEach(t => {
+                    activities.push({
+                        type: 'team',
+                        title: `Team "${t.name}" created`,
+                        subtitle: `${t.memberCount || 0} members`,
+                        icon: '🏆'
+                    });
+                });
+                
+                // Add pending evidence
+                evidence.slice(0, 3).forEach(e => {
+                    activities.push({
+                        type: 'evidence',
+                        title: `Evidence submitted`,
+                        subtitle: `${e.firstName || e.username} - ${e.challengeName}`,
+                        icon: '📋'
+                    });
+                });
+                
+                const container = document.getElementById('recentActivity');
+                if (activities.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-light);">No recent activity</p>';
+                    return;
+                }
+                
+                container.innerHTML = activities.slice(0, 6).map(a => `
+                    <div class="activity-item">
+                        <div class="activity-icon ${a.type === 'user' ? 'new-user' : a.type === 'team' ? 'new-team' : 'evidence'}">${a.icon}</div>
+                        <div class="activity-info">
+                            <h4>${a.title}</h4>
+                            <p>${a.subtitle}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading activity:', e);
             }
         }
 
@@ -622,7 +957,7 @@
                 if (!evidence.length) {
                     container.innerHTML = `
                         <div class="no-evidence">
-                            <div class="no-evidence-icon"></div>
+                            <p style="font-size: 2rem; margin-bottom: 12px;">✓</p>
                             <p>No pending evidence to review!</p>
                             <p style="font-size: 0.85rem;">All submissions have been processed.</p>
                         </div>
@@ -635,29 +970,27 @@
                         <div class="evidence-header">
                             <div class="evidence-user">
                                 <div class="evidence-avatar">${(e.firstName || e.username).charAt(0).toUpperCase()}</div>
-                                <div class="evidence-user-info">
-                                    <h4>${e.firstName || ''} ${e.lastName || ''}</h4>
-                                    <p>@${e.username} · ${new Date(e.submittedAt).toLocaleDateString()}</p>
+                                <div>
+                                    <h4 style="margin: 0 0 4px 0;">${e.firstName || ''} ${e.lastName || ''}</h4>
+                                    <p style="margin: 0; color: var(--text-light); font-size: 0.85rem;">@${e.username} · ${new Date(e.submittedAt).toLocaleDateString()}</p>
                                 </div>
                             </div>
-                            <span class="evidence-badge pending">⏳ Pending</span>
+                            <span style="background: rgba(212, 168, 83, 0.2); color: #856404; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">Pending</span>
                         </div>
                         
                         <div class="evidence-challenge">
-                            <span class="evidence-challenge-icon">${categoryIcons[e.challengeCategory] || '🌱'}</span>
-                            <div class="evidence-challenge-info">
-                                <h5>${e.challengeName}</h5>
-                                <p>${e.challengePoints} points · ${e.challengeCO2}kg CO₂</p>
+                            <span style="font-size: 2rem;">${categoryIcons[e.challengeCategory] || '🌱'}</span>
+                            <div>
+                                <h5 style="margin: 0 0 4px 0;">${e.challengeName}</h5>
+                                <p style="margin: 0; color: var(--text-light); font-size: 0.85rem;">${e.challengePoints} points · ${e.challengeCO2}kg CO₂</p>
                             </div>
                         </div>
                         
-                        <div class="evidence-image-container">
-                            <img src="data:image/jpeg;base64,${e.imageBase64}" class="evidence-image" alt="Evidence">
-                        </div>
+                        <img src="data:image/jpeg;base64,${e.imageBase64}" class="evidence-image" alt="Evidence">
                         
                         <div class="evidence-actions">
-                            <button class="btn-approve" onclick="approveEvidence(${e.id}, '${e.firstName || e.username}', '${e.challengeName}')">✓ Approve</button>
-                            <button class="btn-reject" onclick="rejectEvidence(${e.id})">✕ Reject</button>
+                            <button class="btn-approve" onclick="approveEvidence(${e.id}, '${e.firstName || e.username}', '${e.challengeName}')" style="flex: 1;">Approve</button>
+                            <button class="btn-reject" onclick="rejectEvidence(${e.id})" style="flex: 1;">Reject</button>
                         </div>
                     </div>
                 `).join('');
@@ -681,14 +1014,14 @@
                 
                 const data = await res.json();
                 if (res.ok) {
-                    alert('✅ ' + data.message);
+                    alert('Evidence approved!');
                     loadPendingEvidence();
                     loadStats();
                 } else {
-                    alert('❌ ' + data.error);
+                    alert('Error: ' + data.error);
                 }
             } catch (e) {
-                alert('❌ Error approving evidence');
+                alert('Error approving evidence');
             }
         }
         
@@ -709,19 +1042,23 @@
                 if (res.ok) {
                     alert('Evidence rejected.');
                     loadPendingEvidence();
+                    loadStats();
                 }
             } catch (e) {
-                alert('❌ Error rejecting evidence');
+                alert('Error rejecting evidence');
             }
         }
 
         // Load challenges
+        // Store challenges for editing
+        let allChallenges = [];
+        
         async function loadChallenges() {
             try {
                 const res = await fetch(`${API_URL}/challenges`);
-                const challenges = await res.json();
+                allChallenges = await res.json();
                 
-                document.getElementById('challengesTableBody').innerHTML = challenges.map(c => `
+                document.getElementById('challengesTableBody').innerHTML = allChallenges.map(c => `
                     <tr>
                         <td>${c.name}</td>
                         <td>${categoryIcons[c.category] || ''} ${c.category}</td>
@@ -729,6 +1066,7 @@
                         <td>${c.co2Saved}kg</td>
                         <td><span class="badge badge-${c.difficulty.toLowerCase()}">${c.difficulty}</span></td>
                         <td class="actions">
+                            <button class="btn-secondary" onclick="openEditChallengeModal(${c.id})">Edit</button>
                             <button class="btn-danger" onclick="deleteChallenge(${c.id})">Delete</button>
                         </td>
                     </tr>
@@ -737,6 +1075,66 @@
                 console.error('Error loading challenges');
             }
         }
+        
+        // Open edit challenge modal
+        function openEditChallengeModal(challengeId) {
+            const challenge = allChallenges.find(c => c.id === challengeId);
+            if (!challenge) return;
+            
+            document.getElementById('editChallengeId').value = challenge.id;
+            document.getElementById('editChallengeName').value = challenge.name;
+            document.getElementById('editChallengeDescription').value = challenge.description || '';
+            document.getElementById('editChallengeCategory').value = challenge.category;
+            document.getElementById('editChallengeDifficulty').value = challenge.difficulty;
+            document.getElementById('editChallengePoints').value = challenge.points;
+            document.getElementById('editChallengeCO2').value = challenge.co2Saved;
+            document.getElementById('editChallengeDuration').value = challenge.duration || '';
+            
+            document.getElementById('editChallengeModal').style.display = 'flex';
+        }
+        
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editChallengeModal').style.display = 'none';
+        }
+        
+        // Handle edit form submission
+        document.getElementById('editChallengeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const challengeId = document.getElementById('editChallengeId').value;
+            const updatedChallenge = {
+                name: document.getElementById('editChallengeName').value,
+                description: document.getElementById('editChallengeDescription').value,
+                category: document.getElementById('editChallengeCategory').value,
+                difficulty: document.getElementById('editChallengeDifficulty').value,
+                points: parseInt(document.getElementById('editChallengePoints').value),
+                co2Saved: parseFloat(document.getElementById('editChallengeCO2').value),
+                duration: document.getElementById('editChallengeDuration').value
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/challenges/${challengeId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedChallenge)
+                });
+                
+                if (res.ok) {
+                    alert('Challenge updated!');
+                    closeEditModal();
+                    loadChallenges();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Could not connect to server');
+            }
+        });
 
         // Add challenge
         document.getElementById('addChallengeForm').addEventListener('submit', async (e) => {
@@ -763,16 +1161,16 @@
                 });
                 
                 if (res.ok) {
-                    alert('✅ Challenge added!');
+                    alert('Challenge added!');
                     e.target.reset();
                     loadChallenges();
                     loadStats();
                 } else {
                     const data = await res.json();
-                    alert('❌ ' + data.error);
+                    alert('Error: ' + data.error);
                 }
             } catch (error) {
-                alert('❌ Could not connect to server');
+                alert('Could not connect to server');
             }
         });
 
@@ -786,31 +1184,38 @@
             });
             
             if (res.ok) {
-                alert('✅ Challenge deleted!');
+                alert('Challenge deleted!');
                 loadChallenges();
+                loadStats();
             }
         }
 
         // Load users
         async function loadUsers() {
             try {
-                const res = await fetch(`${API_URL}/admin/users`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
-                });
-                const users = await res.json();
+                const [usersRes, teamsRes] = await Promise.all([
+                    fetch(`${API_URL}/admin/users`, { headers: { 'Authorization': `Bearer ${getToken()}` } }),
+                    fetch(`${API_URL}/teams`)
+                ]);
+                const users = await usersRes.json();
+                const teams = await teamsRes.json();
                 
-                document.getElementById('usersTableBody').innerHTML = users.map(u => `
-                    <tr>
-                        <td>${u.firstName} ${u.lastName}</td>
-                        <td>@${u.username}</td>
-                        <td>${u.classYear || '-'}</td>
-                        <td>${u.points}</td>
-                        <td>${u.completedChallenges || 0}</td>
-                        <td class="actions">
-                            ${u.role !== 'super_admin' ? `<button class="btn-danger" onclick="deleteUser(${u.id})">Delete</button>` : '<span style="color: var(--text-light);">Admin</span>'}
-                        </td>
-                    </tr>
-                `).join('');
+                document.getElementById('usersTableBody').innerHTML = users.map(u => {
+                    const team = teams.find(t => t.id === u.teamId);
+                    return `
+                        <tr>
+                            <td>${u.firstName} ${u.lastName}</td>
+                            <td>@${u.username}</td>
+                            <td>${u.classYear || '-'}</td>
+                            <td>${team ? team.name : '-'}</td>
+                            <td>${u.points}</td>
+                            <td>${u.completedChallenges || 0}</td>
+                            <td class="actions">
+                                ${u.role !== 'super_admin' ? `<button class="btn-danger" onclick="deleteUser(${u.id})">Delete</button>` : '<span style="color: var(--text-light);">Admin</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (e) {
                 console.error('Error loading users');
             }
@@ -843,25 +1248,17 @@
                 const container = document.getElementById('teamsContainer');
                 
                 if (!teams.length) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: var(--text-light);">
-                            <p style="font-size: 2rem; margin-bottom: 12px;">No teams yet</p>
-                            <p>Users haven't created any teams.</p>
-                        </div>
-                    `;
+                    container.innerHTML = '<p style="text-align: center; color: var(--text-light);">No teams yet</p>';
                     return;
                 }
                 
                 container.innerHTML = teams.map(team => `
-                    <div class="team-admin-card" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid var(--sand);">
+                    <div style="background: #f9f9f9; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid var(--sand);">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                             <div>
-                                <h4 style="margin: 0 0 4px 0; color: var(--forest); font-size: 1.2rem;" id="team-name-${team.id}">${team.name}</h4>
+                                <h4 style="margin: 0 0 4px 0; color: var(--forest); font-size: 1.1rem;">${team.name}</h4>
                                 <p style="margin: 0; color: var(--text-light); font-size: 0.85rem;">
-                                    Leader: ${team.leaderName} (@${team.leaderUsername})
-                                </p>
-                                <p style="margin: 4px 0 0 0; color: var(--text-light); font-size: 0.85rem;">
-                                    ${team.memberCount} members · ${team.totalPoints} points
+                                    Leader: ${team.leaderName} · ${team.memberCount} members · ${team.totalPoints} pts
                                 </p>
                             </div>
                             <div style="display: flex; gap: 8px;">
@@ -869,29 +1266,21 @@
                                 <button class="btn-danger" onclick="deleteTeam(${team.id}, '${team.name.replace(/'/g, "\\'")}')">Delete</button>
                             </div>
                         </div>
-                        
-                        <div style="background: var(--sand); border-radius: 12px; padding: 14px;">
-                            <p style="margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; color: var(--text-light); font-weight: 600;">Team Members</p>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                ${team.members.map(m => `
-                                    <div style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
-                                        <span>${m.firstName} ${m.lastName}</span>
-                                        ${m.id !== team.leaderId ? `
-                                            <button onclick="removeMember(${team.id}, ${m.id}, '${m.firstName}')" style="background: var(--coral); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; cursor: pointer; line-height: 1;">×</button>
-                                        ` : '<span style="font-size: 0.7rem; color: var(--sage);">(Leader)</span>'}
-                                    </div>
-                                `).join('')}
-                            </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${team.members.map(m => `
+                                <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid var(--sand);">
+                                    ${m.firstName} ${m.lastName}
+                                    ${m.id !== team.leaderId ? `<button onclick="removeMember(${team.id}, ${m.id}, '${m.firstName}')" style="background: none; border: none; color: var(--coral); cursor: pointer; margin-left: 4px;">×</button>` : ''}
+                                </span>
+                            `).join('')}
                         </div>
                     </div>
                 `).join('');
             } catch (e) {
                 console.error('Error loading teams:', e);
-                document.getElementById('teamsContainer').innerHTML = '<p style="color: var(--coral);">Error loading teams.</p>';
             }
         }
 
-        // Edit team
         async function editTeam(id, currentName, currentDescription) {
             const newName = prompt('Team Name:', currentName);
             if (newName === null) return;
@@ -921,9 +1310,8 @@
             }
         }
 
-        // Delete team
         async function deleteTeam(id, teamName) {
-            if (!confirm(`Delete team "${teamName}"? All members will be removed from this team.`)) return;
+            if (!confirm(`Delete team "${teamName}"? All members will be removed.`)) return;
             
             try {
                 const res = await fetch(`${API_URL}/admin/teams/${id}`, {
@@ -935,16 +1323,12 @@
                     alert('Team deleted!');
                     loadTeams();
                     loadStats();
-                } else {
-                    const data = await res.json();
-                    alert('Error: ' + data.error);
                 }
             } catch (e) {
                 alert('Error deleting team');
             }
         }
 
-        // Remove member from team
         async function removeMember(teamId, userId, memberName) {
             if (!confirm(`Remove ${memberName} from this team?`)) return;
             
@@ -961,15 +1345,176 @@
                 if (res.ok) {
                     alert('Member removed!');
                     loadTeams();
-                } else {
-                    const data = await res.json();
-                    alert('Error: ' + data.error);
                 }
             } catch (e) {
                 alert('Error removing member');
             }
         }
+
+        // ============================================
+        // CAMPUS UPDATES MANAGEMENT
+        // ============================================
+        
+        let allUpdates = [];
+        
+        // Load updates
+        async function loadUpdates() {
+            try {
+                const res = await fetch(`${API_URL}/admin/updates`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                allUpdates = await res.json();
+                
+                const container = document.getElementById('updatesContainer');
+                
+                if (!allUpdates.length) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--text-light);">No campus updates yet. Add one above!</p>';
+                    return;
+                }
+                
+                container.innerHTML = allUpdates.map(update => `
+                    <div style="background: #f9f9f9; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 2px solid var(--sand);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="display: flex; gap: 16px; flex: 1;">
+                                <div style="width: 50px; height: 50px; background: var(--mint); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                                    ${update.icon}
+                                </div>
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0 0 8px 0; color: var(--forest); font-size: 1.1rem;">${update.title}</h4>
+                                    <p style="margin: 0; color: var(--text-light); font-size: 0.9rem; line-height: 1.5;">${update.content}</p>
+                                    <p style="margin: 8px 0 0 0; color: var(--sage); font-size: 0.75rem;">${formatTimeAgo(update.createdAt)}</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-left: 16px;">
+                                <button class="btn-secondary" onclick="openEditUpdateModal(${update.id})">Edit</button>
+                                <button class="btn-danger" onclick="deleteUpdate(${update.id}, '${update.title.replace(/'/g, "\\'")}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading updates:', e);
+            }
+        }
+        
+        // Format time ago
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return '1 day ago';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            if (diffDays < 14) return '1 week ago';
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+            return date.toLocaleDateString();
+        }
+        
+        // Add update form
+        document.getElementById('addUpdateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const update = {
+                title: document.getElementById('updateTitle').value,
+                content: document.getElementById('updateContent').value,
+                icon: document.getElementById('updateIcon').value
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/admin/updates`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(update)
+                });
+                
+                if (res.ok) {
+                    alert('Update added!');
+                    e.target.reset();
+                    loadUpdates();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Could not connect to server');
+            }
+        });
+        
+        // Open edit update modal
+        function openEditUpdateModal(updateId) {
+            const update = allUpdates.find(u => u.id === updateId);
+            if (!update) return;
+            
+            document.getElementById('editUpdateId').value = update.id;
+            document.getElementById('editUpdateTitle').value = update.title;
+            document.getElementById('editUpdateContent').value = update.content;
+            document.getElementById('editUpdateIcon').value = update.icon;
+            
+            document.getElementById('editUpdateModal').style.display = 'flex';
+        }
+        
+        // Close edit update modal
+        function closeEditUpdateModal() {
+            document.getElementById('editUpdateModal').style.display = 'none';
+        }
+        
+        // Edit update form submission
+        document.getElementById('editUpdateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const updateId = document.getElementById('editUpdateId').value;
+            const updatedData = {
+                title: document.getElementById('editUpdateTitle').value,
+                content: document.getElementById('editUpdateContent').value,
+                icon: document.getElementById('editUpdateIcon').value
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/updates/${updateId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+                
+                if (res.ok) {
+                    alert('Update modified!');
+                    closeEditUpdateModal();
+                    loadUpdates();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Could not connect to server');
+            }
+        });
+        
+        // Delete update
+        async function deleteUpdate(id, title) {
+            if (!confirm(`Delete update "${title}"?`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/updates/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                
+                if (res.ok) {
+                    alert('Update deleted!');
+                    loadUpdates();
+                }
+            } catch (e) {
+                alert('Error deleting update');
+            }
+        }
     </script>
 </body>
 </html>
-

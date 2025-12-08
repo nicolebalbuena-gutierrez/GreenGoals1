@@ -105,17 +105,20 @@
         }
         .points-display {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 6px;
+            text-align: center;
         }
         .points-value {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 700;
             color: var(--gold);
+            line-height: 1;
         }
         .points-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-light);
+            text-transform: uppercase;
         }
         .accept-btn {
             padding: 12px 24px;
@@ -171,6 +174,34 @@
         .evidence-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 4px 15px rgba(212, 168, 83, 0.4);
+        }
+        .abandon-btn {
+            padding: 12px 24px;
+            background: transparent;
+            color: var(--coral);
+            border: 2px solid var(--coral);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .abandon-btn:hover {
+            background: var(--coral);
+            color: white;
+            transform: scale(1.05);
+        }
+        .challenge-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+        }
+        .challenge-actions .evidence-btn,
+        .challenge-actions .abandon-btn {
+            width: 100%;
+            text-align: center;
         }
         /* Modal Styles */
         .modal-overlay {
@@ -434,10 +465,18 @@
             cursor: not-allowed;
             transform: none;
         }
+        /* Ensure consistent full width for all sections */
+        .container.dashboard-container {
+            max-width: 1000px;
+            width: 100%;
+        }
+        
         .tab-bar {
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .tab-link {
             flex: 1;
@@ -661,7 +700,7 @@
             <div id="verificationStatus" class="verification-status" style="display: none;"></div>
             
             <button class="modal-btn primary" id="submitEvidenceBtn" onclick="submitEvidence()" disabled>
-                 Submit for Review
+                📤 Submit for Review
             </button>
             <button class="modal-btn secondary" onclick="closeEvidenceModal()">Cancel</button>
         </div>
@@ -674,7 +713,7 @@
         // Show username
         const user = getCurrentUser();
         if (user) {
-            document.getElementById('userWelcome').textContent = `Hi, ${user.username}! `;
+            document.getElementById('userWelcome').textContent = `Hi, ${user.username}! 👋`;
         }
         
         const categoryIcons = {
@@ -746,7 +785,10 @@
                                 <span class="points-value">${c.points}</span>
                                 <span class="points-label">points</span>
                             </div>
-                            <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.category}', ${c.points}, ${c.co2Saved})">📸 Upload Evidence</button>
+                            <div class="challenge-actions">
+                                <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.category}', ${c.points}, ${c.co2Saved})">Upload Evidence</button>
+                                <button class="abandon-btn" onclick="abandonChallenge(${c.id}, '${c.name.replace(/'/g, "\\'")}')">Abandon Challenge</button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -785,8 +827,6 @@
                             <button class="delete-btn" onclick="deleteChallenge(${c.id})">🗑️ Delete</button>
                         </div>
                         ` : ''}
-
-
                     </div>
                 `).join('');
             } else {
@@ -813,6 +853,34 @@
                 
                 if (res.ok) {
                     alert('🎉 ' + data.message);
+                } else {
+                    alert('⚠️ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            }
+        }
+
+        // Abandon a challenge (remove from in progress)
+        async function abandonChallenge(id, name) {
+            if (!confirm(`Are you sure you want to abandon "${name}"?\n\nThis will remove the challenge from your In Progress list. You can always start it again later.`)) {
+                return;
+            }
+            
+            const token = getToken();
+            try {
+                const res = await fetch(`${API_URL}/challenges/${id}/abandon`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('Challenge abandoned. You can start it again anytime!');
+                    loadChallenges(); // Reload to update the view
                 } else {
                     alert('⚠️ ' + data.error);
                 }
@@ -918,7 +986,7 @@
                     // Evidence submitted for admin review
                     statusDiv.className = 'verification-status approved';
                     statusDiv.innerHTML = `
-                        <div style="font-size: 2rem; margin-bottom: 8px;"></div>
+                        <div style="font-size: 2rem; margin-bottom: 8px;">📤</div>
                         <strong>${data.message}</strong>
                         <p style="margin-top: 8px; font-size: 0.9rem;">An admin will review your submission soon.</p>
                         <p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-light);">You'll receive points once approved!</p>
@@ -932,11 +1000,11 @@
                 } else if (data.error) {
                     statusDiv.className = 'verification-status rejected';
                     statusDiv.innerHTML = `
-                        <div style="font-size: 2rem; margin-bottom: 8px;"></div>
+                        <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
                         <strong>${data.error}</strong>
                     `;
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '📤 Submit for Review';
+                    submitBtn.innerHTML = 'Submit for Review';
                 } else {
                     statusDiv.className = 'verification-status rejected';
                     statusDiv.innerHTML = `
@@ -944,13 +1012,13 @@
                         <strong>Something went wrong. Please try again.</strong>
                     `;
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = ' Submit for Review';
+                    submitBtn.innerHTML = 'Submit for Review';
                 }
             } catch (error) {
                 statusDiv.className = 'verification-status rejected';
                 statusDiv.innerHTML = '❌ Error connecting to server. Please try again.';
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = ' Submit for Review';
+                submitBtn.innerHTML = 'Submit for Review';
             }
         }
 
@@ -1014,7 +1082,7 @@
                 });
                 
                 if (res.ok) {
-                    alert(' Challenge added!');
+                    alert('Challenge added!');
                     e.target.reset();
                     loadChallenges();
                 } else {
@@ -1022,7 +1090,7 @@
                     alert('❌ ' + data.error);
                 }
             } catch (error) {
-                alert(' Could not connect to server');
+                alert('❌ Could not connect to server');
             }
         });
         
@@ -1053,7 +1121,7 @@
                 })
             }).then(res => {
                 if (res.ok) {
-                    alert(' Challenge updated!');
+                    alert('Challenge updated!');
                     loadChallenges();
                 }
             });
@@ -1068,7 +1136,7 @@
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             }).then(res => {
                 if (res.ok) {
-                    alert(' Challenge deleted!');
+                    alert('Challenge deleted!');
                     loadChallenges();
                 }
             });

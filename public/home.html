@@ -10,6 +10,24 @@
     <link rel="stylesheet" href="styles.css">
     <script src="auth-check.js"></script>
     <style>
+        /* Ensure consistent full width for all sections */
+        .container.dashboard-container {
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        .dashboard-header,
+        .tab-bar,
+        .welcome-section,
+        .tip-of-day,
+        .impact-grid,
+        .updates-card,
+        .articles-grid,
+        .section-title {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
         .welcome-section {
             display: grid;
             grid-template-columns: 1fr 280px;
@@ -312,9 +330,11 @@
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
-            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
         }
         .tab-link {
+            flex: 1;
             padding: 12px 24px;
             background: rgba(255,255,255,0.15);
             color: var(--cream);
@@ -323,6 +343,7 @@
             font-weight: 500;
             transition: all 0.3s;
             border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
         }
         .tab-link:hover, .tab-link.active {
             background: var(--gold);
@@ -404,6 +425,7 @@
             <a href="home.html" class="tab-link active">Home</a>
             <a href="challenges.html" class="tab-link">Challenges</a>
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
+            <a href="teams.html" class="tab-link">Teams</a>
             <a href="profile.html" class="tab-link">Profile</a>
         </div>
 
@@ -462,83 +484,38 @@
                 <span class="impact-change"> This semester</span>
             </div>
             <div class="impact-card">
-                <div class="impact-icon"></div>
+                <div class="impact-icon">👥</div>
                 <div class="impact-value" id="totalUsers">-</div>
                 <div class="impact-label">Eco Warriors</div>
                 <span class="impact-change">Growing community</span>
             </div>
             <div class="impact-card">
-                <div class="impact-icon"></div>
+                <div class="impact-icon">✅</div>
                 <div class="impact-value" id="totalChallengesCompleted">-</div>
                 <div class="impact-label">Challenges Completed</div>
-                <span class="impact-change"> Keep it up!</span>
+                <span class="impact-change">Keep it up!</span>
             </div>
             <div class="impact-card">
-                <div class="impact-icon"></div>
+                <div class="impact-icon">🏆</div>
                 <div class="impact-value" id="totalTeams">-</div>
                 <div class="impact-label">Active Teams</div>
-                <span class="impact-change"> Join one!</span>
+                <span class="impact-change">Join one!</span>
             </div>
         </div>
 
         <!-- Campus Updates -->
         <div class="updates-card">
             <h3>📢 Campus Sustainability Updates</h3>
-            <div class="update-item">
-                <div class="update-icon">♻️</div>
-                <div class="update-content">
-                    <h4>New Recycling Bins on Campus</h4>
-                    <p>Trinity has installed 20 new recycling stations across campus. Look for the green bins near all academic buildings!</p>
-                    <div class="update-time">2 days ago</div>
-                </div>
-            </div>
-            <div class="update-item">
-                <div class="update-icon">🚲</div>
-                <div class="update-content">
-                    <h4>Bike Share Program Launches</h4>
-                    <p>Free bike rentals are now available for students. Pick up at the library and return to any campus station.</p>
-                    <div class="update-time">1 week ago</div>
-                </div>
-            </div>
-            <div class="update-item">
-                <div class="update-icon">🌱</div>
-                <div class="update-content">
-                    <h4>Community Garden Open for Spring</h4>
-                    <p>Sign up to get your own plot in the campus community garden. Fresh veggies and good vibes await!</p>
-                    <div class="update-time">2 weeks ago</div>
-                </div>
+            <div id="campusUpdatesContainer">
+                <p style="color: var(--text-light);">Loading updates...</p>
             </div>
         </div>
 
-        <!-- Sustainability Articles -->
-        <h2 class="section-title">Sustainability News & Tips</h2>
-        <div class="articles-grid">
-            <div class="article-card">
-                <div class="article-image"></div>
-                <div class="article-content">
-                    <span class="article-tag">Ocean</span>
-                    <h3 class="article-title">How Reducing Plastic Saves Marine Life</h3>
-                    <p class="article-excerpt">Every piece of plastic avoided is a step toward cleaner oceans. Learn how small changes make a big impact.</p>
-                    <a href="https://www.nationalgeographic.com/environment/article/plastic-pollution" target="_blank" class="article-link">Read More →</a>
-                </div>
-            </div>
-            <div class="article-card">
-                <div class="article-image"></div>
-                <div class="article-content">
-                    <span class="article-tag">Food</span>
-                    <h3 class="article-title">The Environmental Impact of Your Diet</h3>
-                    <p class="article-excerpt">What you eat matters for the planet. Discover how plant-based meals can reduce your carbon footprint.</p>
-                    <a href="https://www.bbc.com/future/article/20200211-why-the-vegan-diet-is-not-always-green" target="_blank" class="article-link">Read More →</a>
-                </div>
-            </div>
-            <div class="article-card">
-                <div class="article-image">⚡</div>
-                <div class="article-content">
-                    <span class="article-tag">Energy</span>
-                    <h3 class="article-title">Simple Ways to Save Energy in Your Dorm</h3>
-                    <p class="article-excerpt">From LED bulbs to smart power strips, easy tips to reduce your energy consumption and save money.</p>
-                    <a href="https://www.energy.gov/energysaver/energy-saver" target="_blank" class="article-link">Read More →</a>
-                </div>
+        <!-- Sustainability Articles - Live from NewsAPI -->
+        <h2 class="section-title">Latest Sustainability News</h2>
+        <div class="articles-grid" id="newsArticlesGrid">
+            <div class="article-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <p style="color: var(--text-light);">Loading latest news...</p>
             </div>
         </div>
 
@@ -594,7 +571,15 @@
                 // Calculate total challenges completed
                 const usersRes = await fetch(`${API_URL}/users`);
                 const users = await usersRes.json();
-                const totalCompleted = users.reduce((sum, u) => sum + u.completedChallenges.length, 0);
+                const totalCompleted = users.reduce((sum, u) => {
+                    // Handle both array and number formats
+                    if (Array.isArray(u.completedChallenges)) {
+                        return sum + u.completedChallenges.length;
+                    } else if (typeof u.completedChallenges === 'number') {
+                        return sum + u.completedChallenges;
+                    }
+                    return sum;
+                }, 0);
                 document.getElementById('totalChallengesCompleted').textContent = totalCompleted;
 
                 // Load user's personal stats
@@ -613,6 +598,108 @@
         }
 
         loadStats();
+        loadCampusUpdates();
+        loadNews();
+        
+        // Load campus updates from API
+        async function loadCampusUpdates() {
+            try {
+                const res = await fetch(`${API_URL}/updates`);
+                const updates = await res.json();
+                
+                const container = document.getElementById('campusUpdatesContainer');
+                
+                if (!updates || updates.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-light); text-align: center;">No updates yet. Check back soon!</p>';
+                    return;
+                }
+                
+                container.innerHTML = updates.map(update => `
+                    <div class="update-item">
+                        <div class="update-icon">${update.icon || '🌱'}</div>
+                        <div class="update-content">
+                            <h4>${update.title}</h4>
+                            <p>${update.content}</p>
+                            <div class="update-time">${formatTimeAgo(update.createdAt)}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading updates:', error);
+                document.getElementById('campusUpdatesContainer').innerHTML = '<p style="color: var(--text-light);">Could not load updates.</p>';
+            }
+        }
+        
+        // Format time ago
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return '1 day ago';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            if (diffDays < 14) return '1 week ago';
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+            return date.toLocaleDateString();
+        }
+        
+        // Load live sustainability news from NewsAPI
+        async function loadNews() {
+            const container = document.getElementById('newsArticlesGrid');
+            
+            try {
+                const res = await fetch(`${API_URL}/news`);
+                const articles = await res.json();
+                
+                if (!articles || articles.length === 0 || articles.error) {
+                    container.innerHTML = `
+                        <div class="article-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                            <p style="color: var(--text-light);">No news available right now. Check back later!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Get category from title/description
+                function getCategory(article) {
+                    const text = (article.title + ' ' + article.description).toLowerCase();
+                    if (text.includes('energy') || text.includes('solar') || text.includes('wind')) return 'Energy';
+                    if (text.includes('ocean') || text.includes('marine') || text.includes('sea')) return 'Ocean';
+                    if (text.includes('food') || text.includes('diet') || text.includes('agriculture')) return 'Food';
+                    if (text.includes('forest') || text.includes('tree') || text.includes('wildlife')) return 'Nature';
+                    if (text.includes('transport') || text.includes('car') || text.includes('electric')) return 'Transport';
+                    if (text.includes('climate')) return 'Climate';
+                    if (text.includes('recycle') || text.includes('waste') || text.includes('plastic')) return 'Reduce';
+                    return 'Environment';
+                }
+                
+                container.innerHTML = articles.slice(0, 6).map(article => `
+                    <div class="article-card">
+                        <div class="article-image" style="${article.image ? `background-image: url('${article.image}'); background-size: cover; background-position: center;` : ''}">
+                            ${!article.image ? '🌍' : ''}
+                        </div>
+                        <div class="article-content">
+                            <span class="article-tag">${getCategory(article)}</span>
+                            <h3 class="article-title">${article.title ? article.title.substring(0, 80) + (article.title.length > 80 ? '...' : '') : 'Sustainability News'}</h3>
+                            <p class="article-excerpt">${article.description ? article.description.substring(0, 120) + '...' : 'Click to read the full article.'}</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <a href="${article.url}" target="_blank" class="article-link">Read More →</a>
+                                <span style="font-size: 0.75rem; color: var(--text-light);">${article.source}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading news:', error);
+                container.innerHTML = `
+                    <div class="article-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <p style="color: var(--text-light);">Could not load news. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
     </script>
 </body>
 </html>

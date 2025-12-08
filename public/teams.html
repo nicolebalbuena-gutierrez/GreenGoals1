@@ -10,6 +10,21 @@
     <link rel="stylesheet" href="styles.css">
     <script src="auth-check.js"></script>
     <style>
+        /* Ensure consistent full width for all sections */
+        .container.dashboard-container {
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        .dashboard-header,
+        .tab-bar,
+        .teams-layout,
+        .my-team-banner,
+        .team-card {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
         .tab-bar {
             display: flex;
             gap: 12px;
@@ -32,20 +47,17 @@
             color: var(--forest);
         }
         .teams-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 24px;
         }
-        @media (max-width: 800px) {
-            .teams-layout {
-                grid-template-columns: 1fr;
-            }
-        }
+        
         .team-card {
             background: var(--cream);
             border-radius: 20px;
             padding: 24px;
             box-shadow: 0 10px 40px var(--shadow);
+            overflow: visible !important;
         }
         .team-card h3 {
             font-family: 'Playfair Display', serif;
@@ -343,6 +355,7 @@
         }
         .autocomplete-container {
             position: relative;
+            overflow: visible !important;
         }
         .autocomplete-input {
             width: 100%;
@@ -366,14 +379,14 @@
             border: 2px solid var(--forest);
             border-top: none;
             border-radius: 0 0 12px 12px;
-            max-height: 250px;
+            max-height: 300px;
             overflow-y: auto;
-            z-index: 100;
+            z-index: 9999;
             display: none;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
         }
         .autocomplete-dropdown.show {
-            display: block;
+            display: block !important;
         }
         .autocomplete-item {
             display: flex;
@@ -517,11 +530,19 @@
                 <!-- Add Members -->
                 <div class="team-card">
                     <h3>Add Team Members</h3>
-                    <p style="color: var(--text-light); margin-bottom: 16px;">Search for GreenGoals users to add to your team:</p>
+                    <p style="color: var(--text-light); margin-bottom: 16px;">Select a GreenGoals user to add to your team:</p>
                     
-                    <div class="autocomplete-container">
-                        <input type="text" id="searchUsers" class="autocomplete-input" placeholder="Type a name or username..." autocomplete="off">
-                        <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                    <div class="form-group">
+                        <label>Search or select a user:</label>
+                        <input type="text" id="searchUsers" class="autocomplete-input" 
+                               placeholder="Type to filter users..." 
+                               autocomplete="off"
+                               oninput="filterUserList(this.value)"
+                               style="margin-bottom: 12px;">
+                    </div>
+                    
+                    <div id="userListContainer" style="max-height: 300px; overflow-y: auto; border: 2px solid var(--sand); border-radius: 12px; background: white;">
+                        <p style="padding: 16px; color: var(--text-light);">Loading users...</p>
                     </div>
                     
                     <div id="addedMessage" style="margin-top: 12px; display: none;"></div>
@@ -604,41 +625,105 @@
 
         async function loadMyTeam() {
             try {
+                console.log('loadMyTeam called, currentUser:', currentUser);
+                console.log('allUsers count:', allUsers.length);
+                
                 const teamsRes = await fetch(`${API_URL}/teams`);
                 const teams = await teamsRes.json();
+                console.log('Teams loaded:', teams);
+                
                 const myTeam = teams.find(t => t.id === currentUser.teamId);
+                console.log('My team:', myTeam);
                 
                 if (myTeam) {
                     document.getElementById('myTeamName').textContent = myTeam.name;
                     document.getElementById('myTeamDescription').textContent = myTeam.description || 'No description';
                     document.getElementById('myTeamPoints').textContent = myTeam.totalPoints || 0;
-                    document.getElementById('myTeamMembers').textContent = myTeam.memberCount || 0;
-                    document.getElementById('inviteTeamName').textContent = myTeam.name;
+                    const shareEl = document.getElementById('shareTeamName');
+                    if (shareEl) shareEl.textContent = myTeam.name;
                     
                     // Load team members
-                    const teamMembers = allUsers.filter(u => u.teamId === myTeam.id);
                     const membersList = document.getElementById('teamMembersList');
+                    const teamId = myTeam.id;
                     
-                    if (teamMembers.length > 0) {
-                        membersList.innerHTML = teamMembers.map(m => `
-                            <div class="member-item">
-                                <div class="member-avatar">${(m.firstName || m.username).charAt(0).toUpperCase()}</div>
-                                <div class="member-info">
-                                    <h5>${m.firstName || ''} ${m.lastName || ''}</h5>
-                                    <p>@${m.username} · ${m.points} pts</p>
-                                </div>
-                                ${m.id === myTeam.leaderId ? '<span class="leader-badge">Leader</span>' : ''}
-                            </div>
-                        `).join('');
-                    } else {
-                        membersList.innerHTML = '<p style="color: var(--text-light);">No members yet</p>';
+                    // Filter users who are in this team
+                    let teamMembers = [];
+                    for (let i = 0; i < allUsers.length; i++) {
+                        if (allUsers[i].teamId === teamId) {
+                            teamMembers.push(allUsers[i]);
+                        }
                     }
                     
-                    // Load users that can be added
-                    loadAvailableUsersToAdd();
+                    // Always add current user if not in list
+                    let foundCurrentUser = false;
+                    for (let i = 0; i < teamMembers.length; i++) {
+                        if (teamMembers[i].id === currentUser.id) {
+                            foundCurrentUser = true;
+                            break;
+                        }
+                    }
+                    if (!foundCurrentUser && currentUser.teamId === teamId) {
+                        teamMembers.unshift(currentUser);
+                    }
+                    
+                    console.log('Team members found:', teamMembers.length, teamMembers);
+                    
+                    // Update member count
+                    document.getElementById('myTeamMembers').textContent = teamMembers.length;
+                    
+                    // Build HTML for members
+                    let membersHTML = '';
+                    if (teamMembers.length === 0) {
+                        membersHTML = '<p style="color: var(--text-light);">No members yet</p>';
+                    } else {
+                        for (let i = 0; i < teamMembers.length; i++) {
+                            const m = teamMembers[i];
+                            const isCurrentUser = m.id === currentUser.id;
+                            const isLeader = m.id === myTeam.leaderId;
+                            const firstName = m.firstName || '';
+                            const lastName = m.lastName || '';
+                            const name = (firstName + ' ' + lastName).trim() || m.username;
+                            const initial = (firstName || m.username || '?').charAt(0).toUpperCase();
+                            
+                            // Determine avatar content - profile picture or initial
+                            let avatarContent = initial;
+                            let avatarStyle = '';
+                            if (m.profilePicture) {
+                                if (m.profilePicture.startsWith('http')) {
+                                    avatarContent = '<img src="' + m.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                                    avatarStyle = 'overflow:hidden;';
+                                } else {
+                                    // Emoji profile picture
+                                    avatarContent = m.profilePicture;
+                                    avatarStyle = 'font-size: 1.5rem;';
+                                }
+                            }
+                            
+                            membersHTML += '<div class="member-item" style="' + (isCurrentUser ? 'background: rgba(135, 168, 120, 0.1);' : '') + '">';
+                            membersHTML += '<div class="member-avatar" style="' + avatarStyle + '">' + avatarContent + '</div>';
+                            membersHTML += '<div class="member-info">';
+                            membersHTML += '<h5>' + name + (isCurrentUser ? ' <span style="color: var(--sage); font-size: 0.8rem;">(You)</span>' : '') + '</h5>';
+                            membersHTML += '<p>@' + m.username + ' · ' + (m.points || 0) + ' pts</p>';
+                            membersHTML += '</div>';
+                            if (isLeader) {
+                                membersHTML += '<span class="leader-badge">Leader</span>';
+                            }
+                            membersHTML += '</div>';
+                        }
+                    }
+                    
+                    membersList.innerHTML = membersHTML;
+                    console.log('Members list updated');
                 }
+                
+                // ALWAYS display the user list (even if team not found)
+                console.log('Displaying user list with', allUsers.length, 'users');
+                displayUserList(allUsers);
+                
             } catch (error) {
                 console.error('Error loading team:', error);
+                // Still try to display users even if there's an error
+                displayUserList(allUsers);
             }
         }
 
@@ -754,93 +839,102 @@
             }
         }
 
-        // Autocomplete for adding team members
-        let usersWithoutTeam = [];
-        const searchInput = document.getElementById('searchUsers');
-        const dropdown = document.getElementById('autocompleteDropdown');
         
-        function loadAvailableUsersToAdd() {
-            // Filter users who are not in any team and not admin
-            usersWithoutTeam = allUsers.filter(u => 
-                (u.teamId === null || u.teamId === undefined || !u.teamId) && 
-                u.role !== 'super_admin' && 
-                u.id !== currentUser.id
-            );
+        // Display users in the list
+        function displayUserList(usersToShow) {
+            console.log('displayUserList called with', usersToShow ? usersToShow.length : 0, 'users');
             
-            console.log('Available users to add:', usersWithoutTeam); // Debug log
-            
-            // Set team name for sharing
-            const shareEl = document.getElementById('shareTeamName');
-            if (shareEl && currentUser.teamId) {
-                const teamsData = fetch(`${API_URL}/teams`).then(r => r.json()).then(teams => {
-                    const myTeam = teams.find(t => t.id === currentUser.teamId);
-                    if (myTeam && shareEl) {
-                        shareEl.textContent = myTeam.name;
-                    }
-                });
-            }
-        }
-        
-        // Search input event listener
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase().trim();
-                
-                if (searchTerm.length === 0) {
-                    dropdown.classList.remove('show');
-                    return;
-                }
-                
-                const filtered = usersWithoutTeam.filter(u => 
-                    (u.firstName && u.firstName.toLowerCase().includes(searchTerm)) ||
-                    (u.lastName && u.lastName.toLowerCase().includes(searchTerm)) ||
-                    (u.username && u.username.toLowerCase().includes(searchTerm)) ||
-                    (`${u.firstName} ${u.lastName}`.toLowerCase().includes(searchTerm))
-                );
-                
-                showDropdown(filtered);
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.autocomplete-container')) {
-                    dropdown.classList.remove('show');
-                }
-            });
-            
-            // Focus shows dropdown if there's text
-            searchInput.addEventListener('focus', function() {
-                if (this.value.trim().length > 0) {
-                    const searchTerm = this.value.toLowerCase().trim();
-                    const filtered = usersWithoutTeam.filter(u => 
-                        (u.firstName && u.firstName.toLowerCase().includes(searchTerm)) ||
-                        (u.lastName && u.lastName.toLowerCase().includes(searchTerm)) ||
-                        (u.username && u.username.toLowerCase().includes(searchTerm))
-                    );
-                    showDropdown(filtered);
-                }
-            });
-        }
-        
-        function showDropdown(users) {
-            if (users.length === 0) {
-                dropdown.innerHTML = '<div class="no-results">No users found</div>';
-                dropdown.classList.add('show');
+            const container = document.getElementById('userListContainer');
+            if (!container) {
+                console.error('userListContainer not found!');
                 return;
             }
             
-            dropdown.innerHTML = users.slice(0, 8).map(u => `
-                <div class="autocomplete-item" onclick="addUserToTeam(${u.id}, '${(u.firstName || u.username).replace(/'/g, "\\'")}')">
-                    <div class="autocomplete-avatar">${(u.firstName || u.username).charAt(0).toUpperCase()}</div>
-                    <div class="autocomplete-info">
-                        <div class="autocomplete-name">${u.firstName || ''} ${u.lastName || ''}</div>
-                        <div class="autocomplete-username">@${u.username} · ${u.points || 0} pts</div>
-                    </div>
-                    <span class="autocomplete-add">+ Add</span>
-                </div>
-            `).join('');
+            if (!usersToShow || usersToShow.length === 0) {
+                container.innerHTML = '<p style="padding: 16px; text-align: center; color: var(--text-light);">No users found in the system</p>';
+                return;
+            }
             
-            dropdown.classList.add('show');
+            // Filter out admin and current user
+            const currentUserId = currentUser ? currentUser.id : -1;
+            const users = usersToShow.filter(u => 
+                u.role !== 'super_admin' && 
+                u.id !== currentUserId
+            );
+            
+            console.log('After filtering:', users.length, 'users to display');
+            
+            if (users.length === 0) {
+                container.innerHTML = '<p style="padding: 16px; text-align: center; color: var(--text-light);">No users available to add</p>';
+                return;
+            }
+            
+            let html = '';
+            const myTeamId = currentUser ? currentUser.teamId : null;
+            
+            users.forEach(u => {
+                const isInTeam = myTeamId && u.teamId && u.teamId === myTeamId;
+                const hasOtherTeam = u.teamId && u.teamId !== myTeamId;
+                const name = ((u.firstName || '') + ' ' + (u.lastName || '')).trim();
+                const displayName = name || u.username;
+                const initial = (u.firstName || u.username || '?').charAt(0).toUpperCase();
+                
+                // Determine avatar content - profile picture or initial
+                let avatarContent = initial;
+                let avatarStyle = 'width: 40px; height: 40px; border-radius: 50%; background: var(--sage); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;';
+                if (u.profilePicture) {
+                    if (u.profilePicture.startsWith('http')) {
+                        avatarContent = `<img src="${u.profilePicture}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                        avatarStyle += ' overflow: hidden;';
+                    } else {
+                        // Emoji profile picture
+                        avatarContent = u.profilePicture;
+                        avatarStyle += ' font-size: 1.5rem;';
+                    }
+                }
+                
+                html += `
+                    <div class="user-list-item" 
+                         onclick="${isInTeam ? '' : `addUserToTeam(${u.id}, '${displayName.replace(/'/g, "\\'")}')`}"
+                         style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--sand); ${isInTeam ? 'opacity: 0.5; cursor: default;' : 'cursor: pointer;'} transition: background 0.2s;"
+                         onmouseover="this.style.background='var(--mint)'"
+                         onmouseout="this.style.background='white'">
+                        <div style="${avatarStyle}">${avatarContent}</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; color: var(--text-dark);">${displayName}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light);">@${u.username} · ${u.points || 0} pts</div>
+                        </div>
+                        ${isInTeam ? '<span style="color: var(--sage); font-size: 0.8rem; font-weight: 500;">Already in team</span>' : 
+                          hasOtherTeam ? '<span style="color: var(--coral); font-size: 0.8rem; font-weight: 500;">In another team</span>' : 
+                          '<span style="background: var(--forest); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">+ Add</span>'}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Filter user list as user types
+        function filterUserList(searchTerm) {
+            if (!searchTerm || searchTerm.trim() === '') {
+                displayUserList(allUsers);
+                return;
+            }
+            
+            const term = searchTerm.toLowerCase().trim();
+            const filtered = allUsers.filter(u => {
+                const firstName = (u.firstName || '').toLowerCase();
+                const lastName = (u.lastName || '').toLowerCase();
+                const username = (u.username || '').toLowerCase();
+                const fullName = `${firstName} ${lastName}`;
+                
+                return firstName.includes(term) ||
+                       lastName.includes(term) ||
+                       username.includes(term) ||
+                       fullName.includes(term);
+            });
+            
+            displayUserList(filtered);
         }
         
         async function addUserToTeam(userId, userName) {
@@ -859,22 +953,22 @@
                 if (res.ok) {
                     // Show success message
                     const msgEl = document.getElementById('addedMessage');
-                    msgEl.innerHTML = `<div class="success-message">✓ ${userName} has been added to your team!</div>`;
+                    msgEl.innerHTML = `<div class="success-message" style="background: rgba(135, 168, 120, 0.2); color: var(--forest); padding: 12px 16px; border-radius: 10px; text-align: center; font-weight: 500;">${userName} has been added to your team!</div>`;
                     msgEl.style.display = 'block';
                     
-                    // Clear search and hide dropdown
-                    searchInput.value = '';
-                    dropdown.classList.remove('show');
+                    // Clear search
+                    const searchEl = document.getElementById('searchUsers');
+                    if (searchEl) searchEl.value = '';
                     
-                    // Reload team members
+                    // Reload page after short delay
                     setTimeout(() => {
                         loadTeamsPage();
                     }, 1500);
                 } else {
-                    alert('❌ ' + data.error);
+                    alert('Error: ' + data.error);
                 }
             } catch (error) {
-                alert('❌ Could not connect to server');
+                alert('Could not connect to server');
             }
         }
 

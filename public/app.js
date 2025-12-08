@@ -4,10 +4,21 @@
 
 const API_URL = 'http://localhost:3000/api';
 
-// Check if already logged in - redirect to home
+// Check if already logged in - redirect appropriately
 const token = localStorage.getItem('token');
 if (token) {
-    window.location.href = 'home.html';
+    const userData = localStorage.getItem('user');
+    if (userData) {
+        const user = JSON.parse(userData);
+        // Redirect admins to admin panel, others to home
+        if (user.isAdmin) {
+            window.location.href = 'admin-panel.html';
+        } else {
+            window.location.href = 'home.html';
+        }
+    } else {
+        window.location.href = 'home.html';
+    }
 }
 
 // DOM Elements
@@ -76,12 +87,16 @@ loginForm.addEventListener('submit', async (e) => {
         const data = await response.json();
         
         if (response.ok) {
-            showMessage(` Welcome back, ${data.user.username}!`, 'success');
+            showMessage(`Welcome back, ${data.user.username}!`, 'success');
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            // Redirect to home
+            // Redirect admins to admin panel, others to home
             setTimeout(() => {
-                window.location.href = 'home.html';
+                if (data.user.isAdmin) {
+                    window.location.href = 'admin-panel.html';
+                } else {
+                    window.location.href = 'home.html';
+                }
             }, 800);
         } else {
             showMessage(`❌ ${data.error}`, 'error');
@@ -115,10 +130,10 @@ registerForm.addEventListener('submit', async (e) => {
         const data = await response.json();
         
         if (response.ok) {
-            showMessage(`🎉 Welcome to GreenGoals, ${data.user.username}!`, 'success');
+            showMessage(`Welcome to GreenGoals, ${data.user.username}!`, 'success');
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            // Redirect to home
+            // Redirect to home (new users aren't admins)
             setTimeout(() => {
                 window.location.href = 'home.html';
             }, 800);

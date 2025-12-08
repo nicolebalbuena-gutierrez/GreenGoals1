@@ -13,6 +13,9 @@ const JWT_SECRET = 'greengoals-secret-key-2025';
 // Example: const OPENAI_API_KEY = 'sk-proj-abc123...';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'YOUR_OPENAI_API_KEY_HERE';
 
+// NewsAPI Key for fetching live sustainability news
+const NEWS_API_KEY = process.env.NEWS_API_KEY || '2d0395b0d6634347858b6000239d74fe';
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Increased limit for image uploads
@@ -27,7 +30,7 @@ function readDatabase() {
         const data = fs.readFileSync(DB_PATH, 'utf8');
         return JSON.parse(data);
     } catch (error) {
-        return { users: [], challenges: [], teams: [] };
+        return { users: [], challenges: [], teams: [], updates: [] };
     }
 }
 
@@ -216,20 +219,23 @@ app.post('/api/admin/login', async (req, res) => {
 // Get all users (public - no passwords)
 app.get('/api/users', (req, res) => {
     const db = readDatabase();
-    const users = db.users.map(u => ({
-        id: u.id,
-        username: u.username,
-        firstName: u.firstName || '',
-        lastName: u.lastName || '',
-        classYear: u.classYear || '',
-        profilePicture: u.profilePicture || '',
-        bio: u.bio || '',
-        points: u.points || 0,
-        totalCO2Saved: u.totalCO2Saved || 0,
-        completedChallenges: Array.isArray(u.completedChallenges) ? u.completedChallenges.length : 0,
-        teamId: u.teamId || null,
-        role: u.role || 'user'
-    }));
+    // Filter out admin users from public list
+    const users = db.users
+        .filter(u => u.role !== 'super_admin' && u.role !== 'admin')
+        .map(u => ({
+            id: u.id,
+            username: u.username,
+            firstName: u.firstName || '',
+            lastName: u.lastName || '',
+            classYear: u.classYear || '',
+            profilePicture: u.profilePicture || '',
+            bio: u.bio || '',
+            points: u.points || 0,
+            totalCO2Saved: u.totalCO2Saved || 0,
+            completedChallenges: Array.isArray(u.completedChallenges) ? u.completedChallenges.length : 0,
+            teamId: u.teamId || null,
+            role: u.role || 'user'
+        }));
     res.json(users);
 });
 
@@ -331,6 +337,31 @@ app.post('/api/challenges/:id/accept', authenticateToken, (req, res) => {
     writeDatabase(db);
 
     res.json({ message: `Started: ${challenge.name}`, challenge });
+});
+
+// Abandon a challenge (remove from active challenges)
+app.post('/api/challenges/:id/abandon', authenticateToken, (req, res) => {
+    const db = readDatabase();
+    const challengeId = parseInt(req.params.id);
+    const userId = req.user.userId;
+
+    const user = db.users.find(u => u.id === userId);
+    const challenge = db.challenges.find(c => c.id === challengeId);
+
+    if (!challenge) {
+        return res.status(404).json({ error: 'Challenge not found' });
+    }
+
+    const index = user.activeChallenges.indexOf(challengeId);
+    if (index === -1) {
+        return res.status(400).json({ error: 'Challenge is not in your active challenges' });
+    }
+
+    // Remove from active challenges
+    user.activeChallenges.splice(index, 1);
+    writeDatabase(db);
+
+    res.json({ message: `Abandoned: ${challenge.name}. You can start it again anytime!` });
 });
 
 // Complete a challenge (direct - for admin or testing)
@@ -743,7 +774,9 @@ app.post('/api/teams/:id/add-member', authenticateToken, (req, res) => {
 // Get leaderboard
 app.get('/api/leaderboard', (req, res) => {
     const db = readDatabase();
+    // Filter out admin users from leaderboard
     const leaderboard = db.users
+        .filter(u => u.role !== 'super_admin' && u.role !== 'admin')
         .map(u => ({
             id: u.id,
             username: u.username,
@@ -753,7 +786,8 @@ app.get('/api/leaderboard', (req, res) => {
             profilePicture: u.profilePicture,
             points: u.points,
             totalCO2Saved: u.totalCO2Saved,
-            completedChallenges: u.completedChallenges.length
+            completedChallenges: u.completedChallenges.length,
+            role: u.role
         }))
         .sort((a, b) => b.points - a.points)
         .slice(0, 10);
@@ -778,9 +812,11 @@ app.get('/api/leaderboard/teams', (req, res) => {
 // Get platform stats
 app.get('/api/stats', (req, res) => {
     const db = readDatabase();
-    const totalUsers = db.users.filter(u => u.role !== 'super_admin').length;
-    const totalCO2Saved = db.users.reduce((sum, u) => sum + (u.totalCO2Saved || 0), 0);
-    const totalChallengesCompleted = db.users.reduce((sum, u) => {
+    // Filter out admin users from stats
+    const regularUsers = db.users.filter(u => u.role !== 'super_admin' && u.role !== 'admin');
+    const totalUsers = regularUsers.length;
+    const totalCO2Saved = regularUsers.reduce((sum, u) => sum + (u.totalCO2Saved || 0), 0);
+    const totalChallengesCompleted = regularUsers.reduce((sum, u) => {
         const completed = u.completedChallenges;
         if (Array.isArray(completed)) {
             return sum + completed.length;
@@ -788,12 +824,14 @@ app.get('/api/stats', (req, res) => {
         return sum + (completed || 0);
     }, 0);
     const totalTeams = db.teams ? db.teams.length : 0;
+    const totalChallenges = db.challenges ? db.challenges.length : 0;
     
     res.json({
         totalUsers,
         totalCO2Saved: totalCO2Saved.toFixed(1),
         totalChallengesCompleted,
-        totalTeams
+        totalTeams,
+        totalChallenges
     });
 });
 
@@ -916,8 +954,10 @@ app.get('/api/admin/teams', authenticateAdmin, (req, res) => {
     const teams = db.teams.map(t => {
         // Get leader info
         const leader = db.users.find(u => u.id === t.leaderId);
-        // Get member info
-        const members = t.members.map(memberId => {
+        
+        // Get member info - handle undefined members array
+        const memberIds = Array.isArray(t.members) ? t.members : [];
+        const members = memberIds.map(memberId => {
             const user = db.users.find(u => u.id === memberId);
             return user ? {
                 id: user.id,
@@ -926,6 +966,18 @@ app.get('/api/admin/teams', authenticateAdmin, (req, res) => {
                 username: user.username
             } : null;
         }).filter(m => m !== null);
+        
+        // Also include users who have this teamId but aren't in members array
+        db.users.forEach(u => {
+            if (u.teamId === t.id && !members.find(m => m.id === u.id)) {
+                members.push({
+                    id: u.id,
+                    firstName: u.firstName || '',
+                    lastName: u.lastName || '',
+                    username: u.username
+                });
+            }
+        });
         
         return {
             id: t.id,
@@ -1015,6 +1067,138 @@ app.post('/api/admin/teams/:id/remove-member', authenticateAdmin, (req, res) => 
     
     writeDatabase(db);
     res.json({ message: 'Member removed from team!' });
+});
+
+// ============================================
+// CAMPUS UPDATES ROUTES
+// ============================================
+
+// Get all campus updates (public)
+app.get('/api/updates', (req, res) => {
+    const db = readDatabase();
+    const updates = db.updates || [];
+    // Sort by date, newest first
+    const sortedUpdates = updates.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(sortedUpdates);
+});
+
+// Admin: Get all updates
+app.get('/api/admin/updates', authenticateAdmin, (req, res) => {
+    const db = readDatabase();
+    const updates = db.updates || [];
+    res.json(updates.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+});
+
+// Admin: Create new update
+app.post('/api/admin/updates', authenticateAdmin, (req, res) => {
+    const { title, content, icon } = req.body;
+    const db = readDatabase();
+    
+    if (!db.updates) {
+        db.updates = [];
+    }
+    
+    const newUpdate = {
+        id: db.updates.length > 0 ? Math.max(...db.updates.map(u => u.id)) + 1 : 1,
+        title,
+        content,
+        icon: icon || '🌱',
+        createdAt: new Date().toISOString()
+    };
+    
+    db.updates.push(newUpdate);
+    writeDatabase(db);
+    
+    res.json({ message: 'Update created!', update: newUpdate });
+});
+
+// Admin: Update an update
+app.put('/api/admin/updates/:id', authenticateAdmin, (req, res) => {
+    const { title, content, icon } = req.body;
+    const db = readDatabase();
+    const updateId = parseInt(req.params.id);
+    
+    if (!db.updates) {
+        return res.status(404).json({ error: 'No updates found' });
+    }
+    
+    const update = db.updates.find(u => u.id === updateId);
+    if (!update) {
+        return res.status(404).json({ error: 'Update not found' });
+    }
+    
+    if (title) update.title = title;
+    if (content) update.content = content;
+    if (icon) update.icon = icon;
+    update.updatedAt = new Date().toISOString();
+    
+    writeDatabase(db);
+    
+    res.json({ message: 'Update modified!', update });
+});
+
+// Admin: Delete an update
+app.delete('/api/admin/updates/:id', authenticateAdmin, (req, res) => {
+    const db = readDatabase();
+    const updateId = parseInt(req.params.id);
+    
+    if (!db.updates) {
+        return res.status(404).json({ error: 'No updates found' });
+    }
+    
+    const index = db.updates.findIndex(u => u.id === updateId);
+    if (index === -1) {
+        return res.status(404).json({ error: 'Update not found' });
+    }
+    
+    db.updates.splice(index, 1);
+    writeDatabase(db);
+    
+    res.json({ message: 'Update deleted!' });
+});
+
+// ============================================
+// NEWS API ROUTES
+// ============================================
+
+// Get live sustainability news
+app.get('/api/news', async (req, res) => {
+    try {
+        // Search for environmental news with specific terms
+        const searchTerms = '("climate change" OR "global warming" OR "renewable energy" OR "carbon footprint" OR "electric vehicle" OR "solar energy" OR "wind power" OR "sustainability" OR "zero emissions")';
+        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchTerms)}&sortBy=relevancy&pageSize=12&language=en&apiKey=${NEWS_API_KEY}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.status === 'error') {
+            console.error('NewsAPI error:', data.message);
+            return res.status(500).json({ error: data.message });
+        }
+        
+        // Filter and format articles - only keep relevant ones
+        const relevantKeywords = ['climate', 'environment', 'sustainable', 'renewable', 'solar', 'wind', 'carbon', 'emission', 'electric vehicle', 'ev', 'green', 'eco', 'recycle', 'pollution', 'energy'];
+        
+        const articles = data.articles
+            .filter(article => {
+                const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+                return relevantKeywords.some(keyword => text.includes(keyword));
+            })
+            .slice(0, 6)
+            .map(article => ({
+                title: article.title,
+                description: article.description,
+                url: article.url,
+                image: article.urlToImage,
+                source: article.source.name,
+                publishedAt: article.publishedAt
+            }));
+        
+        res.json(articles);
+    } catch (error) {
+        console.error('Error fetching news:', error);
+        res.status(500).json({ error: 'Failed to fetch news' });
+    }
 });
 
 // ============================================

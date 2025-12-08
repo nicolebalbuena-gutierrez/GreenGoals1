@@ -176,9 +176,9 @@
             margin-bottom: 24px;
         }
         .users-card-header {
-            background: var(--sage);
+            background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
             padding: 20px 28px;
-            color: var(--forest);
+            color: var(--cream);
         }
         .users-card-header h2 {
             font-family: 'Playfair Display', serif;
@@ -225,19 +225,17 @@
             border-radius: 20px;
             font-size: 0.85rem;
         }
-        .leaderboards-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
+        /* Ensure consistent full width for all sections */
+        .container.dashboard-container {
+            max-width: 1000px;
+            width: 100%;
         }
-        @media (max-width: 900px) {
-            .leaderboards-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .leaderboards-grid .leaderboard-card {
-            margin-bottom: 0;
+        
+        .tab-bar,
+        .leaderboard-card,
+        .users-card {
+            width: 100%;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -270,37 +268,35 @@
         </div>
 
 
-        <!-- Leaderboards Side by Side -->
-        <div class="leaderboards-grid">
-            <!-- User Leaderboard -->
-            <div class="leaderboard-card">
-                <div class="leaderboard-header">
-                    <h2> Top Eco Warriors</h2>
-                </div>
-                <div class="leaderboard-list" id="userLeaderboard">
-                    <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
-                </div>
+        <!-- Top Eco Warriors -->
+        <div class="leaderboard-card">
+            <div class="leaderboard-header">
+                <h2>Top Eco Warriors</h2>
             </div>
+            <div class="leaderboard-list" id="userLeaderboard">
+                <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
+            </div>
+        </div>
 
-            <!-- Team Leaderboard -->
-            <div class="leaderboard-card">
-                <div class="leaderboard-header">
-                    <h2> Top Teams</h2>
-                </div>
-                <div class="leaderboard-list" id="teamLeaderboard">
-                    <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
-                </div>
+        <!-- Top Teams -->
+        <div class="leaderboard-card">
+            <div class="leaderboard-header">
+                <h2>Top Teams</h2>
             </div>
-        </div><!-- End leaderboards-grid -->
+            <div class="leaderboard-list" id="teamLeaderboard">
+                <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
+            </div>
+        </div>
 
         <!-- All Users Table -->
         <div class="users-card">
             <div class="users-card-header">
-                <h2>📋 All Participants</h2>
+                <h2>All Participants</h2>
             </div>
             <table class="users-table">
                 <thead>
                     <tr>
+                        <th></th>
                         <th>First Name</th>
                         <th>Last Name</th>
                         <th>Class Year</th>
@@ -308,7 +304,7 @@
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    <tr><td colspan="4">Loading...</td></tr>
+                    <tr><td colspan="5">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -325,9 +321,10 @@
 
         async function loadLeaderboards() {
             try {
-                // Load user leaderboard
+                // Load user leaderboard (filter out admins)
                 const usersRes = await fetch(`${API_URL}/leaderboard`);
-                const users = await usersRes.json();
+                const allUsers = await usersRes.json();
+                const users = allUsers.filter(u => u.role !== 'super_admin' && u.role !== 'admin');
                 
                 const userList = document.getElementById('userLeaderboard');
                 userList.innerHTML = users.map((user, index) => {
@@ -343,7 +340,7 @@
                     
                     return `
                     <div class="rank-item rank-${index + 1}">
-                        <div class="rank-number">${index === 0 ? '1' : index + 1}</div>
+                        <div class="rank-number">${index + 1}</div>
                         <div class="rank-avatar">${avatarContent}</div>
                         <div class="rank-info">
                             <div class="rank-name">${user.username} ${classYearBadge}</div>
@@ -360,16 +357,30 @@
                     </div>
                 `}).join('');
 
-                // Load all users table
+                // Load all users table (filter out admins)
                 const usersTableBody = document.getElementById('usersTableBody');
-                usersTableBody.innerHTML = users.map(u => `
+                const nonAdminUsers = users.filter(u => u.role !== 'super_admin' && u.role !== 'admin');
+                usersTableBody.innerHTML = nonAdminUsers.map(u => {
+                    // Determine avatar content
+                    let avatarContent = (u.firstName || u.username || '?').charAt(0).toUpperCase();
+                    let avatarStyle = 'width: 50px; height: 50px; border-radius: 50%; background: var(--sand); display: flex; align-items: center; justify-content: center; color: var(--text-light); font-weight: 600; font-size: 1.5rem;';
+                    if (u.profilePicture) {
+                        if (u.profilePicture.startsWith('http')) {
+                            avatarContent = `<img src="${u.profilePicture}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                            avatarStyle += ' overflow: hidden;';
+                        } else {
+                            avatarContent = u.profilePicture;
+                        }
+                    }
+                    return `
                     <tr>
+                        <td style="width: 60px;"><div style="${avatarStyle}">${avatarContent}</div></td>
                         <td><strong>${u.firstName}</strong></td>
                         <td>${u.lastName}</td>
                         <td>${u.classYear ? `<span class="year-badge">Class of ${u.classYear}</span>` : '-'}</td>
                         <td><span class="points-badge">${u.points} pts</span></td>
                     </tr>
-                `).join('');
+                `}).join('');
 
                 // Load team leaderboard
                 const teamsRes = await fetch(`${API_URL}/leaderboard/teams`);
@@ -379,7 +390,7 @@
                 if (teams.length > 0) {
                     teamList.innerHTML = teams.map((team, index) => `
                         <div class="rank-item rank-${index + 1}">
-                            <div class="rank-number">${index === 0 ? '' : index + 1}</div>
+                            <div class="rank-number">${index + 1}</div>
                             <div class="rank-info">
                                 <div class="rank-name">${team.name}</div>
                                 <div class="rank-stats">${team.memberCount} members</div>

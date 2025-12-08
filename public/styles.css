@@ -389,8 +389,9 @@ body {
    ============================================ */
 
 .dashboard-container {
-    max-width: 900px;
+    max-width: 1000px;
     padding: 40px 20px;
+    align-items: stretch;
 }
 
 .dashboard-header {
@@ -565,6 +566,10 @@ body {
         padding: 10px 8px;
     }
 }
+
+
+
+
 
 
 
