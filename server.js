@@ -239,6 +239,48 @@ app.get('/api/users', (req, res) => {
     res.json(users);
 });
 
+// Get user's pending evidence submissions (MUST be before /api/user/:id to avoid route conflict)
+app.get('/api/user/pending-evidence', authenticateToken, (req, res) => {
+    const db = readDatabase();
+    const userId = req.user.userId;
+    
+    if (!db.pendingEvidence) {
+        return res.json([]);
+    }
+    
+    const userEvidence = db.pendingEvidence.filter(e => e.userId === userId);
+    // Don't send the full image back, just metadata
+    const safeEvidence = userEvidence.map(e => ({
+        id: e.id,
+        challengeId: e.challengeId,
+        challengeName: e.challengeName,
+        status: e.status,
+        submittedAt: e.submittedAt,
+        reviewedAt: e.reviewedAt,
+        reviewNotes: e.reviewNotes
+    }));
+    
+    res.json(safeEvidence);
+});
+
+// Get user's completed/approved evidence with images
+app.get('/api/user/completed-evidence', authenticateToken, (req, res) => {
+    const db = readDatabase();
+    const userId = req.user.userId;
+    
+    if (!db.pendingEvidence) {
+        return res.json([]);
+    }
+    
+    // Get user's approved evidence
+    const completedEvidence = db.pendingEvidence.filter(e => 
+        e.userId === userId && e.status === 'approved'
+    );
+    
+    // Return with images
+    res.json(completedEvidence);
+});
+
 // Get user by ID
 app.get('/api/user/:id', (req, res) => {
     const db = readDatabase();
@@ -471,30 +513,6 @@ app.post('/api/challenges/:id/submit-evidence', authenticateToken, async (req, r
     });
 });
 
-// Get user's pending evidence submissions
-app.get('/api/user/pending-evidence', authenticateToken, (req, res) => {
-    const db = readDatabase();
-    const userId = req.user.userId;
-    
-    if (!db.pendingEvidence) {
-        return res.json([]);
-    }
-    
-    const userEvidence = db.pendingEvidence.filter(e => e.userId === userId);
-    // Don't send the full image back, just metadata
-    const safeEvidence = userEvidence.map(e => ({
-        id: e.id,
-        challengeId: e.challengeId,
-        challengeName: e.challengeName,
-        status: e.status,
-        submittedAt: e.submittedAt,
-        reviewedAt: e.reviewedAt,
-        reviewNotes: e.reviewNotes
-    }));
-    
-    res.json(safeEvidence);
-});
-
 // Admin: Get all pending evidence
 app.get('/api/admin/pending-evidence', authenticateAdmin, (req, res) => {
     const db = readDatabase();
@@ -508,7 +526,7 @@ app.get('/api/admin/pending-evidence', authenticateAdmin, (req, res) => {
     res.json(pendingOnly);
 });
 
-// Admin: Get all evidence (including reviewed)
+// Admin: Get all evidence (including reviewed) - with images
 app.get('/api/admin/all-evidence', authenticateAdmin, (req, res) => {
     const db = readDatabase();
     
@@ -516,12 +534,8 @@ app.get('/api/admin/all-evidence', authenticateAdmin, (req, res) => {
         return res.json([]);
     }
     
-    // Return all submissions without images (for history)
-    const allEvidence = db.pendingEvidence.map(e => ({
-        ...e,
-        imageBase64: e.status === 'pending' ? e.imageBase64 : '[ARCHIVED]'
-    }));
-    res.json(allEvidence);
+    // Return all submissions with images for admin review
+    res.json(db.pendingEvidence);
 });
 
 // Admin: Approve evidence

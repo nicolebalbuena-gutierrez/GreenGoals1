@@ -203,6 +203,31 @@
             width: 100%;
             text-align: center;
         }
+        .pending-review-badge {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #7c8798, #9aa5b4);
+            color: white;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .pending-review-badge .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         /* Modal Styles */
         .modal-overlay {
             position: fixed;
@@ -556,6 +581,72 @@
             align-items: center;
             gap: 12px;
         }
+        /* Completed Challenges Styles */
+        .completed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .completed-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 3px solid var(--mint);
+            transition: transform 0.3s ease;
+        }
+        .completed-card:hover {
+            transform: translateY(-5px);
+        }
+        .completed-card-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        .completed-card-content {
+            padding: 16px;
+        }
+        .completed-card-content h4 {
+            margin: 0 0 8px 0;
+            color: var(--deep-green);
+            font-size: 1rem;
+            font-family: 'Playfair Display', serif;
+        }
+        .completed-card-content p {
+            margin: 0;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        .completed-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--mint), var(--sage));
+        }
+        .completed-badge {
+            background: white;
+            color: var(--deep-green);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .completed-points {
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .no-completed {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            color: var(--text-light);
+        }
     </style>
 </head>
 <body>
@@ -666,6 +757,17 @@
                 <p style="color: var(--text-light);">Loading challenges...</p>
             </div>
         </div>
+
+        <!-- Completed Challenges Section -->
+        <div id="completedSection" style="display: none; margin-top: 40px;">
+            <div class="section-header">
+                <h2 class="section-title" style="margin-bottom: 0;">🏆 Completed Challenges</h2>
+            </div>
+            <p style="color: var(--text-light); margin-bottom: 20px;">Your successfully completed challenges and submitted evidence.</p>
+            <div class="completed-grid" id="completedGrid">
+                <!-- Completed challenges will be loaded here -->
+            </div>
+        </div>
     </div>
 
     <!-- Evidence Upload Modal -->
@@ -726,6 +828,7 @@
 
         let userActiveChallenges = [];
         let userCompletedChallenges = [];
+        let userPendingEvidence = []; // Track challenges with pending evidence
 
         async function loadChallenges() {
             try {
@@ -739,6 +842,28 @@
                     const userData = await userRes.json();
                     userActiveChallenges = userData.activeChallenges.map(c => c.id);
                     userCompletedChallenges = userData.completedChallenges.map(c => c.id);
+                    
+                    // Get user's pending evidence submissions
+                    try {
+                        const token = getToken();
+                        const pendingRes = await fetch(`${API_URL}/user/pending-evidence`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const pendingData = await pendingRes.json();
+                        // Get challenge IDs that have pending evidence
+                        if (Array.isArray(pendingData)) {
+                            userPendingEvidence = pendingData
+                                .filter(e => e.status === 'pending')
+                                .map(e => e.challengeId);
+                            console.log('Pending evidence challenge IDs:', userPendingEvidence);
+                        } else {
+                            console.log('Pending evidence API returned:', pendingData);
+                            userPendingEvidence = [];
+                        }
+                    } catch (e) {
+                        console.error('Error fetching pending evidence:', e);
+                        userPendingEvidence = [];
+                    }
                 }
                 
                 renderChallenges(allChallenges);
@@ -767,7 +892,10 @@
             
             if (!userIsAdmin && inProgressChallenges.length > 0) {
                 inProgressSection.style.display = 'block';
-                inProgressGrid.innerHTML = inProgressChallenges.map(c => `
+                inProgressGrid.innerHTML = inProgressChallenges.map(c => {
+                    const hasPendingEvidence = userPendingEvidence.includes(c.id);
+                    console.log(`Challenge ${c.id} (${c.name}): hasPendingEvidence = ${hasPendingEvidence}`);
+                    return `
                     <div class="challenge-card in-progress-card" data-category="${c.category}">
                         <span class="challenge-category cat-${c.category}">${c.category}</span>
                         <div class="challenge-icon">${categoryIcons[c.category] || '🌱'}</div>
@@ -786,12 +914,19 @@
                                 <span class="points-label">points</span>
                             </div>
                             <div class="challenge-actions">
-                                <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.category}', ${c.points}, ${c.co2Saved})">Upload Evidence</button>
+                                ${hasPendingEvidence ? `
+                                    <div class="pending-review-badge">
+                                        <span class="spinner"></span>
+                                        Pending Review
+                                    </div>
+                                ` : `
+                                    <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.category}', ${c.points}, ${c.co2Saved})">Upload Evidence</button>
+                                `}
                                 <button class="abandon-btn" onclick="abandonChallenge(${c.id}, '${c.name.replace(/'/g, "\\'")}')">Abandon Challenge</button>
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             } else {
                 inProgressSection.style.display = 'none';
             }
@@ -836,6 +971,53 @@
                         <p>You've accepted all available challenges! Check your Profile to upload evidence.</p>
                     </div>
                 `;
+            }
+        }
+
+        // Load and render completed challenges with evidence
+        async function loadCompletedEvidence() {
+            const user = getUser();
+            if (!user || isAdmin()) {
+                document.getElementById('completedSection').style.display = 'none';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_URL}/user/completed-evidence`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const completedEvidence = await res.json();
+                
+                const completedSection = document.getElementById('completedSection');
+                const completedGrid = document.getElementById('completedGrid');
+                
+                if (!Array.isArray(completedEvidence) || completedEvidence.length === 0) {
+                    completedSection.style.display = 'none';
+                    return;
+                }
+                
+                completedSection.style.display = 'block';
+                
+                // Sort by review date (newest first)
+                completedEvidence.sort((a, b) => new Date(b.reviewedAt) - new Date(a.reviewedAt));
+                
+                completedGrid.innerHTML = completedEvidence.map(e => `
+                    <div class="completed-card">
+                        <img src="data:image/jpeg;base64,${e.imageBase64}" class="completed-card-image" alt="Your evidence">
+                        <div class="completed-card-content">
+                            <h4>${categoryIcons[e.challengeCategory] || '🌱'} ${e.challengeName}</h4>
+                            <p>Completed ${e.reviewedAt ? new Date(e.reviewedAt).toLocaleDateString() : 'N/A'}</p>
+                        </div>
+                        <div class="completed-card-footer">
+                            <span class="completed-badge">✓ Approved</span>
+                            <span class="completed-points">+${e.challengePoints} pts</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (e) {
+                console.error('Error loading completed evidence:', e);
+                document.getElementById('completedSection').style.display = 'none';
             }
         }
 
@@ -996,6 +1178,7 @@
                     setTimeout(() => {
                         closeEvidenceModal();
                         loadChallenges();
+                        loadCompletedEvidence();
                     }, 3000);
                 } else if (data.error) {
                     statusDiv.className = 'verification-status rejected';
@@ -1143,6 +1326,7 @@
         }
 
         loadChallenges();
+        loadCompletedEvidence();
     </script>
 </body>
 </html>
