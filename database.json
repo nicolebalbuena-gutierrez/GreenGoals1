@@ -102,19 +102,19 @@
       "password": "$2a$10$KkoC98PP6Cfx5VPwq12Kn.Aae0yPvX1uM7HcSFiQ/DGvlXuBrHy66",
       "profilePicture": "https://media.licdn.com/dms/image/v2/D4E03AQELOjtUIJAM2g/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1695338840802?e=1766620800&v=beta&t=NsWJvl2LS1XkPtHNgpR17vAkKb5gAd1FZVHEbfidk2c",
       "bio": "",
-      "points": 185,
-      "totalCO2Saved": 26.3,
+      "points": 235,
+      "totalCO2Saved": 33.5,
       "joinedDate": "2025-12-04",
       "teamId": 3,
       "activeChallenges": [
-        4,
-        6,
-        7
+        5
       ],
       "completedChallenges": [
         1,
         2,
-        3
+        3,
+        4,
+        7
       ]
     },
     {
@@ -127,16 +127,22 @@
       "password": "$2a$10$IU.4Cg55eiwzPrzU9YpS5uebOCp4ejVHf8iwurHbI7Ev95K627Nya",
       "profilePicture": "",
       "bio": "",
-      "points": 0,
-      "totalCO2Saved": 0,
+      "points": 185,
+      "totalCO2Saved": 31.1,
       "joinedDate": "2025-12-05",
       "teamId": 3,
       "activeChallenges": [
         1,
         2,
-        3
+        3,
+        6
       ],
-      "completedChallenges": []
+      "completedChallenges": [
+        1,
+        2,
+        4,
+        7
+      ]
     },
     {
       "id": 6,
@@ -172,8 +178,14 @@
       "totalCO2Saved": 0,
       "activeChallenges": [],
       "completedChallenges": [],
-      "teamId": null,
-      "joinedAt": "2025-12-05T17:13:26.372Z"
+      "teamId": 3,
+      "joinedAt": "2025-12-05T17:13:26.372Z",
+      "completedChallenges": [
+        1,
+        2,
+        4,
+        7
+      ]
     }
   ],
   "teams": [
@@ -203,7 +215,7 @@
       "name": "Womens Basketball Team",
       "description": "Women's Basketball Team",
       "leaderId": 4,
-      "totalPoints": 185,
+      "totalPoints": 235,
       "createdAt": "2025-12-05T16:30:15.459Z"
     }
   ],
@@ -239,16 +251,6 @@
       "duration": "1 day"
     },
     {
-      "id": 4,
-      "name": "Meatless Monday",
-      "description": "Go vegetarian for an entire day",
-      "points": 25,
-      "co2Saved": 3.6,
-      "difficulty": "Easy",
-      "category": "Food",
-      "duration": "1 day"
-    },
-    {
       "id": 5,
       "name": "Zero waste week",
       "description": "Produce zero landfill waste for 7 days",
@@ -259,14 +261,14 @@
       "duration": "7 days"
     },
     {
-      "id": 6,
-      "name": "Cold Shower",
-      "description": "Take cold showers for 5 days to save energy",
-      "points": 40,
-      "co2Saved": 2.1,
-      "difficulty": "Medium",
-      "category": "Energy",
-      "duration": "5 days"
+      "id": 7,
+      "name": "Meatless Monday",
+      "description": "Go vegetarian for an entire day",
+      "points": 25,
+      "category": "Food",
+      "difficulty": "Easy",
+      "duration": "1",
+      "co2Saved": 3.6
     }
   ],
   "pendingEvidence": [
@@ -301,6 +303,54 @@
       "submittedAt": "2025-12-05T17:11:22.851Z",
       "reviewedAt": "2025-12-09T00:58:51.918Z",
       "reviewNotes": "Approved"
+    },
+    {
+      "id": 3,
+      "userId": 4,
+      "username": "nicolebalbuena",
+      "firstName": "Nicole",
+      "lastName": "Balbuena",
+      "challengeId": 4,
+      "challengeName": "Meatless Monday",
+      "challengePoints": 25,
+      "challengeCO2": 3.6,
+      "imageBase64": "[APPROVED - IMAGE ARCHIVED]",
+      "status": "approved",
+      "submittedAt": "2025-12-09T02:03:56.671Z",
+      "reviewedAt": "2025-12-09T02:06:00.485Z",
+      "reviewNotes": "Approved"
+    },
+    {
+      "id": 4,
+      "userId": 4,
+      "username": "nicolebalbuena",
+      "firstName": "Nicole",
+      "lastName": "Balbuena",
+      "challengeId": 7,
+      "challengeName": "Meatless Monday",
+      "challengePoints": 25,
+      "challengeCO2": 3.6,
+      "imageBase64": "[APPROVED - IMAGE ARCHIVED]",
+      "status": "approved",
+      "submittedAt": "2025-12-09T02:09:54.215Z",
+      "reviewedAt": "2025-12-09T02:11:20.141Z",
+      "reviewNotes": "Approved"
+    },
+    {
+      "id": 5,
+      "userId": 4,
+      "username": "nicolebalbuena",
+      "firstName": "Nicole",
+      "lastName": "Balbuena",
+      "challengeId": 5,
+      "challengeName": "Zero waste week",
+      "challengePoints": 150,
+      "challengeCO2": 8.2,
+      "imageBase64": "[REJECTED - IMAGE ARCHIVED]",
+      "status": "rejected",
+      "submittedAt": "2025-12-09T14:53:07.985Z",
+      "reviewedAt": "2025-12-09T14:54:23.592Z",
+      "reviewNotes": "Not Zero Waste"
     }
   ],
   "updates": [
