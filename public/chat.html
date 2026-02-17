@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenGoals - Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="auth-check.js"></script>
+    <style>
+        .container.dashboard-container { max-width: 1000px; width: 100%; }
+        .tab-bar, .dashboard-header, .chat-layout { width: 100%; box-sizing: border-box; }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-welcome { color: var(--mint); font-size: 0.9rem; }
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--cream);
+            border: 1px solid rgba(224, 122, 95, 0.5);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: var(--coral);
+            color: white;
+        }
+        
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .tab-link {
+            flex: 1;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        .tab-link:hover, .tab-link.active {
+            background: var(--gold);
+            color: var(--forest);
+        }
+        
+        /* Chat mode tabs (General vs DM) */
+        .chat-mode-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .chat-mode-btn {
+            padding: 10px 20px;
+            background: var(--sand);
+            color: var(--text-dark);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .chat-mode-btn:hover { background: var(--mint); color: var(--forest); }
+        .chat-mode-btn.active {
+            background: var(--forest);
+            color: var(--cream);
+            border-color: var(--forest);
+        }
+        
+        /* Chat layout */
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            min-height: 450px;
+        }
+        @media (min-width: 700px) {
+            .chat-layout.dm-mode { grid-template-columns: 220px 1fr; }
+        }
+        
+        .chat-sidebar {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px var(--shadow);
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        .chat-sidebar.hidden { display: none !important; }
+        
+        .chat-main {
+            background: var(--cream);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            min-height: 450px;
+        }
+        
+        .chat-header {
+            padding: 20px 24px;
+            border-bottom: 2px solid var(--sand);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--forest);
+        }
+        .chat-header .subtitle { font-size: 0.85rem; color: var(--text-light); font-family: 'Outfit', sans-serif; margin-top: 4px; }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .chat-message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .chat-message.sent {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--forest), var(--forest-light));
+            color: var(--cream);
+            border-bottom-right-radius: 4px;
+        }
+        .chat-message.received {
+            align-self: flex-start;
+            background: var(--sand);
+            color: var(--text-dark);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-message .sender { font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; opacity: 0.9; }
+        .chat-message .time { font-size: 0.7rem; opacity: 0.7; margin-top: 6px; }
+        
+        /* Post-style cards for General Chat */
+        .chat-post {
+            width: 100%;
+            max-width: 100%;
+            background: var(--cream);
+            border: 2px solid var(--sand);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+        .chat-post .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .post-delete-btn {
+            padding: 6px 12px;
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--coral);
+            border: 1px solid var(--coral);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .post-delete-btn:hover { background: var(--coral); color: white; }
+        .chat-post .post-author { font-weight: 600; color: var(--forest); }
+        .chat-post .post-time { font-size: 0.8rem; color: var(--text-light); }
+        .chat-post .post-text { margin-bottom: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+        .chat-post .post-image { max-width: 100%; max-height: 400px; border-radius: 12px; display: block; cursor: pointer; }
+        
+        .chat-compose-post {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-compose-post textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 14px 18px;
+            border: 2px solid var(--sand);
+            border-radius: 14px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        .chat-compose-post textarea:focus { outline: none; border-color: var(--forest); }
+        .chat-compose-post textarea::placeholder { color: var(--text-light); opacity: 0.7; }
+        .compose-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .compose-image-preview {
+            position: relative;
+            display: inline-block;
+        }
+        .compose-image-preview img { max-width: 120px; max-height: 120px; border-radius: 10px; object-fit: cover; }
+        .compose-image-preview .remove-img { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; background: var(--coral); color: white; border: none; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .compose-add-image { padding: 8px 16px; background: var(--sand); border: 2px dashed var(--sage); border-radius: 10px; color: var(--text-dark); font-family: 'Outfit', sans-serif; cursor: pointer; font-size: 0.9rem; }
+        .compose-add-image:hover { background: var(--mint); border-color: var(--forest); }
+        
+        .chat-input-area {
+            padding: 20px 24px;
+            border-top: 2px solid var(--sand);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid var(--sand);
+            border-radius: 14px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .chat-input-area input:focus {
+            outline: none;
+            border-color: var(--forest);
+        }
+        .chat-input-area input::placeholder { color: var(--text-light); opacity: 0.7; }
+        .chat-send-btn {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--forest), var(--forest-light));
+            color: var(--cream);
+            border: none;
+            border-radius: 14px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .chat-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 58, 47, 0.4);
+        }
+        .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .dm-user-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 6px;
+        }
+        .dm-user-item:hover { background: var(--sand); }
+        .dm-user-item.active { background: var(--mint); color: var(--forest); }
+        .dm-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--sage), var(--mint));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .dm-user-name { font-weight: 600; color: var(--text-dark); }
+        .dm-user-username { font-size: 0.8rem; color: var(--text-light); }
+        
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            padding: 40px;
+            text-align: center;
+        }
+        .chat-empty .icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
+        .chat-empty p { margin: 8px 0; }
+        
+        .select-conversation-msg {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            padding: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+    </div>
+
+    <div class="container dashboard-container">
+        <div class="dashboard-header">
+            <div class="logo">
+                <span class="logo-icon">🌍</span>
+                <h1>GreenGoals</h1>
+            </div>
+            <div class="header-right">
+                <span class="user-welcome" id="userWelcome"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <a href="home.html" class="tab-link">Home</a>
+            <a href="challenges.html" class="tab-link">Challenges</a>
+            <a href="leaderboard.html" class="tab-link">Leaderboard</a>
+            <a href="teams.html" class="tab-link">Teams</a>
+            <a href="chat.html" class="tab-link active">Chat</a>
+            <a href="profile.html" class="tab-link">Profile</a>
+        </div>
+
+        <div class="chat-mode-tabs">
+            <button class="chat-mode-btn active" data-mode="general"> General Chat</button>
+            <button class="chat-mode-btn" data-mode="dm"> Direct Messages</button>
+        </div>
+
+        <div class="chat-layout" id="chatLayout">
+            <aside class="chat-sidebar" id="chatSidebar">
+                <h3 style="margin-bottom: 16px; font-family: 'Playfair Display', serif; color: var(--forest);">Start a conversation</h3>
+                <div id="dmUserList">
+                    <p style="color: var(--text-light);">Loading users...</p>
+                </div>
+            </aside>
+            <main class="chat-main">
+                <div class="chat-header" id="chatHeader">
+                    <span id="chatTitle">General Chat</span>
+                    <div class="subtitle" id="chatSubtitle">Chat with the whole GreenGoals community</div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-empty" id="chatEmpty">
+                        <span class="icon">💬</span>
+                        <p>No messages yet. Be the first to say hi!</p>
+                    </div>
+                </div>
+                <div class="chat-input-area" id="chatInputArea">
+                    <!-- General Chat: post composer -->
+                    <div id="generalCompose" class="chat-compose-post" style="width: 100%; display: flex;">
+                        <textarea id="postText" placeholder="Share an update, eco tip, or photo with the community... (like a tweet!)" maxlength="2000" autocomplete="off"></textarea>
+                        <div class="compose-actions">
+                            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                <input type="file" id="postImageFile" accept="image/*" style="display: none;">
+                                <button type="button" class="compose-add-image" onclick="document.getElementById('postImageFile').click()">📷 Add photo</button>
+                                <span id="imagePreviewContainer"></span>
+                            </div>
+                            <button class="chat-send-btn" id="sendPostBtn" onclick="sendMessage()">Post</button>
+                        </div>
+                    </div>
+                    <!-- DM: simple input -->
+                    <div id="dmCompose" style="display: none; width: 100%; align-items: flex-end; gap: 12px;">
+                        <input type="text" id="messageInput" placeholder="Type a message..." maxlength="2000" autocomplete="off" style="flex: 1; padding: 14px 18px; border: 2px solid var(--sand); border-radius: 14px;">
+                        <button class="chat-send-btn" id="sendDmBtn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const user = getCurrentUser();
+        const token = getToken();
+        
+        if (!user || !token) {
+            window.location.href = 'index.html';
+        }
+        
+        document.getElementById('userWelcome').textContent = `Hi, ${user.username}! 👋`;
+        
+        let currentMode = 'general';
+        let selectedDmUserId = null;
+        let pollInterval = null;
+        const POLL_MS = 3000;
+        
+        // Mode tabs
+        document.querySelectorAll('.chat-mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.chat-mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                selectedDmUserId = null;
+                
+                if (currentMode === 'general') {
+                    document.getElementById('chatLayout').classList.remove('dm-mode');
+                    document.getElementById('chatSidebar').classList.add('hidden');
+                    document.getElementById('chatTitle').textContent = 'General Chat';
+                    document.getElementById('chatSubtitle').textContent = 'Post updates, pics, and chat with the community';
+                    document.getElementById('chatInputArea').style.display = 'flex';
+                    document.getElementById('generalCompose').style.display = 'flex';
+                    document.getElementById('dmCompose').style.display = 'none';
+                    loadGeneralMessages();
+                } else {
+                    document.getElementById('chatLayout').classList.add('dm-mode');
+                    document.getElementById('chatSidebar').classList.remove('hidden');
+                    loadDmUsers();
+                    showSelectConversation();
+                }
+                startPolling();
+            });
+        });
+        
+        function showSelectConversation() {
+            document.getElementById('chatTitle').textContent = 'Direct Messages';
+            document.getElementById('chatSubtitle').textContent = 'Select a user to start chatting';
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="select-conversation-msg">
+                    <p>👈 Pick someone from the list to start a conversation</p>
+                </div>
+            `;
+            document.getElementById('chatInputArea').style.display = 'none';
+        }
+        
+        async function loadDmUsers() {
+            try {
+                const res = await fetch(`${API_URL}/chat/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await res.json();
+                const listEl = document.getElementById('dmUserList');
+                if (!users.length) {
+                    listEl.innerHTML = '<p style="color: var(--text-light);">No other users yet.</p>';
+                    return;
+                }
+                listEl.innerHTML = users.map(u => {
+                    const displayName = u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.username;
+                    const safeName = (displayName || '').replace(/'/g, "\\'");
+                    const safeUsername = (u.username || '').replace(/'/g, "\\'");
+                    return `
+                    <div class="dm-user-item" data-user-id="${u.id}" data-username="${safeUsername}" onclick="openDm(${u.id}, '${safeName}', '${safeUsername}')">
+                        <div class="dm-user-avatar">${(u.firstName || u.username || '?')[0].toUpperCase()}</div>
+                        <div>
+                            <div class="dm-user-name">${displayName}</div>
+                            <div class="dm-user-username">@${u.username}</div>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (e) {
+                document.getElementById('dmUserList').innerHTML = '<p style="color: var(--coral);">Could not load users.</p>';
+            }
+        }
+        
+        function openDm(otherUserId, otherUserName, otherUsername) {
+            selectedDmUserId = otherUserId;
+            document.querySelectorAll('.dm-user-item').forEach(el => {
+                el.classList.toggle('active', parseInt(el.dataset.userId) === otherUserId);
+            });
+            document.getElementById('chatTitle').textContent = otherUserName || 'Direct Message';
+            document.getElementById('chatSubtitle').textContent = `Chat with @${otherUsername || 'user'}`;
+            document.getElementById('chatInputArea').style.display = 'flex';
+            document.getElementById('generalCompose').style.display = 'none';
+            document.getElementById('dmCompose').style.display = 'flex';
+            document.getElementById('messageInput').placeholder = `Message ${otherUserName || 'user'}...`;
+            loadDmMessages();
+        }
+        
+        async function loadGeneralMessages() {
+            try {
+                const res = await fetch(`${API_URL}/chat/general`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to load');
+                renderMessages(Array.isArray(data) ? data : [], false);
+            } catch (e) {
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="chat-empty">
+                        <span class="icon">⚠️</span>
+                        <p>Could not load messages. ${e.message || ''}</p>
+                        <p style="font-size: 0.85rem; margin-top: 8px;">Make sure the server is running (npm start).</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadDmMessages() {
+            if (!selectedDmUserId) return;
+            try {
+                const res = await fetch(`${API_URL}/chat/dm/${selectedDmUserId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to load messages');
+                }
+                renderMessages(Array.isArray(data) ? data : [], true);
+            } catch (e) {
+                console.error('Load DM error:', e);
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="chat-empty">
+                        <span class="icon">⚠️</span>
+                        <p>Could not load messages. ${e.message || ''}</p>
+                        <p style="font-size: 0.85rem; margin-top: 8px;">Make sure the server is running (npm start).</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderMessages(messages, isDm) {
+            const container = document.getElementById('chatMessages');
+            
+            if (!messages || messages.length === 0) {
+                container.innerHTML = `
+                    <div class="chat-empty">
+                        <span class="icon">💬</span>
+                        <p>No messages yet. ${isDm ? 'Say hi!' : 'Be the first to post!'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            if (isDm) {
+                container.innerHTML = messages.map(m => {
+                    const isSent = parseInt(m.senderId) === parseInt(user.id);
+                    const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    return `
+                        <div class="chat-message ${isSent ? 'sent' : 'received'}">
+                            <div class="text">${escapeHtml(m.text)}</div>
+                            <div class="time">${timeStr}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                // General chat: post-style cards with optional images + delete for own posts
+                container.innerHTML = messages.map(m => {
+                    const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+                    const textHtml = m.text ? `<div class="post-text">${escapeHtml(m.text)}</div>` : '';
+                    const mime = m.imageMimeType || 'image/jpeg';
+                    const imgHtml = m.imageBase64 ? `<img class="post-image" src="data:${mime};base64,${m.imageBase64}" alt="Post" onclick="window.open(this.src)">` : '';
+                    const isOwn = parseInt(m.senderId) === parseInt(user.id);
+                    const deleteBtn = isOwn ? `<button type="button" class="post-delete-btn" onclick="deleteOwnPost('${String(m.id).replace(/'/g, "\\'")}')" title="Delete your post"> Delete</button>` : '';
+                    return `
+                        <div class="chat-post">
+                            <div class="post-header">
+                                <span class="post-author">@${escapeHtml(m.senderUsername || 'unknown')}</span>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span class="post-time">${timeStr}</span>
+                                    ${deleteBtn}
+                                </div>
+                            </div>
+                            ${textHtml}
+                            ${imgHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        async function deleteOwnPost(messageId) {
+            if (!confirm('Delete this post? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`${API_URL}/chat/messages/${messageId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    loadGeneralMessages();
+                } else {
+                    alert(data.error || 'Failed to delete');
+                }
+            } catch (e) {
+                alert('Could not delete post');
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        let selectedImageBase64 = null;
+        let selectedImageMimeType = 'image/jpeg';
+        
+        document.getElementById('postImageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { alert('Image must be under 2MB'); e.target.value = ''; return; }
+            selectedImageMimeType = file.type || 'image/jpeg';
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const dataUrl = ev.target.result;
+                selectedImageBase64 = dataUrl.split(',')[1] || dataUrl;
+                document.getElementById('imagePreviewContainer').innerHTML = `
+                    <div class="compose-image-preview">
+                        <img src="${dataUrl}" alt="Preview">
+                        <button type="button" class="remove-img" onclick="clearPostImage()" title="Remove">×</button>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        });
+        
+        function clearPostImage() {
+            selectedImageBase64 = null;
+            selectedImageMimeType = 'image/jpeg';
+            document.getElementById('imagePreviewContainer').innerHTML = '';
+        }
+        
+        async function sendMessage() {
+            let text, body;
+            const sendBtn = currentMode === 'general' ? document.getElementById('sendPostBtn') : document.getElementById('sendDmBtn');
+            sendBtn.disabled = true;
+            
+            if (currentMode === 'general') {
+                text = (document.getElementById('postText').value || '').trim();
+                if (!text && !selectedImageBase64) {
+                    alert('Add some text or a photo to post!');
+                    sendBtn.disabled = false;
+                    return;
+                }
+                body = { text: text || '', imageBase64: selectedImageBase64 || undefined, imageMimeType: selectedImageMimeType || 'image/jpeg' };
+            } else {
+                if (!selectedDmUserId) { sendBtn.disabled = false; return; }
+                text = (document.getElementById('messageInput').value || '').trim();
+                if (!text) { sendBtn.disabled = false; return; }
+                body = { text };
+            }
+            
+            try {
+                let url = currentMode === 'general' ? `${API_URL}/chat/general` : `${API_URL}/chat/dm/${selectedDmUserId}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                let data;
+                try { data = await res.json(); } catch (_) { data = {}; }
+                if (res.ok) {
+                    if (currentMode === 'general') {
+                        document.getElementById('postText').value = '';
+                        clearPostImage();
+                        loadGeneralMessages();
+                    } else {
+                        document.getElementById('messageInput').value = '';
+                        loadDmMessages();
+                    }
+                } else {
+                    alert('Failed to send: ' + (data.error || res.statusText || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error('Send message error:', e);
+                alert('Could not send. Check your connection.');
+            }
+            sendBtn.disabled = false;
+        }
+        
+        document.getElementById('messageInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+        document.getElementById('postText').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+        
+        function poll() {
+            if (currentMode === 'general') loadGeneralMessages();
+            else if (selectedDmUserId) loadDmMessages();
+        }
+        
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(poll, POLL_MS);
+        }
+        
+        function stopPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = null;
+        }
+        
+        // Initial load
+        document.getElementById('chatSidebar').classList.add('hidden');
+        loadGeneralMessages();
+        loadDmUsers();
+        startPolling();
+        
+        window.addEventListener('visibilitychange', () => {
+            if (document.hidden) stopPolling();
+            else startPolling();
+        });
+    </script>
+</body>
+</html>

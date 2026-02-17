@@ -674,6 +674,7 @@
             <a href="challenges.html" class="tab-link active">Challenges</a>
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
             <a href="teams.html" class="tab-link">Teams</a>
+            <a href="chat.html" class="tab-link">Chat</a>
             <a href="profile.html" class="tab-link">Profile</a>
         </div>
 
@@ -1035,6 +1036,7 @@
                 
                 if (res.ok) {
                     alert('🎉 ' + data.message);
+                    loadChallenges(); // Refresh UI so challenge moves to In Progress
                 } else {
                     alert('⚠️ ' + data.error);
                 }

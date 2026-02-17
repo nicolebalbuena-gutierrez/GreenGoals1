@@ -4,3 +4,13 @@ target/
 out/
 build/
 .DS_Store
+
+# Firebase
+firebase-service-account.json
+.firebase-service-account.json.md
+.firebase/
+firebase-debug.log
+
+# Environment variables
+.env
+.env.local

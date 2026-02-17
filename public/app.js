@@ -2,23 +2,23 @@
 // GREENGOALS - Frontend JavaScript
 // ============================================
 
-const API_URL = 'http://localhost:3000/api';
+// Use same host as the page, or localhost:3000 if opened as file
+const API_URL = (window.location.origin && window.location.origin !== 'file://' && window.location.origin !== 'null')
+    ? window.location.origin + '/api'
+    : 'http://localhost:3000/api';
 
-// Check if already logged in - redirect appropriately
+// If already logged in, redirect to home or admin
 const token = localStorage.getItem('token');
-if (token) {
-    const userData = localStorage.getItem('user');
-    if (userData) {
+const userData = localStorage.getItem('user');
+if (token && userData) {
+    try {
         const user = JSON.parse(userData);
-        // Redirect admins to admin panel, others to home
         if (user.isAdmin) {
             window.location.href = 'admin-panel.html';
         } else {
             window.location.href = 'home.html';
         }
-    } else {
-        window.location.href = 'home.html';
-    }
+    } catch (e) {}
 }
 
 // DOM Elements
@@ -74,35 +74,36 @@ function hideMessage() {
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const username = document.getElementById('loginUsername').value;
+    const usernameOrEmail = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
     
+    if (!password || !usernameOrEmail) {
+        showMessage('❌ Please enter username/email and password', 'error');
+        return;
+    }
+    
+    showMessage('Signing in...', 'success');
+    
     try {
-        const response = await fetch(`${API_URL}/login`, {
+        const res = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ usernameOrEmail, password })
         });
+        const data = await res.json().catch(() => ({}));
         
-        const data = await response.json();
-        
-        if (response.ok) {
+        if (res.ok && data.token && data.user) {
             showMessage(`Welcome back, ${data.user.username}!`, 'success');
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            // Redirect admins to admin panel, others to home
             setTimeout(() => {
-                if (data.user.isAdmin) {
-                    window.location.href = 'admin-panel.html';
-                } else {
-                    window.location.href = 'home.html';
-                }
-            }, 800);
+                window.location.href = data.user.isAdmin ? 'admin-panel.html' : 'home.html';
+            }, 500);
         } else {
-            showMessage(`❌ ${data.error}`, 'error');
+            showMessage('❌ ' + (data.error || 'Login failed'), 'error');
         }
-    } catch (error) {
-        showMessage('❌ Could not connect to server. Make sure it\'s running!', 'error');
+    } catch (err) {
+        showMessage('❌ Cannot reach server. Run: npm start', 'error');
     }
 });
 
@@ -113,35 +114,36 @@ loginForm.addEventListener('submit', async (e) => {
 registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const firstName = document.getElementById('registerFirstName').value;
-    const lastName = document.getElementById('registerLastName').value;
-    const username = document.getElementById('registerUsername').value;
+    const firstName = document.getElementById('registerFirstName').value.trim();
+    const lastName = document.getElementById('registerLastName').value.trim();
+    const username = document.getElementById('registerUsername').value.trim();
     const classYear = document.getElementById('registerClassYear').value;
-    const email = document.getElementById('registerEmail').value;
+    const email = document.getElementById('registerEmail').value.trim();
     const password = document.getElementById('registerPassword').value;
     
+    if (!email || !password || !username) {
+        showMessage('❌ Please fill in email, username, and password', 'error');
+        return;
+    }
+    
     try {
-        const response = await fetch(`${API_URL}/register`, {
+        const res = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ firstName, lastName, username, classYear, email, password })
         });
+        const data = await res.json().catch(() => ({}));
         
-        const data = await response.json();
-        
-        if (response.ok) {
+        if (res.ok && data.token && data.user) {
             showMessage(`Welcome to GreenGoals, ${data.user.username}!`, 'success');
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            // Redirect to home (new users aren't admins)
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, 800);
+            setTimeout(() => { window.location.href = 'home.html'; }, 500);
         } else {
-            showMessage(`❌ ${data.error}`, 'error');
+            showMessage('❌ ' + (data.error || 'Registration failed'), 'error');
         }
-    } catch (error) {
-        showMessage('❌ Could not connect to server. Make sure it\'s running!', 'error');
+    } catch (err) {
+        showMessage('❌ Cannot reach server. Run: npm start', 'error');
     }
 });
 

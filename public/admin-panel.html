@@ -469,6 +469,7 @@
             <div class="admin-nav">
                 <button class="admin-nav-btn active" data-section="dashboard">Home</button>
                 <button class="admin-nav-btn" data-section="evidence">Evidence Review</button>
+                <button class="admin-nav-btn" data-section="chat">Chat Monitor</button>
                 <button class="admin-nav-btn" data-section="users">Manage Users</button>
                 <button class="admin-nav-btn" data-section="teams">Manage Teams</button>
                 <button class="admin-nav-btn" data-section="challenges">Manage Challenges</button>
@@ -530,6 +531,10 @@
                         <div class="icon">🏅</div>
                         <div class="label">View Teams</div>
                     </div>
+                    <div class="quick-action-btn" onclick="showSection('chat')">
+                        <div class="icon">💬</div>
+                        <div class="label">Monitor Chat</div>
+                    </div>
                 </div>
 
                 <!-- Recent Activity -->
@@ -537,6 +542,20 @@
                     <h3>Recent Activity</h3>
                     <div id="recentActivity">
                         <p style="color: var(--text-light);">Loading activity...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Monitoring Section -->
+            <div class="admin-section" id="section-chat">
+                <div class="admin-card">
+                    <h3>Chat Monitoring</h3>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">Monitor general chat and direct messages. Delete inappropriate content.</p>
+                    <div style="margin-bottom: 16px;">
+                        <button class="btn-secondary" onclick="loadChatMessages()">🔄 Refresh</button>
+                    </div>
+                    <div id="chatMessagesList" style="max-height: 600px; overflow-y: auto;">
+                        <p style="color: var(--text-light);">Loading messages...</p>
                     </div>
                 </div>
             </div>
@@ -843,6 +862,8 @@
             
             document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
             document.getElementById(`section-${sectionName}`).classList.add('active');
+            
+            if (sectionName === 'chat') loadChatMessages();
         }
 
         const categoryIcons = {
@@ -1497,6 +1518,66 @@
             }
         });
         
+        // Load chat messages (admin moderation)
+        async function loadChatMessages() {
+            const container = document.getElementById('chatMessagesList');
+            if (!container) return;
+            container.innerHTML = '<p style="color: var(--text-light);">Loading messages...</p>';
+            try {
+                const res = await fetch(`${API_URL}/admin/chat/messages`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const messages = await res.json();
+                if (!res.ok) throw new Error(messages.error || 'Failed to load');
+                if (!messages || messages.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-light);">No messages yet.</p>';
+                    return;
+                }
+                container.innerHTML = messages.map(m => {
+                    const isGeneral = (m.conversationId || '') === 'general';
+                    const convLabel = isGeneral ? '💬 General' : `✉️ DM (${m.senderUsername || '?'} → user ${m.recipientId || '?'})`;
+                    const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+                    const textEscaped = (m.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                    return `
+                        <div class="evidence-card" style="margin-bottom: 12px;">
+                            <div class="evidence-header" style="flex-wrap: wrap; gap: 12px;">
+                                <div class="evidence-user">
+                                    <span style="font-weight: 600;">@${m.senderUsername || 'unknown'}</span>
+                                    <span class="badge" style="background: ${isGeneral ? 'rgba(135,168,120,0.3)' : 'rgba(87,117,96,0.3)'}; color: var(--forest);">${convLabel}</span>
+                                </div>
+                                <span style="font-size: 0.8rem; color: var(--text-light);">${timeStr}</span>
+                            </div>
+                            ${textEscaped ? `<p style="margin: 12px 0; word-break: break-word;">${textEscaped}</p>` : ''}
+                            ${m.imageBase64 ? `<img src="data:${m.imageMimeType || 'image/jpeg'};base64,${m.imageBase64}" alt="Post image" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 12px; display: block;">` : ''}
+                            <div class="evidence-actions">
+                                <button class="btn-danger" onclick="deleteChatMessage('${String(m.id || '').replace(/'/g, "\\'")}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<p style="color: var(--coral);">Error: ${e.message || 'Could not load messages'}</p>`;
+            }
+        }
+        
+        async function deleteChatMessage(id) {
+            if (!confirm('Delete this message? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`${API_URL}/admin/chat/messages/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                if (res.ok) {
+                    loadChatMessages();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + (data.error || 'Failed to delete'));
+                }
+            } catch (e) {
+                alert('Could not delete message');
+            }
+        }
+
         // Delete update
         async function deleteUpdate(id, title) {
             if (!confirm(`Delete update "${title}"?`)) return;
