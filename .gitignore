@@ -14,3 +14,5 @@ firebase-debug.log
 # Environment variables
 .env
 .env.local
+firebase-service-account.json*
+node_modules/
