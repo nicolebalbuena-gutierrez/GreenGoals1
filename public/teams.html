@@ -1036,10 +1036,6 @@
 
         <!-- Welcome Section (dashboard-style) -->
         <div class="teams-welcome-section">
-            <div class="teams-welcome-banner">
-                <h1>Teams</h1>
-                <p>Create a team, invite friends, and compete together on the GreenGoals leaderboard.</p>
-            </div>
             <div class="teams-welcome-aside">
                 <div class="teams-summary-card">
                     <h3>Your Teams</h3>
@@ -1122,14 +1118,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="team-invite-section">
-                            <h4 style="margin: 0 0 12px 0; color: var(--forest); font-size: 1rem;">Invite friends</h4>
-                            <div class="invite-code">
-                                <div id="inviteMessage" style="font-size: 0.9rem; line-height: 1.5; word-break: break-word;"></div>
-                            </div>
-                            <button type="button" class="copy-btn" onclick="copyInviteMessage()">Copy invite</button>
-                            <button class="btn-danger" style="margin-top: 16px; width: 100%;" onclick="leaveTeam()">Leave team</button>
-                        </div>
                     </div>
                 </div>
         </div>
@@ -1170,14 +1158,6 @@
                     <div class="form-group">
                         <label>Description</label>
                         <textarea id="teamDescription" rows="3" placeholder="What's your team about?"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Invite friends to join (optional)</label>
-                        <input type="text" id="inviteSearchUsers" class="autocomplete-input" placeholder="Type to filter users..." autocomplete="off" oninput="filterInviteUserList(this.value)" style="margin-bottom: 12px;">
-                        <div id="inviteUserListContainer" style="max-height: 280px; overflow-y: auto; border: 2px solid var(--sand); border-radius: 12px; background: white;">
-                            <p style="padding: 16px; color: var(--text-light);">Loading users...</p>
-                        </div>
-                        <p style="color: var(--text-light); font-size: 0.8rem; margin-top: 8px;">Click users to include on your invite list. After you create the team, they receive invitations to accept.</p>
                     </div>
                     <button type="submit" class="btn-primary">Create Team</button>
                 </form>
@@ -1415,14 +1395,6 @@
             document.getElementById('myTeamDescription').textContent = team.description || 'No description';
             document.getElementById('myTeamPoints').textContent = team.totalPoints || 0;
 
-            const inviteEl = document.getElementById('inviteMessage');
-            if (inviteEl) {
-                const baseUrl = window.location.origin || 'http://localhost:3000';
-                const message = `Join my GreenGoals team "${team.name}"!\n\n1. Log in to GreenGoals\n2. Go to the Teams tab\n3. Find "${team.name}" and tap Request to join – I'll approve you!\n\nLink: ${baseUrl}/teams.html`;
-                inviteEl.textContent = message;
-                inviteEl.dataset.inviteText = message;
-            }
-
             const membersList = document.getElementById('teamMembersList');
             const teamId = team.id;
 
@@ -1628,22 +1600,6 @@
             else inviteSelectedIds.splice(idx, 1);
             if (inviteUserListFilter) filterInviteUserList(inviteUserListFilter);
             else displayInviteUserList(allUsers);
-        }
-
-        function copyInviteMessage() {
-            const el = document.getElementById('inviteMessage');
-            if (!el) return;
-            const text = el.dataset.inviteText || el.textContent || '';
-            if (!text) return;
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('Invite copied! Paste it into email, text, or social.');
-                }).catch(() => {
-                    alert('Could not copy automatically. You can still select and copy the text manually.');
-                });
-            } else {
-                alert('Your browser does not support automatic copy. Please select and copy the text manually.');
-            }
         }
 
         function goToCreateTeam() {

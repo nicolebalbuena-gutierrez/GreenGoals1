@@ -440,7 +440,7 @@
                         <td style="width: 60px;"><div style="${avatarStyle}">${avatarContent}</div></td>
                         <td><strong>${u.firstName}</strong></td>
                         <td>${u.lastName}</td>
-                        <td>${u.classYear ? `<span class="year-badge">Class of ${u.classYear}</span>` : '-'}</td>
+                        <td>${u.classYear ? `<span class="year-badge">'${String(u.classYear).slice(-2)}</span>` : '-'}</td>
                         <td><span class="points-badge">${u.points} pts</span></td>
                     </tr>
                 `}).join('');
