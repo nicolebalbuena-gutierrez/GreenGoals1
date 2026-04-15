@@ -2,13 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
     <title>GreenGoals - Home</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
     <script src="auth-check.js"></script>
+    <script src="nav-drawer.js"></script>
+    <script src="page-loader.js"></script>
     <style>
         /* Ensure consistent full width for all sections */
         .container.dashboard-container {
@@ -111,14 +123,9 @@
         }
         .impact-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
             margin-bottom: 28px;
-        }
-        @media (max-width: 800px) {
-            .impact-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
         @media (max-width: 500px) {
             .impact-grid {
@@ -128,7 +135,7 @@
         .impact-card {
             background: var(--cream);
             border-radius: 20px;
-            padding: 28px;
+            padding: 22px 20px;
             text-align: center;
             box-shadow: 0 10px 40px var(--shadow);
             transition: transform 0.3s;
@@ -137,11 +144,11 @@
             transform: translateY(-5px);
         }
         .impact-icon {
-            font-size: 3rem;
-            margin-bottom: 12px;
+            font-size: 2.4rem;
+            margin-bottom: 10px;
         }
         .impact-value {
-            font-size: 2.5rem;
+            font-size: 2.1rem;
             font-weight: 700;
             color: var(--forest);
             font-family: 'Playfair Display', serif;
@@ -159,6 +166,73 @@
             color: var(--forest);
             border-radius: 20px;
             font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .friends-home-section {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 40px var(--shadow);
+            margin-bottom: 24px;
+        }
+        .friends-home-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .friend-home-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--sand);
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.2s;
+            flex: 1 1 200px;
+        }
+        .friend-home-card:hover {
+            background: #ebe5db;
+            transform: translateY(-2px);
+        }
+        .friend-home-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            overflow: hidden;
+        }
+        .friend-home-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .see-all-friends-link {
+            display: inline-block;
+            color: var(--forest);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        .see-all-friends-link:hover {
+            text-decoration: underline;
+        }
+        .no-friends-placeholder {
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 24px;
+        }
+        .no-friends-placeholder a {
+            color: var(--gold);
             font-weight: 600;
         }
         .section-title {
@@ -399,6 +473,64 @@
             margin-top: 4px;
             font-size: 1rem;
         }
+        @media (max-width: 640px) {
+            .welcome-banner {
+                padding: 18px 16px;
+            }
+            .welcome-banner h1 {
+                font-size: 1.42rem;
+            }
+            .welcome-banner p {
+                font-size: 0.92rem;
+            }
+            .quick-actions {
+                flex-direction: column;
+                margin-top: 16px;
+            }
+            .quick-action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .tip-of-day {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px;
+            }
+        }
+
+        /* iPhone/PWA: make Impact section much more compact */
+        @media (max-width: 430px) {
+            .section-title {
+                font-size: 1.15rem;
+                margin-bottom: 12px;
+                gap: 8px;
+            }
+            .impact-grid {
+                gap: 12px;
+                margin-bottom: 18px;
+            }
+            .impact-card {
+                padding: 16px;
+                border-radius: 16px;
+            }
+            .impact-icon {
+                font-size: 2rem;
+                margin-bottom: 6px;
+            }
+            .impact-value {
+                font-size: 1.7rem;
+                line-height: 1.1;
+            }
+            .impact-label {
+                font-size: 0.8rem;
+                margin-top: 2px;
+            }
+            .impact-change {
+                margin-top: 6px;
+                padding: 3px 8px;
+                font-size: 0.72rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -427,6 +559,7 @@
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
             <a href="teams.html" class="tab-link">Teams</a>
             <a href="chat.html" class="tab-link">Chat</a>
+            <a href="news.html" class="tab-link">News</a>
             <a href="profile.html" class="tab-link">Profile</a>
         </div>
 
@@ -504,6 +637,16 @@
             </div>
         </div>
 
+        <!-- My Friends (teammates) -->
+        <h2 class="section-title">🤝 My Friends</h2>
+        <div id="friendsSection" class="friends-home-section" style="display: none;">
+            <div id="friendsHomeList" class="friends-home-list"></div>
+            <a href="profile.html" class="see-all-friends-link">View my profile & friends →</a>
+        </div>
+        <div id="noFriendsSection" class="no-friends-placeholder" style="display: none;">
+            <p>Join a team to connect with friends! <a href="teams.html">Go to Teams</a></p>
+        </div>
+
         <!-- Campus Updates -->
         <div class="updates-card">
             <h3>📢 Campus Sustainability Updates</h3>
@@ -519,11 +662,12 @@
                 <p style="color: var(--text-light);">Loading latest news...</p>
             </div>
         </div>
+        <a href="news.html" class="see-all-friends-link" style="margin-bottom: 28px;">Check out more news here →</a>
 
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = window.getGreenGoalsApiUrl();
 
         // Eco tips array
         const ecoTips = [
@@ -547,16 +691,6 @@
         const user = getCurrentUser();
         if (user) {
             document.getElementById('userWelcome').textContent = `Hi, ${user.username}! 👋`;
-            // Fetch full user data to get first name
-            fetch(`${API_URL}/user/${user.id}`)
-                .then(res => res.json())
-                .then(userData => {
-                    const firstName = userData.firstName || user.username;
-                    document.getElementById('welcomeMessage').textContent = `Welcome back, ${firstName}!`;
-                })
-                .catch(() => {
-                    document.getElementById('welcomeMessage').textContent = `Welcome back, ${user.username}!`;
-                });
         }
 
         // Load stats
@@ -598,9 +732,81 @@
             }
         }
 
-        loadStats();
-        loadCampusUpdates();
-        loadNews();
+        async function bootHomePage() {
+            showGreenGoalsPageLoader('Loading…');
+            try {
+                if (user) {
+                    try {
+                        const userRes = await fetch(`${API_URL}/user/${user.id}`);
+                        const userData = await userRes.json();
+                        if (userData && !userData.surveyCompleted) {
+                            window.location.href = 'survey.html';
+                            return;
+                        }
+                        const firstName = userData.firstName || user.username;
+                        document.getElementById('welcomeMessage').textContent = `Welcome back, ${firstName}!`;
+                    } catch {
+                        document.getElementById('welcomeMessage').textContent = `Welcome back, ${user.username}!`;
+                    }
+                }
+                await Promise.all([
+                    loadStats(),
+                    loadFriends(),
+                    loadCampusUpdates(),
+                    loadNews()
+                ]);
+            } finally {
+                hideGreenGoalsPageLoader();
+            }
+        }
+
+        bootHomePage();
+
+        async function loadFriends() {
+            if (!user) return;
+            try {
+                const [userRes, teamsRes, usersRes] = await Promise.all([
+                    fetch(`${API_URL}/user/${user.id}`),
+                    fetch(`${API_URL}/teams`),
+                    fetch(`${API_URL}/users`)
+                ]);
+                const fullUser = await userRes.json();
+                const teams = await teamsRes.json();
+                const users = await usersRes.json();
+                const userTeamIds = Array.isArray(fullUser.teamIds) ? fullUser.teamIds : (fullUser.teamId ? [fullUser.teamId] : []);
+                const friends = users.filter(u =>
+                    u.id !== fullUser.id &&
+                    Array.isArray(u.teamIds) &&
+                    u.teamIds.some(tid => userTeamIds.includes(tid))
+                );
+                const friendsSection = document.getElementById('friendsSection');
+                const noFriendsSection = document.getElementById('noFriendsSection');
+                const friendsList = document.getElementById('friendsHomeList');
+                if (friends.length > 0) {
+                    friendsSection.style.display = 'block';
+                    noFriendsSection.style.display = 'none';
+                    friendsList.innerHTML = friends.slice(0, 6).map(f => {
+                        const displayName = (f.firstName || f.lastName) ? `${f.firstName || ''} ${f.lastName || ''}`.trim() : f.username;
+                        const avatar = f.profilePicture
+                            ? (f.profilePicture.startsWith('http') ? `<img src="${f.profilePicture}" alt="">` : f.profilePicture)
+                            : '🌿';
+                        return `<a class="friend-home-card" href="profile.html?userId=${f.id}">
+                            <div class="friend-home-avatar">${avatar}</div>
+                            <div>
+                                <div style="font-weight:600;">${displayName}</div>
+                                <div style="font-size:0.85rem;color:var(--text-light);">@${f.username} · ${f.points || 0} pts</div>
+                            </div>
+                        </a>`;
+                    }).join('');
+                } else {
+                    friendsSection.style.display = 'none';
+                    noFriendsSection.style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('friendsSection').style.display = 'none';
+                document.getElementById('noFriendsSection').style.display = 'block';
+            }
+        }
         
         // Load campus updates from API
         async function loadCampusUpdates() {
@@ -676,7 +882,7 @@
                     return 'Environment';
                 }
                 
-                container.innerHTML = articles.slice(0, 6).map(article => `
+                container.innerHTML = articles.slice(0, 2).map(article => `
                     <div class="article-card">
                         <div class="article-image" style="${article.image ? `background-image: url('${article.image}'); background-size: cover; background-position: center;` : ''}">
                             ${!article.image ? '🌍' : ''}

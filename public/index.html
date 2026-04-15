@@ -2,7 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
     <title>GreenGoals - Eco Challenges with Friends</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +36,7 @@
                 <h1>GreenGoals</h1>
             </div>
             <p class="tagline">Social Eco-Challenges with Friends</p>
+            <p class="tagline" style="opacity: 0.9; font-size: 0.85rem; max-width: 22rem; margin-left: auto; margin-right: auto;">Tip for phones: after you sign in, use <strong>Share → Add to Home Screen</strong> (iPhone) or <strong>Add to Home screen</strong> (Android) to open GreenGoals like an app.</p>
         </header>
 
         <!-- Auth Card -->
@@ -128,6 +138,8 @@
 
     </div>
 
+    <script src="api-url.js"></script>
+    <script src="page-loader.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -2,6 +2,11 @@
 // AUTH CHECK - Include this on protected pages
 // ============================================
 
+// Disable browser scroll restoration so each protected page opens at the top
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+
 (function() {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -59,6 +64,39 @@ function addAdminTab() {
     tabBar.appendChild(adminTab);
 }
 
-// Auto-add admin tab when DOM is ready
-document.addEventListener('DOMContentLoaded', addAdminTab);
+function updateChatTabUnreadBadge() {
+    const token = localStorage.getItem('token');
+    if (!token || typeof window.getGreenGoalsApiUrl !== 'function') return;
+
+    const apiUrl = window.getGreenGoalsApiUrl();
+    fetch(`${apiUrl}/chat/unread`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (data) {
+            var total = typeof data.total === 'number' ? data.total : 0;
+            document.querySelectorAll('a.tab-link[href="chat.html"]').forEach(function (link) {
+                var badge = link.querySelector('.chat-tab-unread-badge');
+                if (total <= 0) {
+                    if (badge) badge.remove();
+                    return;
+                }
+                var label = total > 99 ? '99+' : String(total);
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'chat-tab-unread-badge';
+                    badge.setAttribute('aria-label', total + ' unread chats');
+                    link.appendChild(badge);
+                }
+                badge.textContent = label;
+            });
+        })
+        .catch(function () {});
+}
+
+// Auto-add admin tab and chat unread badge when DOM is ready
+document.addEventListener('DOMContentLoaded', function () {
+    addAdminTab();
+    updateChatTabUnreadBadge();
+});
 

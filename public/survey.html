@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
+    <title>GreenGoals - Welcome Survey</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="page-loader.js"></script>
+    <style>
+        .survey-page-wrapper {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+        .survey-container {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .survey-card {
+            background: var(--cream);
+            border-radius: 24px;
+            padding: 36px;
+            box-shadow: 0 20px 60px var(--shadow);
+        }
+        .survey-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .survey-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--forest);
+            margin-bottom: 8px;
+        }
+        .survey-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+        .survey-section {
+            margin-bottom: 28px;
+        }
+        .survey-section:last-of-type {
+            margin-bottom: 0;
+        }
+        .survey-label {
+            font-weight: 600;
+            color: var(--forest);
+            margin-bottom: 12px;
+            display: block;
+            font-size: 0.95rem;
+        }
+        .survey-hint {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+        .survey-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .survey-option {
+            padding: 12px 18px;
+            border: 2px solid var(--sand);
+            border-radius: 14px;
+            background: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .survey-option:hover {
+            border-color: var(--sage);
+            background: #f8faf8;
+        }
+        .survey-option.selected {
+            border-color: var(--forest);
+            background: linear-gradient(135deg, var(--forest-light) 0%, var(--sage) 100%);
+            color: var(--cream);
+        }
+        .survey-option input {
+            display: none;
+        }
+        .survey-radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .survey-radio-option {
+            padding: 12px 18px;
+            border: 2px solid var(--sand);
+            border-radius: 14px;
+            background: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .survey-radio-option:hover {
+            border-color: var(--sage);
+        }
+        .survey-radio-option.selected {
+            border-color: var(--forest);
+            background: linear-gradient(135deg, var(--forest-light) 0%, var(--sage) 100%);
+            color: var(--cream);
+        }
+        .survey-submit {
+            margin-top: 32px;
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+            color: var(--cream);
+            border: none;
+            border-radius: 14px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .survey-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+        .survey-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+    </div>
+
+    <div class="survey-page-wrapper">
+        <div class="survey-container">
+        <div class="survey-card">
+            <div class="survey-header">
+                <h1 id="surveyTitle">Welcome to GreenGoals! 🌱</h1>
+                <p id="surveySubtitle">Tell us about your sustainability interests so we can personalize your experience.</p>
+            </div>
+
+            <form id="surveyForm">
+                <div class="survey-section">
+                    <label class="survey-label">Which sustainability areas interest you most?</label>
+                    <p class="survey-hint">Select all that apply</p>
+                    <div class="survey-options" id="categoriesOptions">
+                        <label class="survey-option" data-value="Reduce"><input type="checkbox" name="categories" value="Reduce"> ♻️ Reduce</label>
+                        <label class="survey-option" data-value="Nature"><input type="checkbox" name="categories" value="Nature"> 🌳 Nature</label>
+                        <label class="survey-option" data-value="Transport"><input type="checkbox" name="categories" value="Transport"> 🚲 Transport</label>
+                        <label class="survey-option" data-value="Food"><input type="checkbox" name="categories" value="Food"> 🥗 Food</label>
+                        <label class="survey-option" data-value="Energy"><input type="checkbox" name="categories" value="Energy"> ⚡ Energy</label>
+                    </div>
+                </div>
+
+                <div class="survey-section">
+                    <label class="survey-label">What types of sustainability do you want to implement?</label>
+                    <p class="survey-hint">Select all that apply</p>
+                    <div class="survey-options" id="typesOptions">
+                        <label class="survey-option" data-value="daily"><input type="checkbox" name="types" value="daily"> 📅 Daily habits</label>
+                        <label class="survey-option" data-value="lifestyle"><input type="checkbox" name="types" value="lifestyle"> 🏠 Lifestyle changes</label>
+                        <label class="survey-option" data-value="community"><input type="checkbox" name="types" value="community"> 🤝 Community action</label>
+                        <label class="survey-option" data-value="energy"><input type="checkbox" name="types" value="energy"> 💡 Energy & home</label>
+                    </div>
+                </div>
+
+                <div class="survey-section">
+                    <label class="survey-label">How much time can you commit to challenges?</label>
+                    <div class="survey-radio-group" id="timeOptions">
+                        <label class="survey-radio-option" data-value="quick"><input type="radio" name="timeCommitment" value="quick"> ⚡ Quick wins (&lt;1 day)</label>
+                        <label class="survey-radio-option" data-value="medium"><input type="radio" name="timeCommitment" value="medium"> 📆 Medium (1–7 days)</label>
+                        <label class="survey-radio-option" data-value="long"><input type="radio" name="timeCommitment" value="long"> 🌳 Long-term (weeks+)</label>
+                        <label class="survey-radio-option" data-value="mix"><input type="radio" name="timeCommitment" value="mix"> 🔀 Mix of all</label>
+                    </div>
+                </div>
+
+                <div class="survey-section">
+                    <label class="survey-label">Preferred challenge difficulty?</label>
+                    <div class="survey-radio-group" id="difficultyOptions">
+                        <label class="survey-radio-option" data-value="Easy"><input type="radio" name="difficulty" value="Easy"> 😊 Easy</label>
+                        <label class="survey-radio-option" data-value="Medium"><input type="radio" name="difficulty" value="Medium"> 💪 Medium</label>
+                        <label class="survey-radio-option" data-value="Hard"><input type="radio" name="difficulty" value="Hard"> 🏆 Hard</label>
+                        <label class="survey-radio-option" data-value="Mix"><input type="radio" name="difficulty" value="Mix"> 🔀 Mix of all</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="survey-submit" id="submitBtn">Continue to GreenGoals →</button>
+            </form>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.getGreenGoalsApiUrl();
+
+        // Pre-fill form when user has existing preferences (editing from profile)
+        const isFromProfile = new URLSearchParams(window.location.search).get('from') === 'profile';
+        (async function loadExistingPreferences() {
+            const user = getCurrentUser();
+            if (!user) return;
+            showGreenGoalsPageLoader('Loading…');
+            try {
+                const res = await fetch(`${API_URL}/user/${user.id}`);
+                const data = res.ok ? await res.json() : null;
+                if (data && data.surveyCompleted && data.surveyPreferences) {
+                    const prefs = data.surveyPreferences;
+                    document.getElementById('surveyTitle').textContent = 'Update your preferences 🌱';
+                    document.getElementById('surveySubtitle').textContent = 'Change your sustainability interests to personalize your challenge feed.';
+                    document.getElementById('submitBtn').textContent = 'Save preferences →';
+                    (prefs.categories || []).forEach(cat => {
+                        const cb = document.querySelector(`input[name="categories"][value="${cat}"]`);
+                        if (cb) cb.checked = true;
+                        const opt = document.querySelector(`#categoriesOptions [data-value="${cat}"]`);
+                        if (opt) opt.classList.add('selected');
+                    });
+                    (prefs.types || []).forEach(t => {
+                        const cb = document.querySelector(`input[name="types"][value="${t}"]`);
+                        if (cb) cb.checked = true;
+                        const opt = document.querySelector(`#typesOptions [data-value="${t}"]`);
+                        if (opt) opt.classList.add('selected');
+                    });
+                    const timeVal = prefs.timeCommitment || 'mix';
+                    const timeRadio = document.querySelector(`input[name="timeCommitment"][value="${timeVal}"]`);
+                    if (timeRadio) timeRadio.checked = true;
+                    document.querySelector(`#timeOptions [data-value="${timeVal}"]`)?.classList.add('selected');
+                    const diffVal = prefs.difficulty || 'Mix';
+                    const diffRadio = document.querySelector(`input[name="difficulty"][value="${diffVal}"]`);
+                    if (diffRadio) diffRadio.checked = true;
+                    document.querySelector(`#difficultyOptions [data-value="${diffVal}"]`)?.classList.add('selected');
+                }
+            } catch (_) { /* ignore */ }
+            finally {
+                hideGreenGoalsPageLoader();
+            }
+        })();
+
+        // Multi-select toggle (preventDefault stops label from double-toggling the checkbox)
+        document.querySelectorAll('#categoriesOptions .survey-option, #typesOptions .survey-option').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                const input = el.querySelector('input');
+                input.checked = !input.checked;
+                el.classList.toggle('selected', input.checked);
+            });
+        });
+
+        // Radio select
+        document.querySelectorAll('#timeOptions .survey-radio-option, #difficultyOptions .survey-radio-option').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if (e.target.tagName === 'INPUT') return;
+                const group = el.closest('.survey-radio-group');
+                group.querySelectorAll('.survey-radio-option').forEach(o => o.classList.remove('selected'));
+                el.classList.add('selected');
+                el.querySelector('input').checked = true;
+            });
+        });
+
+        document.getElementById('surveyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const categories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(c => c.value);
+            const types = Array.from(document.querySelectorAll('input[name="types"]:checked')).map(t => t.value);
+            const timeCommitment = document.querySelector('input[name="timeCommitment"]:checked')?.value || 'mix';
+            const difficulty = document.querySelector('input[name="difficulty"]:checked')?.value || 'Mix';
+
+            if (categories.length === 0) {
+                alert('Please select at least one sustainability area.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(`${API_URL}/user/survey`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({
+                        categories,
+                        types,
+                        timeCommitment,
+                        difficulty
+                    })
+                });
+                if (!res.ok) throw new Error('Failed to save');
+                const data = await res.json();
+                if (data.user) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                }
+                window.location.href = isFromProfile ? 'profile.html' : 'home.html';
+            } catch (err) {
+                alert('Something went wrong. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Continue to GreenGoals →';
+            }
+        });
+    </script>
+</body>
+</html>

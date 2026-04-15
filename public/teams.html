@@ -2,13 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
     <title>GreenGoals - Teams</title>
-    <link rel="pentonnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
     <script src="auth-check.js"></script>
+    <script src="nav-drawer.js"></script>
+    <script src="page-loader.js"></script>
     <style>
         /* Ensure consistent full width for all sections */
         .container.dashboard-container {
@@ -75,22 +87,73 @@
             margin-bottom: 24px;
             position: relative;
             overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
         }
-        .my-team-banner::before {
-            content: '👥';
-            position: absolute;
-            right: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 6rem;
-            opacity: 0.2;
+        .my-team-banner-left {
+            flex: 1;
+            min-width: 200px;
+        }
+        .my-team-banner-top-scorer {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255,255,255,0.15);
+            padding: 20px 24px;
+            border-radius: 16px;
+            max-width: 280px;
+            flex-shrink: 0;
+        }
+        .my-team-banner-top-scorer .mvp-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .my-team-banner-top-scorer .mvp-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .my-team-banner-top-scorer .mvp-info {
+            color: var(--cream);
+            min-width: 0;
+            overflow: hidden;
+        }
+        .my-team-banner-top-scorer .mvp-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        .my-team-banner-top-scorer .mvp-name {
+            font-weight: 600;
+            font-size: 1.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .my-team-banner-top-scorer .mvp-points {
+            font-size: 1.35rem;
+            font-weight: 700;
+            opacity: 1;
         }
         .my-team-banner h2 {
             font-family: 'Playfair Display', serif;
             font-size: 1.8rem;
             margin-bottom: 8px;
         }
-        .my-team-banner p {
+        .my-team-banner-left p {
             opacity: 0.9;
             margin-bottom: 16px;
         }
@@ -188,6 +251,245 @@
         }
         .available-team:last-child {
             margin-bottom: 0;
+        }
+        /* Your teams - compact */
+        .your-teams-compact.team-card {
+            padding: 16px 20px;
+        }
+        .your-teams-compact.team-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .your-teams-compact .my-teams-row {
+            margin-bottom: 0;
+        }
+        /* Horizontal team list for my teams */
+        .my-teams-row {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .my-team-pill {
+            flex: 1 1 0;
+            min-width: 140px;
+            padding: 16px 18px;
+            background: var(--sand);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .your-teams-compact .my-team-pill .team-info h4 {
+            font-size: 0.95rem;
+        }
+        .your-teams-compact .my-team-pill .team-info p {
+            font-size: 0.8rem;
+        }
+        .teams-more-btn {
+            cursor: pointer;
+        }
+        .teams-more-btn .team-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .teams-chevron {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            transition: transform 0.2s;
+        }
+        .teams-dropdown-list {
+            flex-basis: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--sand);
+        }
+        .my-team-pill:hover {
+            background: var(--mint);
+            border-color: var(--forest);
+        }
+        .my-team-pill.selected {
+            border-color: var(--forest);
+            background: rgba(135, 168, 120, 0.15);
+        }
+        .my-team-pill.selected .team-info h4 {
+            color: var(--forest);
+        }
+        .my-team-pill .team-info {
+            margin: 0;
+        }
+        .my-team-pill .team-info h4 {
+            margin: 0 0 4px 0;
+        }
+        .my-team-pill .team-info p {
+            margin: 0;
+        }
+        .members-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--sand);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 12px;
+        }
+        .members-toggle:hover {
+            background: var(--mint);
+        }
+        .members-toggle h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--forest);
+        }
+        .members-toggle .chevron {
+            font-size: 1rem;
+            color: var(--text-light);
+            transition: transform 0.2s;
+        }
+        .members-toggle.expanded .chevron {
+            transform: rotate(180deg);
+        }
+        .members-list-collapsible {
+            display: none;
+            margin-top: 0;
+        }
+        .members-list-collapsible.show {
+            display: block;
+            margin-top: 12px;
+        }
+        .team-panel .members-list-collapsible {
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .team-requests-subhead {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--forest);
+            margin: 14px 0 8px 0;
+        }
+        .team-requests-subhead:first-child {
+            margin-top: 0;
+        }
+        .team-three-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 700px) {
+            .team-three-col {
+                grid-template-columns: 1fr;
+            }
+        }
+        .team-panel {
+            background: var(--sand);
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .team-panel:hover {
+            border-color: rgba(135, 168, 120, 0.3);
+        }
+        .team-panel.mvp-panel {
+            background: linear-gradient(145deg, rgba(212, 168, 83, 0.25) 0%, rgba(212, 168, 83, 0.1) 100%);
+            border-color: rgba(212, 168, 83, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+        .team-panel.mvp-panel .team-mvp-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .team-panel .panel-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--forest);
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .team-panel.mvp-panel .panel-title {
+            cursor: default;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .team-panel .panel-title .chevron {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            transition: transform 0.2s;
+        }
+        .team-panel .panel-title.expanded .chevron {
+            transform: rotate(180deg);
+        }
+        .team-mvp-card {
+            text-align: center;
+            padding: 8px 0 0;
+        }
+        .team-mvp-card .mvp-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--forest);
+            opacity: 0.85;
+            margin-bottom: 10px;
+        }
+        .team-mvp-card .mvp-avatar {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: var(--cream);
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .team-mvp-card .mvp-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .team-mvp-card .mvp-name {
+            font-weight: 600;
+            color: var(--forest);
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+        .team-mvp-card .mvp-username {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        .team-mvp-card .mvp-points {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--forest);
+        }
+        .team-invite-section {
+            background: var(--cream);
+            border: 2px solid var(--sand);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 0;
         }
         .team-info h4 {
             color: var(--text-dark);
@@ -471,6 +773,235 @@
             color: var(--mint);
             font-size: 0.9rem;
         }
+        /* Quick action cards at top */
+        .team-quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 700px) {
+            .team-quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+        .team-quick-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 20px 22px;
+            box-shadow: 0 10px 30px var(--shadow);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            border: 2px solid transparent;
+        }
+        .team-quick-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+            border-color: var(--forest);
+        }
+        .team-quick-card.primary {
+            background: linear-gradient(135deg, var(--forest), var(--forest-light));
+            color: var(--cream);
+        }
+        .team-quick-card.primary:hover {
+            border-color: var(--gold);
+        }
+        .team-quick-card.primary .quick-title {
+            color: var(--cream);
+        }
+        .team-quick-card-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        .team-quick-card-content {
+            flex: 1;
+        }
+        .team-quick-card .quick-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            margin: 0 0 4px 0;
+            color: var(--forest);
+        }
+        .team-quick-card .quick-subtitle {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        /* Dashboard-style layout */
+        .teams-welcome-section {
+            display: grid;
+            grid-template-columns: 1fr minmax(280px, 340px);
+            gap: 20px;
+            margin-bottom: 28px;
+            align-items: start;
+        }
+        @media (max-width: 800px) {
+            .teams-welcome-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        .teams-welcome-aside {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+        .teams-welcome-banner {
+            background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 50%, var(--sage) 100%);
+            border-radius: 24px;
+            padding: 40px;
+            color: var(--cream);
+            position: relative;
+            overflow: hidden;
+        }
+        .teams-welcome-banner::before {
+            content: '👥';
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 8rem;
+            opacity: 0.2;
+        }
+        .teams-welcome-banner h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        .teams-welcome-banner p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            max-width: 500px;
+        }
+        .teams-summary-card {
+            background: linear-gradient(135deg, var(--forest-light) 0%, var(--sage) 100%);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 10px 40px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .teams-summary-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: var(--cream);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .teams-summary-stat {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .teams-summary-stat:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .teams-summary-icon {
+            font-size: 1.8rem;
+        }
+        .teams-summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--cream);
+        }
+        .teams-summary-label {
+            font-size: 0.8rem;
+            color: var(--mint);
+        }
+        .teams-section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--cream);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .teams-impact-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 600px) {
+            .teams-impact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .teams-impact-card {
+            background: var(--cream);
+            border-radius: 20px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 10px 40px var(--shadow);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .teams-impact-card:hover {
+            transform: translateY(-5px);
+        }
+        .teams-impact-card .impact-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .teams-impact-card .impact-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--forest);
+            font-family: 'Playfair Display', serif;
+        }
+        .teams-impact-card .impact-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .teams-content-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 900px) {
+            .teams-content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .team-join-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .team-join-vertical .team-panel {
+            margin-bottom: 0;
+        }
+        .team-join-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 700px) {
+            .team-join-two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+        #teamsYouRequestedList .available-team,
+        #availableTeams .available-team {
+            margin-bottom: 12px;
+        }
+        #teamsYouRequestedList .available-team:last-child,
+        #availableTeams .available-team:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -499,98 +1030,172 @@
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
             <a href="teams.html" class="tab-link active">Teams</a>
             <a href="chat.html" class="tab-link">Chat</a>
+            <a href="news.html" class="tab-link">News</a>
             <a href="profile.html" class="tab-link">Profile</a>
         </div>
 
-        <!-- My Team Section (shown when user has a team) -->
-        <div id="myTeamSection" style="display: none;">
-            <div class="my-team-banner">
-                <h2 id="myTeamName">My Team</h2>
-                <p id="myTeamDescription">Team description here</p>
-                <div class="team-stats">
-                    <div class="team-stat">
-                        <div class="team-stat-value" id="myTeamPoints">0</div>
-                        <div class="team-stat-label">Team Points</div>
-                    </div>
-                    <div class="team-stat">
-                        <div class="team-stat-value" id="myTeamMembers">0</div>
-                        <div class="team-stat-label">Members</div>
-                    </div>
-                </div>
+        <!-- Welcome Section (dashboard-style) -->
+        <div class="teams-welcome-section">
+            <div class="teams-welcome-banner">
+                <h1>Teams</h1>
+                <p>Create a team, invite friends, and compete together on the GreenGoals leaderboard.</p>
             </div>
-
-            <div class="teams-layout">
-                <!-- Team Members -->
-                <div class="team-card">
-                    <h3>Team Members</h3>
-                    <div id="teamMembersList">
-                        <p style="color: var(--text-light);">Loading...</p>
+            <div class="teams-welcome-aside">
+                <div class="teams-summary-card">
+                    <h3>Your Teams</h3>
+                    <div class="teams-summary-stat">
+                        <span class="teams-summary-icon">👥</span>
+                        <div style="display: flex; flex-direction: column;">
+                            <span class="teams-summary-value" id="teamsSummaryCount">0</span>
+                            <span class="teams-summary-label">Teams</span>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Add Members -->
-                <div class="team-card">
-                    <h3>Add Team Members</h3>
-                    <p style="color: var(--text-light); margin-bottom: 16px;">Select a GreenGoals user to add to your team:</p>
-                    
-                    <div class="form-group">
-                        <label>Search or select a user:</label>
-                        <input type="text" id="searchUsers" class="autocomplete-input" 
-                               placeholder="Type to filter users..." 
-                               autocomplete="off"
-                               oninput="filterUserList(this.value)"
-                               style="margin-bottom: 12px;">
-                    </div>
-                    
-                    <div id="userListContainer" style="max-height: 300px; overflow-y: auto; border: 2px solid var(--sand); border-radius: 12px; background: white;">
-                        <p style="padding: 16px; color: var(--text-light);">Loading users...</p>
-                    </div>
-                    
-                    <div id="addedMessage" style="margin-top: 12px; display: none;"></div>
-                    
-                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--sand);">
-                        <p style="color: var(--text-light); font-size: 0.85rem; margin-bottom: 12px;">Or share your team name "<strong id="shareTeamName"></strong>" so friends can join!</p>
-                        <button class="btn-danger" onclick="leaveTeam()">Leave Team</button>
+                    <div class="teams-summary-stat">
+                        <span class="teams-summary-icon">⭐</span>
+                        <div style="display: flex; flex-direction: column;">
+                            <span class="teams-summary-value" id="teamsSummaryPoints">0</span>
+                            <span class="teams-summary-label">Total team pts</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- No Team Section (shown when user has no team) -->
-        <div id="noTeamSection" style="display: none;">
-            <div class="teams-layout">
-                <!-- Create Team -->
-                <div class="team-card">
-                    <h3>Create a Team</h3>
-                    <form id="createTeamForm">
-                        <div class="form-group">
-                            <label>Team Name</label>
-                            <input type="text" id="teamName" required placeholder="e.g., Green Warriors">
+        <!-- My Teams Section (shown when user has teams) -->
+        <div id="myTeamSection" style="display: none;">
+            <h2 class="teams-section-title">My teams</h2>
+            <div class="team-card your-teams-compact">
+                <div id="myTeamsList" class="my-teams-row"></div>
+            </div>
+            <div class="team-card" id="selectedTeamCard" style="margin-top: 24px;">
+                    <h3 id="selectedTeamHeader">Team details</h3>
+                    <div id="noTeamSelected" style="text-align: center; padding: 40px 20px; color: var(--text-light);">
+                        <p>Select a team from the list</p>
+                    </div>
+                    <div id="selectedTeamContent" style="display: none;">
+                        <div class="my-team-banner" style="margin-bottom: 20px;">
+                            <div class="my-team-banner-left">
+                                <h2 id="myTeamName">My Team</h2>
+                                <p id="myTeamDescription">Select a team</p>
+                                <div class="team-stats">
+                                    <div class="team-stat">
+                                        <div class="team-stat-value" id="myTeamPoints">0</div>
+                                        <div class="team-stat-label">Team Points</div>
+                                    </div>
+                                    <div class="team-stat">
+                                        <div class="team-stat-value" id="myTeamMembers">0</div>
+                                        <div class="team-stat-label">Members</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="my-team-banner-top-scorer" id="teamMvpCard">
+                                <div class="mvp-avatar" id="mvpAvatar">?</div>
+                                <div class="mvp-info">
+                                    <div class="mvp-label">Top scorer</div>
+                                    <div class="mvp-name" id="mvpName">—</div>
+                                    <div class="mvp-points" id="mvpPoints">0 pts</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Description</label>
-                            <textarea id="teamDescription" rows="3" placeholder="What's your team about?"></textarea>
+                        <div class="team-three-col">
+                            <div class="team-panel">
+                                <div class="panel-title">
+                                    <span>Members</span>
+                                </div>
+                                <div id="teamMembersList" class="members-list-collapsible show">
+                                    <p style="color: var(--text-light); font-size: 0.9rem;">No members yet</p>
+                                </div>
+                            </div>
+                            <div class="team-panel">
+                                <div class="panel-title">
+                                    <span>Add members</span>
+                                </div>
+                                <div id="addMembersContent" class="members-list-collapsible show">
+                                    <p style="color: var(--text-light); font-size: 0.85rem; margin-bottom: 12px;">Search users and send an invitation — they accept or decline under <strong>Team requests</strong> below.</p>
+                                    <div class="form-group">
+                                        <input type="text" id="searchUsers" class="autocomplete-input" placeholder="Search..." autocomplete="off" oninput="filterUserList(this.value)" style="margin-bottom: 10px;">
+                                    </div>
+                                    <div id="userListContainer" style="max-height: 180px; overflow-y: auto; border: 2px solid rgba(0,0,0,0.06); border-radius: 10px; background: white;">
+                                        <p style="padding: 12px; color: var(--text-light); font-size: 0.9rem;">Loading...</p>
+                                    </div>
+                                    <div id="addedMessage" style="margin-top: 10px; display: none;"></div>
+                                </div>
+                            </div>
                         </div>
-                        <button type="submit" class="btn-primary">Create Team</button>
-                    </form>
-                </div>
-
-                <!-- Join Team -->
-                <div class="team-card">
-                    <h3>Join a Team</h3>
-                    <p style="color: var(--text-light); margin-bottom: 16px;">Browse available teams and join one!</p>
-                    <div id="availableTeams">
-                        <p style="color: var(--text-light);">Loading teams...</p>
+                        <div class="team-invite-section">
+                            <h4 style="margin: 0 0 12px 0; color: var(--forest); font-size: 1rem;">Invite friends</h4>
+                            <div class="invite-code">
+                                <div id="inviteMessage" style="font-size: 0.9rem; line-height: 1.5; word-break: break-word;"></div>
+                            </div>
+                            <button type="button" class="copy-btn" onclick="copyInviteMessage()">Copy invite</button>
+                            <button class="btn-danger" style="margin-top: 16px; width: 100%;" onclick="leaveTeam()">Leave team</button>
+                        </div>
                     </div>
                 </div>
+        </div>
+
+        <!-- Create & Join Section -->
+        <h2 class="teams-section-title">Create & join</h2>
+        <div id="noTeamSection">
+            <!-- Join Team panels (above Create, same format as Members/Add members) -->
+            <div class="team-join-two-col">
+                <div class="team-panel">
+                    <div class="panel-title">
+                        <span>Team requests</span>
+                    </div>
+                    <p style="color: var(--text-light); font-size: 0.85rem; margin-bottom: 12px;">Invitations to join a team, people asking to join teams you’re on, and your outgoing “request to join” status — all in one place.</p>
+                    <div id="teamInvitesList" style="max-height: 340px; overflow-y: auto;">
+                        <p style="color: var(--text-light); font-size: 0.9rem; margin: 0;">Loading…</p>
+                    </div>
+                </div>
+                <div class="team-panel" id="teamsYouRequestedPanel">
+                    <div class="panel-title">
+                        <span>Pending requests</span>
+                    </div>
+                    <p style="color: var(--text-light); font-size: 0.85rem; margin-bottom: 12px;">Teams you requested to join.</p>
+                    <div id="teamsYouRequestedList" style="max-height: 200px; overflow-y: auto;">
+                        <p id="noPendingRequestsMessage" style="color: var(--text-light); font-size: 0.9rem; margin: 0;">No pending requests</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create a Team -->
+            <div class="team-card" id="createTeamSection">
+                <h3>Create a Team</h3>
+                <form id="createTeamForm">
+                    <div class="form-group">
+                        <label>Team Name</label>
+                        <input type="text" id="teamName" required placeholder="e.g., Green Warriors">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="teamDescription" rows="3" placeholder="What's your team about?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Invite friends to join (optional)</label>
+                        <input type="text" id="inviteSearchUsers" class="autocomplete-input" placeholder="Type to filter users..." autocomplete="off" oninput="filterInviteUserList(this.value)" style="margin-bottom: 12px;">
+                        <div id="inviteUserListContainer" style="max-height: 280px; overflow-y: auto; border: 2px solid var(--sand); border-radius: 12px; background: white;">
+                            <p style="padding: 16px; color: var(--text-light);">Loading users...</p>
+                        </div>
+                        <p style="color: var(--text-light); font-size: 0.8rem; margin-top: 8px;">Click users to include on your invite list. After you create the team, they receive invitations to accept.</p>
+                    </div>
+                    <button type="submit" class="btn-primary">Create Team</button>
+                </form>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = window.getGreenGoalsApiUrl();
         let currentUser = null;
         let allUsers = [];
+        let myTeams = [];
+        let selectedTeamId = null;
+        let inviteSelectedIds = [];
+        let inviteUserListFilter = '';
+        let pendingRequestTeamIds = [];
+        /** @type {Set<number>} User IDs with a pending member invite from the currently selected team */
+        let pendingOutgoingInviteeIds = new Set();
 
         // Show username
         const user = getCurrentUser();
@@ -599,164 +1204,628 @@
         }
 
         async function loadTeamsPage() {
+            showGreenGoalsPageLoader('Loading teams…');
             try {
                 // Get current user's full data
-                const userRes = await fetch(`${API_URL}/user/${user.id}`);
+                const userRes = await fetch(`${API_URL}/user/${user.id}`, { cache: 'no-store' });
                 currentUser = await userRes.json();
                 
                 // Get all users for member lists
-                const usersRes = await fetch(`${API_URL}/users`);
+                const usersRes = await fetch(`${API_URL}/users`, { cache: 'no-store' });
                 allUsers = await usersRes.json();
                 
-                if (currentUser.teamId) {
-                    // User has a team - show my team section
-                    document.getElementById('myTeamSection').style.display = 'block';
-                    document.getElementById('noTeamSection').style.display = 'none';
-                    loadMyTeam();
-                } else {
-                    // User has no team - show join/create section
-                    document.getElementById('myTeamSection').style.display = 'none';
-                    document.getElementById('noTeamSection').style.display = 'block';
-                    loadAvailableTeams();
-                }
+                // Show "My teams" section only when user has at least one team
+                document.getElementById('myTeamSection').style.display = 'none'; // set by loadMyTeam
+                
+                const pendingRes = await fetch(`${API_URL}/user/team-join-requests`, {
+                    cache: 'no-store',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const pendingData = await pendingRes.json();
+                pendingRequestTeamIds = Array.isArray(pendingData.teamIds) ? pendingData.teamIds : [];
+
+                await loadMyTeam();
+                await loadAvailableTeams();
+                displayInviteUserList(allUsers);
             } catch (error) {
                 console.error('Error loading teams:', error);
+            } finally {
+                hideGreenGoalsPageLoader();
             }
         }
 
         async function loadMyTeam() {
             try {
-                console.log('loadMyTeam called, currentUser:', currentUser);
-                console.log('allUsers count:', allUsers.length);
-                
-                const teamsRes = await fetch(`${API_URL}/teams`);
+                const teamsRes = await fetch(`${API_URL}/teams`, { cache: 'no-store' });
                 const teams = await teamsRes.json();
-                console.log('Teams loaded:', teams);
-                
-                const myTeam = teams.find(t => t.id === currentUser.teamId);
-                console.log('My team:', myTeam);
-                
-                if (myTeam) {
-                    document.getElementById('myTeamName').textContent = myTeam.name;
-                    document.getElementById('myTeamDescription').textContent = myTeam.description || 'No description';
-                    document.getElementById('myTeamPoints').textContent = myTeam.totalPoints || 0;
-                    const shareEl = document.getElementById('shareTeamName');
-                    if (shareEl) shareEl.textContent = myTeam.name;
-                    
-                    // Load team members
-                    const membersList = document.getElementById('teamMembersList');
-                    const teamId = myTeam.id;
-                    
-                    // Filter users who are in this team
-                    let teamMembers = [];
-                    for (let i = 0; i < allUsers.length; i++) {
-                        if (allUsers[i].teamId === teamId) {
-                            teamMembers.push(allUsers[i]);
-                        }
-                    }
-                    
-                    // Always add current user if not in list
-                    let foundCurrentUser = false;
-                    for (let i = 0; i < teamMembers.length; i++) {
-                        if (teamMembers[i].id === currentUser.id) {
-                            foundCurrentUser = true;
-                            break;
-                        }
-                    }
-                    if (!foundCurrentUser && currentUser.teamId === teamId) {
-                        teamMembers.unshift(currentUser);
-                    }
-                    
-                    console.log('Team members found:', teamMembers.length, teamMembers);
-                    
-                    // Update member count
-                    document.getElementById('myTeamMembers').textContent = teamMembers.length;
-                    
-                    // Build HTML for members
-                    let membersHTML = '';
-                    if (teamMembers.length === 0) {
-                        membersHTML = '<p style="color: var(--text-light);">No members yet</p>';
-                    } else {
-                        for (let i = 0; i < teamMembers.length; i++) {
-                            const m = teamMembers[i];
-                            const isCurrentUser = m.id === currentUser.id;
-                            const isLeader = m.id === myTeam.leaderId;
-                            const firstName = m.firstName || '';
-                            const lastName = m.lastName || '';
-                            const name = (firstName + ' ' + lastName).trim() || m.username;
-                            const initial = (firstName || m.username || '?').charAt(0).toUpperCase();
-                            
-                            // Determine avatar content - profile picture or initial
-                            let avatarContent = initial;
-                            let avatarStyle = '';
-                            if (m.profilePicture) {
-                                if (m.profilePicture.startsWith('http')) {
-                                    avatarContent = '<img src="' + m.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-                                    avatarStyle = 'overflow:hidden;';
-                                } else {
-                                    // Emoji profile picture
-                                    avatarContent = m.profilePicture;
-                                    avatarStyle = 'font-size: 1.5rem;';
-                                }
-                            }
-                            
-                            membersHTML += '<div class="member-item" style="' + (isCurrentUser ? 'background: rgba(135, 168, 120, 0.1);' : '') + '">';
-                            membersHTML += '<div class="member-avatar" style="' + avatarStyle + '">' + avatarContent + '</div>';
-                            membersHTML += '<div class="member-info">';
-                            membersHTML += '<h5>' + name + (isCurrentUser ? ' <span style="color: var(--sage); font-size: 0.8rem;">(You)</span>' : '') + '</h5>';
-                            membersHTML += '<p>@' + m.username + ' · ' + (m.points || 0) + ' pts</p>';
-                            membersHTML += '</div>';
-                            if (isLeader) {
-                                membersHTML += '<span class="leader-badge">Leader</span>';
-                            }
-                            membersHTML += '</div>';
-                        }
-                    }
-                    
-                    membersList.innerHTML = membersHTML;
-                    console.log('Members list updated');
+                // Determine which teams the current user belongs to
+                const ids = Array.isArray(currentUser.teamIds) && currentUser.teamIds.length
+                    ? currentUser.teamIds.map(id => parseInt(id)).filter(id => !Number.isNaN(id))
+                    : (currentUser.teamId ? [parseInt(currentUser.teamId)] : []);
+
+                myTeams = teams.filter(t => ids.includes(t.id));
+
+                // Update summary card (dashboard-style)
+                const countEl = document.getElementById('teamsSummaryCount');
+                const pointsEl = document.getElementById('teamsSummaryPoints');
+                if (countEl) countEl.textContent = myTeams.length;
+                if (pointsEl) pointsEl.textContent = myTeams.reduce((sum, t) => sum + (t.totalPoints || 0), 0);
+
+                if (!myTeams.length) {
+                    document.getElementById('myTeamSection').style.display = 'none';
+                    return;
                 }
-                
-                // ALWAYS display the user list (even if team not found)
-                console.log('Displaying user list with', allUsers.length, 'users');
-                displayUserList(allUsers);
-                
+
+                document.getElementById('myTeamSection').style.display = 'block';
+                if (!selectedTeamId || !myTeams.find(t => t.id === selectedTeamId)) {
+                    selectedTeamId = myTeams[0].id;
+                }
+
+                renderMyTeamsList();
+                renderSelectedTeamDetails();
+                await refreshPendingMemberInvitesAndUserList();
             } catch (error) {
                 console.error('Error loading team:', error);
-                // Still try to display users even if there's an error
-                displayUserList(allUsers);
+                pendingOutgoingInviteeIds = new Set();
+                displayUserListForCurrentSearch();
+            }
+        }
+
+        function displayUserListForCurrentSearch() {
+            const searchEl = document.getElementById('searchUsers');
+            const q = searchEl && searchEl.value ? searchEl.value.trim() : '';
+            if (q) filterUserList(q);
+            else displayUserList(allUsers);
+        }
+
+        async function refreshPendingMemberInvitesAndUserList() {
+            pendingOutgoingInviteeIds = new Set();
+            if (!selectedTeamId || !getToken()) {
+                displayUserListForCurrentSearch();
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/teams/${selectedTeamId}/member-invites/pending`, {
+                    cache: 'no-store',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const list = res.ok ? await res.json() : [];
+                (list || []).forEach((inv) => pendingOutgoingInviteeIds.add(parseInt(inv.inviteeUserId, 10)));
+            } catch (_) {
+                pendingOutgoingInviteeIds = new Set();
+            }
+            displayUserListForCurrentSearch();
+        }
+
+        function userBelongsToTeamClient(userObj, teamId) {
+            if (!userObj) return false;
+            const tid = parseInt(teamId);
+            if (Number.isNaN(tid)) return false;
+            if (Array.isArray(userObj.teamIds) && userObj.teamIds.includes(tid)) return true;
+            return parseInt(userObj.teamId) === tid;
+        }
+
+        function renderMyTeamsList() {
+            const listEl = document.getElementById('myTeamsList');
+            if (!listEl) return;
+
+            if (!myTeams || !myTeams.length) {
+                listEl.innerHTML = '<p style="color: var(--text-light); font-size: 0.9rem;">You are not in any teams yet.</p>';
+                return;
+            }
+
+            const showCount = Math.min(3, myTeams.length);
+            const displayed = myTeams.slice(0, showCount);
+            const hasMore = myTeams.length > 3;
+
+            listEl.innerHTML = displayed.map(t => {
+                const isSelected = t.id === selectedTeamId;
+                return `
+                    <div class="my-team-pill ${isSelected ? 'selected' : ''}" onclick="selectMyTeam(${t.id})">
+                        <div class="team-info">
+                            <h4>${t.name}</h4>
+                            <p>${t.memberCount || 0} members · ${t.totalPoints || 0} pts</p>
+                        </div>
+                    </div>
+                `;
+            }).join('') + (hasMore ? `
+                <div class="my-team-pill teams-more-btn" id="teamsMoreBtn" onclick="toggleTeamsDropdown()">
+                    <div class="team-info">
+                        <h4>+${myTeams.length - 3} more</h4>
+                        <span class="teams-chevron" id="teamsChevron">▼</span>
+                    </div>
+                </div>
+                <div class="teams-dropdown-list" id="teamsDropdownList" style="display: none;">
+                    ${myTeams.slice(3).map(t => `
+                        <div class="my-team-pill ${t.id === selectedTeamId ? 'selected' : ''}" onclick="selectMyTeam(${t.id}); toggleTeamsDropdown();">
+                            <div class="team-info">
+                                <h4>${t.name}</h4>
+                                <p>${t.memberCount || 0} members · ${t.totalPoints || 0} pts</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '');
+        }
+
+        function toggleTeamsDropdown() {
+            const list = document.getElementById('teamsDropdownList');
+            const chevron = document.getElementById('teamsChevron');
+            if (!list || !chevron) return;
+            const isOpen = list.style.display !== 'none';
+            list.style.display = isOpen ? 'none' : 'flex';
+            chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+
+        function selectMyTeam(teamId) {
+            selectedTeamId = parseInt(teamId);
+            renderMyTeamsList();
+            renderSelectedTeamDetails();
+            void refreshPendingMemberInvitesAndUserList();
+        }
+
+        function toggleMembersList() {
+            const listEl = document.getElementById('teamMembersList');
+            const toggleEl = document.getElementById('membersToggle');
+            if (!listEl || !toggleEl) return;
+            listEl.classList.toggle('show');
+            toggleEl.classList.toggle('expanded', listEl.classList.contains('show'));
+        }
+
+        function collapseMembersList() {
+            const listEl = document.getElementById('teamMembersList');
+            const toggleEl = document.getElementById('membersToggle');
+            if (listEl) listEl.classList.remove('show');
+            if (toggleEl) toggleEl.classList.remove('expanded');
+        }
+
+        function toggleAddMembersList() {
+            const contentEl = document.getElementById('addMembersContent');
+            const toggleEl = document.getElementById('addMembersToggle');
+            if (!contentEl || !toggleEl) return;
+            contentEl.classList.toggle('show');
+            toggleEl.classList.toggle('expanded', contentEl.classList.contains('show'));
+        }
+
+        function collapseAddMembersList() {
+            const contentEl = document.getElementById('addMembersContent');
+            const toggleEl = document.getElementById('addMembersToggle');
+            if (contentEl) contentEl.classList.remove('show');
+            if (toggleEl) toggleEl.classList.remove('expanded');
+        }
+
+        function renderSelectedTeamDetails() {
+            const noTeamEl = document.getElementById('noTeamSelected');
+            const contentEl = document.getElementById('selectedTeamContent');
+            if (!myTeams || !myTeams.length || !selectedTeamId) {
+                if (noTeamEl) noTeamEl.style.display = 'block';
+                if (contentEl) contentEl.style.display = 'none';
+                return;
+            }
+            const team = myTeams.find(t => t.id === selectedTeamId);
+            if (!team) {
+                if (noTeamEl) noTeamEl.style.display = 'block';
+                if (contentEl) contentEl.style.display = 'none';
+                return;
+            }
+            if (noTeamEl) noTeamEl.style.display = 'none';
+            if (contentEl) contentEl.style.display = 'block';
+
+            document.getElementById('myTeamName').textContent = team.name;
+            document.getElementById('myTeamDescription').textContent = team.description || 'No description';
+            document.getElementById('myTeamPoints').textContent = team.totalPoints || 0;
+
+            const inviteEl = document.getElementById('inviteMessage');
+            if (inviteEl) {
+                const baseUrl = window.location.origin || 'http://localhost:3000';
+                const message = `Join my GreenGoals team "${team.name}"!\n\n1. Log in to GreenGoals\n2. Go to the Teams tab\n3. Find "${team.name}" and tap Request to join – I'll approve you!\n\nLink: ${baseUrl}/teams.html`;
+                inviteEl.textContent = message;
+                inviteEl.dataset.inviteText = message;
+            }
+
+            const membersList = document.getElementById('teamMembersList');
+            const teamId = team.id;
+
+            // Filter users who are in this team
+            const teamMembers = allUsers.filter(u => userBelongsToTeamClient(u, teamId));
+
+            // Always add current user if they belong to this team but aren't in list
+            if (userBelongsToTeamClient(currentUser, teamId) && !teamMembers.find(m => m.id === currentUser.id)) {
+                teamMembers.unshift(currentUser);
+            }
+
+            document.getElementById('myTeamMembers').textContent = teamMembers.length;
+
+            const toggleEl = document.getElementById('membersToggle');
+            if (toggleEl) {
+                const span = toggleEl.querySelector('span:first-child');
+                if (span) span.textContent = `Members (${teamMembers.length})`;
+            }
+
+            let membersHTML = '';
+            if (!teamMembers.length) {
+                membersHTML = '<p style="color: var(--text-light);">No members yet</p>';
+            } else {
+                for (let i = 0; i < teamMembers.length; i++) {
+                    const m = teamMembers[i];
+                    const isCurrentUser = m.id === currentUser.id;
+                    const isLeader = m.id === team.leaderId;
+                    const firstName = m.firstName || '';
+                    const lastName = m.lastName || '';
+                    const name = (firstName + ' ' + lastName).trim() || m.username;
+                    const initial = (firstName || m.username || '?').charAt(0).toUpperCase();
+                    
+                    // Determine avatar content - profile picture or initial
+                    let avatarContent = initial;
+                    let avatarStyle = '';
+                    if (m.profilePicture) {
+                        if (m.profilePicture.startsWith('http')) {
+                            avatarContent = '<img src="' + m.profilePicture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                            avatarStyle = 'overflow:hidden;';
+                        } else {
+                            // Emoji profile picture
+                            avatarContent = m.profilePicture;
+                            avatarStyle = 'font-size: 1.5rem;';
+                        }
+                    }
+                    
+                    const tag = isCurrentUser ? 'div' : 'a';
+                    const attrs = isCurrentUser ? '' : ' href="profile.html?userId=' + m.id + '" style="text-decoration:none;color:inherit;"';
+                    membersHTML += '<' + tag + ' class="member-item" style="' + (isCurrentUser ? 'background: rgba(135, 168, 120, 0.1);' : '') + ';display:flex;align-items:center;"' + attrs + '>';
+                    membersHTML += '<div class="member-avatar" style="' + avatarStyle + '">' + avatarContent + '</div>';
+                    membersHTML += '<div class="member-info">';
+                    membersHTML += '<h5>' + name + (isCurrentUser ? ' <span style="color: var(--sage); font-size: 0.8rem;">(You)</span>' : '') + '</h5>';
+                    membersHTML += '<p>@' + m.username + ' · ' + (m.points || 0) + ' pts</p>';
+                    membersHTML += '</div>';
+                    if (isLeader) {
+                        membersHTML += '<span class="leader-badge">Leader</span>';
+                    }
+                    membersHTML += '</' + tag + '>';
+                }
+            }
+
+            membersList.innerHTML = membersHTML;
+
+            // Update top scorer in banner
+            const mvp = teamMembers.length ? teamMembers.reduce((best, m) => 
+                (m.points || 0) > (best.points || 0) ? m : best
+            ) : null;
+            const mvpAvatarEl = document.getElementById('mvpAvatar');
+            const mvpNameEl = document.getElementById('mvpName');
+            const mvpPointsEl = document.getElementById('mvpPoints');
+            if (mvp && mvpAvatarEl && mvpNameEl && mvpPointsEl) {
+                const mvpName = ((mvp.firstName || '') + ' ' + (mvp.lastName || '')).trim() || mvp.username;
+                if (mvp.profilePicture) {
+                    if (mvp.profilePicture.startsWith('http')) {
+                        mvpAvatarEl.innerHTML = '<img src="' + mvp.profilePicture + '" alt="">';
+                    } else {
+                        mvpAvatarEl.textContent = mvp.profilePicture;
+                    }
+                } else {
+                    mvpAvatarEl.textContent = (mvp.firstName || mvp.username || '?')[0].toUpperCase();
+                }
+                mvpNameEl.textContent = mvpName;
+                mvpPointsEl.textContent = (mvp.points || 0) + ' pts';
+            } else if (mvpAvatarEl && mvpNameEl && mvpPointsEl) {
+                mvpAvatarEl.innerHTML = '?';
+                mvpNameEl.textContent = '—';
+                mvpPointsEl.textContent = '—';
+            }
+
+        }
+
+        async function approveJoinRequest(teamId, requestId) {
+            const tid = parseInt(teamId, 10);
+            try {
+                const res = await fetch(`${API_URL}/teams/${tid}/join-requests/${requestId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    await loadMyTeam();
+                    await loadAvailableTeams();
+                    renderSelectedTeamDetails();
+                    alert('✅ ' + (data.message || 'Request approved!'));
+                } else {
+                    alert('❌ ' + (data.error || 'Failed to approve'));
+                }
+            } catch (e) {
+                alert('❌ Could not approve request');
+            }
+        }
+
+        async function rejectJoinRequest(teamId, requestId) {
+            const tid = parseInt(teamId, 10);
+            try {
+                const res = await fetch(`${API_URL}/teams/${tid}/join-requests/${requestId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    await loadAvailableTeams();
+                    alert('Request rejected.');
+                } else {
+                    alert('❌ ' + (data.error || 'Failed to reject'));
+                }
+            } catch (e) {
+                alert('❌ Could not reject request');
+            }
+        }
+
+        function displayInviteUserList(usersToShow) {
+            const container = document.getElementById('inviteUserListContainer');
+            if (!container) return;
+
+            if (!usersToShow || !usersToShow.length) {
+                container.innerHTML = '<p style="padding: 16px; text-align: center; color: var(--text-light);">No users found</p>';
+                return;
+            }
+
+            const currentUserId = currentUser ? currentUser.id : -1;
+            const users = usersToShow.filter(u => u.role !== 'super_admin' && u.id !== currentUserId);
+            if (!users.length) {
+                container.innerHTML = '<p style="padding: 16px; text-align: center; color: var(--text-light);">No users available to invite</p>';
+                return;
+            }
+
+            let html = '';
+            users.forEach(u => {
+                const isSelected = inviteSelectedIds.indexOf(u.id) !== -1;
+                const name = ((u.firstName || '') + ' ' + (u.lastName || '')).trim();
+                const displayName = name || u.username;
+                const initial = (u.firstName || u.username || '?').charAt(0).toUpperCase();
+                let avatarContent = initial;
+                let avatarStyle = 'width: 40px; height: 40px; border-radius: 50%; background: var(--sage); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;';
+                if (u.profilePicture) {
+                    if (u.profilePicture.startsWith('http')) {
+                        avatarContent = `<img src="${u.profilePicture}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                        avatarStyle += ' overflow: hidden;';
+                    } else {
+                        avatarContent = u.profilePicture;
+                        avatarStyle += ' font-size: 1.5rem;';
+                    }
+                }
+                const safeName = displayName.replace(/'/g, "\\'");
+                html += `
+                    <div class="user-list-item" onclick="toggleInviteUser(${u.id}, '${safeName}')"
+                         style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--sand); cursor: pointer; transition: background 0.2s;"
+                         onmouseover="this.style.background='var(--mint)'"
+                         onmouseout="this.style.background='white'">
+                        <div style="${avatarStyle}">${avatarContent}</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; color: var(--text-dark);">${displayName}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light);">@${u.username} · ${u.points || 0} pts</div>
+                        </div>
+                        ${isSelected ? '<span style="color: var(--sage); font-size: 0.8rem; font-weight: 500;">Added to invite</span>' : '<span style="background: var(--forest); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">+ Invite</span>'}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterInviteUserList(searchTerm) {
+            inviteUserListFilter = (searchTerm || '').trim();
+            if (!inviteUserListFilter) {
+                displayInviteUserList(allUsers);
+                return;
+            }
+            const term = inviteUserListFilter.toLowerCase();
+            const filtered = allUsers.filter(u => {
+                const firstName = (u.firstName || '').toLowerCase();
+                const lastName = (u.lastName || '').toLowerCase();
+                const username = (u.username || '').toLowerCase();
+                const fullName = `${firstName} ${lastName}`;
+                return firstName.includes(term) || lastName.includes(term) || username.includes(term) || fullName.includes(term);
+            });
+            displayInviteUserList(filtered);
+        }
+
+        function toggleInviteUser(userId, displayName) {
+            const idx = inviteSelectedIds.indexOf(userId);
+            if (idx === -1) inviteSelectedIds.push(userId);
+            else inviteSelectedIds.splice(idx, 1);
+            if (inviteUserListFilter) filterInviteUserList(inviteUserListFilter);
+            else displayInviteUserList(allUsers);
+        }
+
+        function copyInviteMessage() {
+            const el = document.getElementById('inviteMessage');
+            if (!el) return;
+            const text = el.dataset.inviteText || el.textContent || '';
+            if (!text) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Invite copied! Paste it into email, text, or social.');
+                }).catch(() => {
+                    alert('Could not copy automatically. You can still select and copy the text manually.');
+                });
+            } else {
+                alert('Your browser does not support automatic copy. Please select and copy the text manually.');
+            }
+        }
+
+        function goToCreateTeam() {
+            const section = document.getElementById('createTeamSection');
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function goToMyTeams() {
+            // If user has a primary team, scroll to that section.
+            if (currentUser && currentUser.teamId) {
+                const mySection = document.getElementById('myTeamSection');
+                if (mySection && mySection.style.display !== 'none') {
+                    mySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                }
+            }
+            // Otherwise, guide them to create a team.
+            const createSection = document.getElementById('createTeamSection');
+            if (createSection) {
+                createSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                alert('You don’t have a team yet. Create one to see your team data here.');
             }
         }
 
         async function loadAvailableTeams() {
             try {
-                const res = await fetch(`${API_URL}/teams`);
+                const res = await fetch(`${API_URL}/teams`, { cache: 'no-store' });
                 const teams = await res.json();
-                
-                const container = document.getElementById('availableTeams');
-                
-                if (teams.length === 0) {
-                    container.innerHTML = `
-                        <div class="no-team-message">
-                            <h3>No teams yet!</h3>
-                            <p>Be the first to create a team.</p>
-                        </div>
-                    `;
-                    return;
+
+                const invitesListEl = document.getElementById('teamInvitesList');
+                if (invitesListEl) {
+                    const headers = { 'Authorization': `Bearer ${getToken()}` };
+                    let memberInvites = [];
+                    try {
+                        const invRes = await fetch(`${API_URL}/user/team-member-invites`, {
+                            cache: 'no-store',
+                            headers
+                        });
+                        memberInvites = invRes.ok ? await invRes.json() : [];
+                    } catch (_) {
+                        memberInvites = [];
+                    }
+                    if (!Array.isArray(memberInvites)) memberInvites = [];
+
+                    const joinRows = [];
+                    const teamsForJoin = Array.isArray(myTeams) && myTeams.length ? myTeams : [];
+                    await Promise.all(
+                        teamsForJoin.map(async (team) => {
+                            try {
+                                const jr = await fetch(`${API_URL}/teams/${team.id}/join-requests`, {
+                                    cache: 'no-store',
+                                    headers
+                                });
+                                const reqs = jr.ok ? await jr.json() : [];
+                                if (Array.isArray(reqs)) {
+                                    reqs.forEach((r) => {
+                                        joinRows.push(Object.assign({}, r, { teamId: team.id, teamName: team.name }));
+                                    });
+                                }
+                            } catch (_) {}
+                        })
+                    );
+
+                    const blocks = [];
+                    if (memberInvites.length) {
+                        blocks.push('<p class="team-requests-subhead">Invitations for you</p>');
+                        blocks.push(memberInvites.map((inv) => `
+                            <div class="available-team" style="flex-wrap: wrap; gap: 10px;">
+                                <div class="team-info" style="flex: 1; min-width: 140px;">
+                                    <h4>${escapeTeamsHtml(inv.teamName)}</h4>
+                                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-light);">Invited by ${escapeTeamsHtml(inv.inviterDisplayName || inv.inviterUsername || 'a teammate')}</p>
+                                </div>
+                                <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                                    <button type="button" class="btn-join" onclick="acceptTeamMemberInvite(${inv.id})">Accept</button>
+                                    <button type="button" class="btn-danger" style="padding: 10px 16px;" onclick="declineTeamMemberInvite(${inv.id})">Decline</button>
+                                </div>
+                            </div>
+                        `).join(''));
+                    }
+                    if (joinRows.length) {
+                        blocks.push('<p class="team-requests-subhead">Wants to join your team</p>');
+                        blocks.push(joinRows.map((r) => {
+                            const name = ((r.firstName || '') + ' ' + (r.lastName || '')).trim() || r.username || 'User';
+                            const tid = Number(r.teamId);
+                            const rid = Number(r.id);
+                            const teamLabel = escapeTeamsHtml(r.teamName || 'Team');
+                            const safeUser = escapeTeamsHtml(name);
+                            const uname = r.username ? escapeTeamsHtml(r.username) : '';
+                            return `
+                                <div class="available-team" style="flex-wrap: wrap; gap: 10px;">
+                                    <div class="team-info" style="flex: 1; min-width: 140px;">
+                                        <h4>${safeUser}</h4>
+                                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-light);">Wants to join <strong>${teamLabel}</strong>${uname ? ` · @${uname}` : ''}</p>
+                                    </div>
+                                    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                                        <button type="button" class="btn-join" onclick="approveJoinRequest(${tid}, ${rid})">Approve</button>
+                                        <button type="button" class="btn-danger" style="padding: 10px 16px;" onclick="rejectJoinRequest(${tid}, ${rid})">Reject</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join(''));
+                    }
+                    if (!blocks.length) {
+                        invitesListEl.innerHTML = '<p style="color: var(--text-light); font-size: 0.9rem; margin: 0;">No team requests right now.</p>';
+                    } else {
+                        invitesListEl.innerHTML = blocks.join('');
+                    }
                 }
                 
-                container.innerHTML = teams.map(t => `
-                    <div class="available-team">
-                        <div class="team-info">
-                            <h4>${t.name}</h4>
-                            <p>${t.memberCount || 0} members · ${t.totalPoints || 0} pts</p>
-                        </div>
-                        <button class="btn-join" onclick="joinTeam(${t.id})">Join</button>
-                    </div>
-                `).join('');
+                const requestedList = document.getElementById('teamsYouRequestedList');
+
+                const myTeamIds = [];
+                if (currentUser) {
+                    if (Array.isArray(currentUser.teamIds)) currentUser.teamIds.forEach(id => myTeamIds.push(parseInt(id)));
+                    if (currentUser.teamId && !myTeamIds.includes(parseInt(currentUser.teamId))) myTeamIds.push(parseInt(currentUser.teamId));
+                }
+                const isInTeam = (tid) => myTeamIds.includes(parseInt(tid));
+                const hasPendingRequest = (tid) => pendingRequestTeamIds.some(id => parseInt(id) === parseInt(tid));
+
+                // Pending requests (teams you requested)
+                const pendingTeams = teams.filter(t => hasPendingRequest(t.id) && !isInTeam(t.id));
+                if (requestedList) {
+                    if (pendingTeams.length > 0) {
+                        requestedList.innerHTML = pendingTeams.map(t => `
+                            <div class="available-team">
+                                <div class="team-info">
+                                    <h4>${t.name}</h4>
+                                    <p>${t.memberCount || 0} members · ${t.totalPoints || 0} pts</p>
+                                </div>
+                                <span style="color: var(--text-light); font-size: 0.85rem;">Request sent</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        requestedList.innerHTML = '<p id="noPendingRequestsMessage" style="color: var(--text-light); font-size: 0.9rem; margin: 0;">No pending requests</p>';
+                    }
+                }
             } catch (error) {
                 console.error('Error loading teams:', error);
-                document.getElementById('availableTeams').innerHTML = '<p style="color: var(--coral);">Error loading teams</p>';
+            }
+        }
+
+        function escapeTeamsHtml(s) {
+            return String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        async function acceptTeamMemberInvite(inviteId) {
+            try {
+                const res = await fetch(`${API_URL}/user/team-member-invites/${inviteId}/accept`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    alert(data.message || 'You joined the team!');
+                    loadTeamsPage();
+                } else {
+                    alert(data.error || 'Could not accept invitation');
+                }
+            } catch (_) {
+                alert('Could not connect to server');
+            }
+        }
+
+        async function declineTeamMemberInvite(inviteId) {
+            try {
+                const res = await fetch(`${API_URL}/user/team-member-invites/${inviteId}/decline`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    await loadAvailableTeams();
+                } else {
+                    alert(data.error || 'Could not decline');
+                }
+            } catch (_) {
+                alert('Could not connect to server');
             }
         }
 
@@ -766,6 +1835,7 @@
             
             const name = document.getElementById('teamName').value;
             const description = document.getElementById('teamDescription').value;
+            const selectedInviteIds = inviteSelectedIds.slice();
             
             try {
                 const res = await fetch(`${API_URL}/teams`, {
@@ -780,7 +1850,30 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    alert('🎉 Team created! You are now the team leader.');
+                    const teamId = data.team && data.team.id;
+                    if (teamId && selectedInviteIds.length) {
+                        for (const uid of selectedInviteIds) {
+                            try {
+                                await fetch(`${API_URL}/teams/${teamId}/add-member`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${getToken()}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ userId: uid })
+                                });
+                            } catch (_) {
+                                // Ignore individual invite errors
+                            }
+                        }
+                    }
+                    alert('🎉 Team created! Invitations were sent to anyone you selected — they can accept under Team requests.');
+                    e.target.reset();
+                    inviteSelectedIds = [];
+                    inviteUserListFilter = '';
+                    const inviteSearch = document.getElementById('inviteSearchUsers');
+                    if (inviteSearch) inviteSearch.value = '';
+                    displayInviteUserList(allUsers);
                     loadTeamsPage();
                 } else {
                     alert('❌ ' + data.error);
@@ -790,24 +1883,23 @@
             }
         });
 
-        // Join team
-        async function joinTeam(teamId) {
+        // Request to join a team (team leader approves later)
+        async function requestToJoinTeam(teamId) {
             try {
-                const res = await fetch(`${API_URL}/teams/${teamId}/join`, {
+                const res = await fetch(`${API_URL}/teams/${teamId}/request-join`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${getToken()}`,
                         'Content-Type': 'application/json'
                     }
                 });
-                
                 const data = await res.json();
-                
                 if (res.ok) {
-                    alert('🎉 ' + data.message);
-                    loadTeamsPage();
+                    pendingRequestTeamIds.push(parseInt(teamId));
+                    loadAvailableTeams();
+                    alert('✅ ' + (data.message || 'Request sent! The team leader will review it.'));
                 } else {
-                    alert('❌ ' + data.error);
+                    alert('❌ ' + (data.error || 'Could not send request'));
                 }
             } catch (error) {
                 alert('❌ Could not connect to server');
@@ -817,6 +1909,7 @@
         // Leave team
         async function leaveTeam() {
             if (!confirm('Are you sure you want to leave this team?')) return;
+            const teamId = selectedTeamId || (currentUser && currentUser.teamId);
             
             try {
                 const res = await fetch(`${API_URL}/teams/leave`, {
@@ -824,7 +1917,8 @@
                     headers: {
                         'Authorization': `Bearer ${getToken()}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ teamId })
                 });
                 
                 const data = await res.json();
@@ -871,11 +1965,11 @@
             }
             
             let html = '';
-            const myTeamId = currentUser ? currentUser.teamId : null;
+                const myTeamId = selectedTeamId || (currentUser ? currentUser.teamId : null);
             
             users.forEach(u => {
-                const isInTeam = myTeamId && u.teamId && u.teamId === myTeamId;
-                const hasOtherTeam = u.teamId && u.teamId !== myTeamId;
+                const isInTeam = myTeamId ? userBelongsToTeamClient(u, myTeamId) : false;
+                const pendingInvite = myTeamId && pendingOutgoingInviteeIds.has(u.id);
                 const name = ((u.firstName || '') + ' ' + (u.lastName || '')).trim();
                 const displayName = name || u.username;
                 const initial = (u.firstName || u.username || '?').charAt(0).toUpperCase();
@@ -893,12 +1987,15 @@
                         avatarStyle += ' font-size: 1.5rem;';
                     }
                 }
+
+                const canInvite = !isInTeam && !pendingInvite;
+                const rowStyle = (isInTeam || pendingInvite) ? 'opacity: 0.75; cursor: default;' : 'cursor: pointer;';
                 
                 html += `
                     <div class="user-list-item" 
-                         onclick="${isInTeam ? '' : `addUserToTeam(${u.id}, '${displayName.replace(/'/g, "\\'")}')`}"
-                         style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--sand); ${isInTeam ? 'opacity: 0.5; cursor: default;' : 'cursor: pointer;'} transition: background 0.2s;"
-                         onmouseover="this.style.background='var(--mint)'"
+                         onclick="${canInvite ? `addUserToTeam(${u.id}, '${displayName.replace(/'/g, "\\'")}')` : ''}"
+                         style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--sand); ${rowStyle} transition: background 0.2s;"
+                         onmouseover="if(this.style.cursor==='pointer')this.style.background='var(--mint)'"
                          onmouseout="this.style.background='white'">
                         <div style="${avatarStyle}">${avatarContent}</div>
                         <div style="flex: 1;">
@@ -906,8 +2003,8 @@
                             <div style="font-size: 0.85rem; color: var(--text-light);">@${u.username} · ${u.points || 0} pts</div>
                         </div>
                         ${isInTeam ? '<span style="color: var(--sage); font-size: 0.8rem; font-weight: 500;">Already in team</span>' : 
-                          hasOtherTeam ? '<span style="color: var(--coral); font-size: 0.8rem; font-weight: 500;">In another team</span>' : 
-                          '<span style="background: var(--forest); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">+ Add</span>'}
+                          pendingInvite ? '<span style="color: var(--text-light); font-size: 0.8rem; font-weight: 500;">Invitation sent</span>' :
+                          '<span style="background: var(--forest); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">+ Invite</span>'}
                     </div>
                 `;
             });
@@ -940,7 +2037,12 @@
         
         async function addUserToTeam(userId, userName) {
             try {
-                const res = await fetch(`${API_URL}/teams/${currentUser.teamId}/add-member`, {
+                const teamId = selectedTeamId || (currentUser && currentUser.teamId);
+                if (!teamId) {
+                    alert('Please select one of your teams first.');
+                    return;
+                }
+                const res = await fetch(`${API_URL}/teams/${teamId}/add-member`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${getToken()}`,
@@ -952,21 +2054,16 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    // Show success message
                     const msgEl = document.getElementById('addedMessage');
-                    msgEl.innerHTML = `<div class="success-message" style="background: rgba(135, 168, 120, 0.2); color: var(--forest); padding: 12px 16px; border-radius: 10px; text-align: center; font-weight: 500;">${userName} has been added to your team!</div>`;
+                    const msg = data.message || `Invitation sent to ${userName}. They can accept it under Team requests.`;
+                    msgEl.innerHTML = `<div class="success-message" style="background: rgba(135, 168, 120, 0.2); color: var(--forest); padding: 12px 16px; border-radius: 10px; text-align: center; font-weight: 500;">${msg}</div>`;
                     msgEl.style.display = 'block';
-                    
-                    // Clear search
                     const searchEl = document.getElementById('searchUsers');
                     if (searchEl) searchEl.value = '';
-                    
-                    // Reload page after short delay
-                    setTimeout(() => {
-                        loadTeamsPage();
-                    }, 1500);
+                    pendingOutgoingInviteeIds.add(parseInt(userId, 10));
+                    displayUserListForCurrentSearch();
                 } else {
-                    alert('Error: ' + data.error);
+                    alert('Error: ' + (data.error || 'Could not send invitation'));
                 }
             } catch (error) {
                 alert('Could not connect to server');

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Sustainability news for GreenGoals.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
+    <title>GreenGoals - News</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="nav-drawer.js"></script>
+    <script src="page-loader.js"></script>
+    <style>
+        .container.dashboard-container { max-width: 1000px; width: 100%; }
+        .dashboard-header, .tab-bar, .articles-grid, .news-intro { width: 100%; box-sizing: border-box; }
+
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .tab-link {
+            flex: 1;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        .tab-link:hover, .tab-link.active {
+            background: var(--gold);
+            color: var(--forest);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-welcome {
+            color: var(--mint);
+            font-size: 0.9rem;
+        }
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--cream);
+            border: 1px solid rgba(224, 122, 95, 0.5);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: var(--coral);
+            color: white;
+        }
+
+        .news-intro {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 16px;
+            padding: 16px 18px;
+            color: var(--cream);
+            margin-bottom: 18px;
+        }
+        .news-intro strong { color: var(--mint); }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--cream);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 900px) {
+            .articles-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .articles-grid { grid-template-columns: 1fr; }
+        }
+        .article-card {
+            background: var(--cream);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px var(--shadow);
+            transition: transform 0.3s;
+        }
+        .article-card:hover { transform: translateY(-5px); }
+        .article-image {
+            height: 160px;
+            background: linear-gradient(135deg, var(--sage), var(--mint));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+        .article-content { padding: 24px; }
+        .article-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--mint);
+            color: var(--forest);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .article-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .article-excerpt {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .article-link {
+            color: var(--forest);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .article-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="leaf leaf-1">🌿</div>
+        <div class="leaf leaf-2">🍃</div>
+        <div class="leaf leaf-3">🌱</div>
+    </div>
+
+    <div class="container dashboard-container">
+        <div class="dashboard-header">
+            <div class="logo">
+                <span class="logo-icon">📰</span>
+                <h1>News</h1>
+            </div>
+            <div class="header-right">
+                <span class="user-welcome" id="userWelcome"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <a href="home.html" class="tab-link">Home</a>
+            <a href="challenges.html" class="tab-link">Challenges</a>
+            <a href="leaderboard.html" class="tab-link">Leaderboard</a>
+            <a href="teams.html" class="tab-link">Teams</a>
+            <a href="chat.html" class="tab-link">Chat</a>
+            <a href="news.html" class="tab-link active">News</a>
+            <a href="profile.html" class="tab-link">Profile</a>
+        </div>
+
+        <div class="news-intro">
+            <strong>What this is:</strong> a curated stream of sustainability headlines. Tap any story to open the original source.
+        </div>
+
+        <h2 class="section-title">Latest Sustainability News</h2>
+        <div class="articles-grid" id="newsArticlesGrid">
+            <div class="article-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <p style="color: var(--text-light);">Loading latest news...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.getGreenGoalsApiUrl();
+
+        const user = getCurrentUser();
+        if (user) {
+            const el = document.getElementById('userWelcome');
+            if (el) el.textContent = `Hi, ${user.username}! 👋`;
+        }
+
+        function getCategory(article) {
+            const text = ((article?.title || '') + ' ' + (article?.description || '')).toLowerCase();
+            if (text.includes('energy') || text.includes('solar') || text.includes('wind')) return 'Energy';
+            if (text.includes('ocean') || text.includes('marine') || text.includes('sea')) return 'Ocean';
+            if (text.includes('food') || text.includes('diet') || text.includes('agriculture')) return 'Food';
+            if (text.includes('forest') || text.includes('tree') || text.includes('wildlife')) return 'Nature';
+            if (text.includes('transport') || text.includes('car') || text.includes('electric')) return 'Transport';
+            if (text.includes('climate')) return 'Climate';
+            if (text.includes('recycle') || text.includes('waste') || text.includes('plastic')) return 'Reduce';
+            return 'Environment';
+        }
+
+        async function loadNews() {
+            const container = document.getElementById('newsArticlesGrid');
+            if (!container) return;
+
+            try {
+                const res = await fetch(`${API_URL}/news`);
+                const articles = await res.json();
+
+                if (!articles || articles.length === 0 || articles.error) {
+                    container.innerHTML = `
+                        <div class="article-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                            <p style="color: var(--text-light);">No news available right now. Check back later!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = articles.slice(0, 12).map(article => `
+                    <div class="article-card">
+                        <div class="article-image" style="${article.image ? `background-image: url('${article.image}'); background-size: cover; background-position: center;` : ''}">
+                            ${!article.image ? '🌍' : ''}
+                        </div>
+                        <div class="article-content">
+                            <span class="article-tag">${getCategory(article)}</span>
+                            <h3 class="article-title">${article.title ? article.title.substring(0, 90) + (article.title.length > 90 ? '...' : '') : 'Sustainability News'}</h3>
+                            <p class="article-excerpt">${article.description ? article.description.substring(0, 140) + '...' : 'Click to read the full article.'}</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                                <a href="${article.url}" target="_blank" class="article-link" rel="noopener noreferrer">Read More →</a>
+                                <span style="font-size: 0.75rem; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%;">${article.source || ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading news:', error);
+                container.innerHTML = `
+                    <div class="article-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <p style="color: var(--text-light);">Could not load news. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function bootNewsPage() {
+            showGreenGoalsPageLoader('Loading news…');
+            try {
+                await loadNews();
+            } finally {
+                hideGreenGoalsPageLoader();
+            }
+        }
+        bootNewsPage();
+    </script>
+</body>
+</html>
+

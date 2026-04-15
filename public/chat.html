@@ -2,13 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
     <title>GreenGoals - Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
     <script src="auth-check.js"></script>
+    <script src="nav-drawer.js"></script>
+    <script src="page-loader.js"></script>
     <style>
         .container.dashboard-container { max-width: 1000px; width: 100%; }
         .tab-bar, .dashboard-header, .chat-layout { width: 100%; box-sizing: border-box; }
@@ -56,13 +68,17 @@
             color: var(--forest);
         }
         
-        /* Chat mode tabs (General vs DM) */
+        /* Chat mode tabs (General / DM / Team) */
         .chat-mode-tabs {
             display: flex;
             gap: 8px;
             margin-bottom: 20px;
         }
         .chat-mode-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             padding: 10px 20px;
             background: var(--sand);
             color: var(--text-dark);
@@ -79,6 +95,18 @@
             color: var(--cream);
             border-color: var(--forest);
         }
+        .chat-mode-unread-badge {
+            min-width: 22px;
+            height: 22px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: var(--coral);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 22px;
+            text-align: center;
+        }
         
         /* Chat layout */
         .chat-layout {
@@ -88,7 +116,7 @@
             min-height: 450px;
         }
         @media (min-width: 700px) {
-            .chat-layout.dm-mode { grid-template-columns: 220px 1fr; }
+            .chat-layout.dm-mode { grid-template-columns: 300px 1fr; }
         }
         
         .chat-sidebar {
@@ -118,6 +146,34 @@
             color: var(--forest);
         }
         .chat-header .subtitle { font-size: 0.85rem; color: var(--text-light); font-family: 'Outfit', sans-serif; margin-top: 4px; }
+        .team-members-btn {
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 999px;
+            border: 1px solid rgba(26,58,47,0.3);
+            font-size: 0.8rem;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .team-members-btn:hover {
+            background: var(--mint);
+        }
+        .team-members-list {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .team-member-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.9);
+            font-size: 0.75rem;
+            color: var(--forest);
+        }
         
         .chat-messages {
             flex: 1;
@@ -177,6 +233,18 @@
         .chat-post .post-time { font-size: 0.8rem; color: var(--text-light); }
         .chat-post .post-text { margin-bottom: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
         .chat-post .post-image { max-width: 100%; max-height: 400px; border-radius: 12px; display: block; cursor: pointer; }
+        .post-actions { display: flex; align-items: center; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+        .post-like-btn, .post-reply-btn { background: none; border: none; font-family: 'Outfit', sans-serif; font-size: 0.85rem; color: var(--text-light); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; transition: color 0.2s; }
+        .post-like-btn:hover, .post-reply-btn:hover { color: var(--forest); }
+        .post-like-btn.liked { color: var(--coral); }
+        .post-reply-form { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--sand); display: flex; gap: 8px; align-items: flex-end; }
+        .post-reply-form input { flex: 1; padding: 10px 14px; border: 2px solid var(--sand); border-radius: 10px; font-size: 0.9rem; }
+        .post-reply-form input:focus { outline: none; border-color: var(--forest); }
+        .post-reply-form button { padding: 10px 18px; border-radius: 10px; font-size: 0.9rem; cursor: pointer; }
+        .chat-reply { margin-left: 24px; padding: 12px 16px; background: rgba(0,0,0,0.04); border-radius: 12px; margin-top: 8px; border-left: 3px solid var(--sage); }
+        .chat-reply .reply-to { font-size: 0.75rem; color: var(--text-light); margin-bottom: 4px; }
+        .chat-reply .reply-text { font-size: 0.9rem; line-height: 1.4; }
+        .chat-reply .reply-meta { font-size: 0.75rem; color: var(--text-light); margin-top: 6px; }
         
         .chat-compose-post {
             display: flex;
@@ -268,6 +336,74 @@
         }
         .dm-user-name { font-weight: 600; color: var(--text-dark); }
         .dm-user-username { font-size: 0.8rem; color: var(--text-light); }
+        .dm-row-unread-badge {
+            margin-left: auto;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: var(--coral);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .dm-sidebar-extras {
+            display: none;
+            margin-bottom: 16px;
+        }
+        .dm-sidebar-extras.visible { display: block; }
+        .dm-search-wrap {
+            position: relative;
+        }
+        .dm-search-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--sand);
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            background: rgba(255,255,255,0.95);
+        }
+        .dm-search-input:focus {
+            outline: none;
+            border-color: var(--forest);
+        }
+        .dm-search-input::placeholder { color: var(--text-light); opacity: 0.85; }
+        .dm-search-results {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 4px);
+            max-height: 240px;
+            overflow-y: auto;
+            background: var(--cream);
+            border: 2px solid var(--sand);
+            border-radius: 12px;
+            box-shadow: 0 10px 32px var(--shadow);
+            z-index: 20;
+        }
+        .dm-search-results.open { display: block; }
+        .dm-search-result-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--sand);
+        }
+        .dm-search-result-row:last-child { border-bottom: none; }
+        .dm-search-result-row:hover { background: var(--sand); }
+        .dm-search-hint {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            line-height: 1.35;
+        }
         
         .chat-empty {
             flex: 1;
@@ -318,25 +454,45 @@
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
             <a href="teams.html" class="tab-link">Teams</a>
             <a href="chat.html" class="tab-link active">Chat</a>
+            <a href="news.html" class="tab-link">News</a>
             <a href="profile.html" class="tab-link">Profile</a>
         </div>
 
         <div class="chat-mode-tabs">
             <button class="chat-mode-btn active" data-mode="general"> General Chat</button>
-            <button class="chat-mode-btn" data-mode="dm"> Direct Messages</button>
+            <button class="chat-mode-btn" data-mode="dm"> DM</button>
+            <button class="chat-mode-btn" data-mode="team"> Team Chat</button>
         </div>
 
         <div class="chat-layout" id="chatLayout">
             <aside class="chat-sidebar" id="chatSidebar">
-                <h3 style="margin-bottom: 16px; font-family: 'Playfair Display', serif; color: var(--forest);">Start a conversation</h3>
+                <h3 id="conversationListTitle" style="margin-bottom: 16px; font-family: 'Playfair Display', serif; color: var(--forest);">Start a conversation</h3>
+                <div id="dmSidebarExtras" class="dm-sidebar-extras" aria-hidden="true">
+                    <div class="dm-search-wrap">
+                        <input type="search" id="dmUserSearch" class="dm-search-input" placeholder="Search users to start a chat…" maxlength="80" autocomplete="off" aria-label="Search users to message">
+                        <div id="dmSearchResults" class="dm-search-results" role="listbox"></div>
+                    </div>
+                    <p class="dm-search-hint">Only people you’ve messaged appear below—search to start a new chat.</p>
+                </div>
                 <div id="dmUserList">
-                    <p style="color: var(--text-light);">Loading users...</p>
+                    <p style="color: var(--text-light);">Loading…</p>
                 </div>
             </aside>
             <main class="chat-main">
                 <div class="chat-header" id="chatHeader">
-                    <span id="chatTitle">General Chat</span>
-                    <div class="subtitle" id="chatSubtitle">Chat with the whole GreenGoals community</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap: wrap;">
+                        <div>
+                            <span id="chatTitle">General Chat</span>
+                            <div class="subtitle" id="chatSubtitle">Chat with the whole GreenGoals community</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap: wrap;">
+                            <a href="#" id="viewProfileBtn" style="display:none; padding:8px 14px; background:var(--sand); color:var(--forest); border-radius:10px; text-decoration:none; font-size:0.85rem; font-weight:600;">👤 View profile</a>
+                            <button class="team-members-btn" id="teamMembersBtn" style="display:none;" onclick="toggleTeamMembers()">
+                                👥 Team members
+                            </button>
+                        </div>
+                    </div>
+                    <div id="teamMembersList" class="team-members-list" style="display:none;"></div>
                 </div>
                 <div class="chat-messages" id="chatMessages">
                     <div class="chat-empty" id="chatEmpty">
@@ -368,7 +524,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = window.getGreenGoalsApiUrl();
         const user = getCurrentUser();
         const token = getToken();
         
@@ -380,8 +536,127 @@
         
         let currentMode = 'general';
         let selectedDmUserId = null;
+        let hasTeamChat = false;
+        let teamMeta = null;
+        let userTeams = [];
+        let currentTeamId = null;
         let pollInterval = null;
         const POLL_MS = 3000;
+        let lastGeneralMessages = [];
+
+        async function refreshUnreadUi() {
+            try {
+                const res = await fetch(`${API_URL}/chat/unread`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+                const s = await res.json();
+                applyChatModeButtonBadges(s);
+                applySidebarRowBadges(s);
+                updateMainTabBarChatBadgeFromSummary(s);
+            } catch (e) {
+                console.warn('Unread refresh:', e);
+            }
+        }
+
+        async function markChatChannelRead(channel, extra = {}) {
+            try {
+                const body = { channel, ...extra };
+                const res = await fetch(`${API_URL}/chat/read`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) console.warn('Mark read failed', await res.text());
+            } catch (e) {
+                console.warn('Mark read:', e);
+            }
+            await refreshUnreadUi();
+        }
+
+        function applyChatModeButtonBadges(s) {
+            document.querySelectorAll('.chat-mode-btn').forEach(btn => {
+                const mode = btn.dataset.mode;
+                let n = 0;
+                if (mode === 'general') n = s.general || 0;
+                else if (mode === 'dm') n = Object.values(s.dm || {}).reduce((a, b) => a + b, 0);
+                else if (mode === 'team') n = Object.values(s.team || {}).reduce((a, b) => a + b, 0);
+                let badge = btn.querySelector('.chat-mode-unread-badge');
+                if (n <= 0) {
+                    if (badge) badge.remove();
+                    return;
+                }
+                const label = n > 99 ? '99+' : String(n);
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'chat-mode-unread-badge';
+                    badge.setAttribute('aria-label', `${n} unread`);
+                    btn.appendChild(badge);
+                }
+                badge.textContent = label;
+            });
+        }
+
+        function applySidebarRowBadges(s) {
+            document.querySelectorAll('.dm-user-item[data-user-id]').forEach(row => {
+                const id = row.getAttribute('data-user-id');
+                const n = (s.dm && s.dm[String(id)]) || 0;
+                let badge = row.querySelector('.dm-row-unread-badge');
+                if (n <= 0) {
+                    if (badge) badge.remove();
+                    return;
+                }
+                const label = n > 99 ? '99+' : String(n);
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'dm-row-unread-badge';
+                    badge.setAttribute('aria-label', `${n} unread messages`);
+                    row.appendChild(badge);
+                }
+                badge.textContent = label;
+            });
+            document.querySelectorAll('.dm-user-item[data-team-id]').forEach(row => {
+                const id = row.getAttribute('data-team-id');
+                const n = (s.team && s.team[String(id)]) || 0;
+                let badge = row.querySelector('.dm-row-unread-badge');
+                if (n <= 0) {
+                    if (badge) badge.remove();
+                    return;
+                }
+                const label = n > 99 ? '99+' : String(n);
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'dm-row-unread-badge';
+                    badge.setAttribute('aria-label', `${n} unread messages`);
+                    row.appendChild(badge);
+                }
+                badge.textContent = label;
+            });
+        }
+
+        function updateMainTabBarChatBadgeFromSummary(s) {
+            const total = typeof s.total === 'number' ? s.total : 0;
+            document.querySelectorAll('a.tab-link[href="chat.html"]').forEach(link => {
+                let badge = link.querySelector('.chat-tab-unread-badge');
+                if (total <= 0) {
+                    if (badge) badge.remove();
+                    return;
+                }
+                const label = total > 99 ? '99+' : String(total);
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'chat-tab-unread-badge';
+                    badge.setAttribute('aria-label', `${total} unread chats`);
+                    link.appendChild(badge);
+                }
+                badge.textContent = label;
+            });
+        }
+        let openReplyPostId = null;
+        let replyDraft = '';
         
         // Mode tabs
         document.querySelectorAll('.chat-mode-btn').forEach(btn => {
@@ -391,45 +666,160 @@
                 currentMode = btn.dataset.mode;
                 selectedDmUserId = null;
                 
+                const viewProfileBtn = document.getElementById('viewProfileBtn');
+                if (viewProfileBtn) viewProfileBtn.style.display = 'none';
                 if (currentMode === 'general') {
                     document.getElementById('chatLayout').classList.remove('dm-mode');
                     document.getElementById('chatSidebar').classList.add('hidden');
+                    setDmSidebarExtrasVisible(false);
+                    const titleEl = document.getElementById('conversationListTitle');
+                    if (titleEl) titleEl.textContent = 'Start a conversation';
                     document.getElementById('chatTitle').textContent = 'General Chat';
                     document.getElementById('chatSubtitle').textContent = 'Post updates, pics, and chat with the community';
                     document.getElementById('chatInputArea').style.display = 'flex';
                     document.getElementById('generalCompose').style.display = 'flex';
                     document.getElementById('dmCompose').style.display = 'none';
                     loadGeneralMessages();
-                } else {
+                } else if (currentMode === 'dm') {
                     document.getElementById('chatLayout').classList.add('dm-mode');
                     document.getElementById('chatSidebar').classList.remove('hidden');
-                    loadDmUsers();
+                    setDmSidebarExtrasVisible(true);
+                    const titleEl = document.getElementById('conversationListTitle');
+                    if (titleEl) titleEl.textContent = 'DM';
+                    loadDmConversations();
                     showSelectConversation();
+                } else if (currentMode === 'team') {
+                    document.getElementById('chatLayout').classList.add('dm-mode');
+                    document.getElementById('chatSidebar').classList.remove('hidden');
+                    setDmSidebarExtrasVisible(false);
+                    const titleEl = document.getElementById('conversationListTitle');
+                    if (titleEl) titleEl.textContent = 'Your teams';
+                    document.getElementById('chatTitle').textContent = 'Team Chat';
+                    document.getElementById('chatSubtitle').textContent = 'Select a team to start chatting';
+                    document.getElementById('chatInputArea').style.display = 'flex';
+                    document.getElementById('generalCompose').style.display = 'none';
+                    document.getElementById('dmCompose').style.display = 'flex';
+                    document.getElementById('messageInput').placeholder = 'Message your team...';
+                    loadUserTeamsForChat();
                 }
                 startPolling();
             });
         });
         
-        function showSelectConversation() {
-            document.getElementById('chatTitle').textContent = 'Direct Messages';
-            document.getElementById('chatSubtitle').textContent = 'Select a user to start chatting';
-            document.getElementById('chatMessages').innerHTML = `
-                <div class="select-conversation-msg">
-                    <p>👈 Pick someone from the list to start a conversation</p>
-                </div>
-            `;
-            document.getElementById('chatInputArea').style.display = 'none';
+        function setDmSidebarExtrasVisible(show) {
+            const el = document.getElementById('dmSidebarExtras');
+            if (!el) return;
+            el.classList.toggle('visible', !!show);
+            el.setAttribute('aria-hidden', show ? 'false' : 'true');
+            if (!show) {
+                closeDmSearchUi();
+            }
         }
-        
-        async function loadDmUsers() {
+
+        function closeDmSearchUi() {
+            const box = document.getElementById('dmSearchResults');
+            const input = document.getElementById('dmUserSearch');
+            if (box) {
+                box.innerHTML = '';
+                box.classList.remove('open');
+            }
+            if (input) input.value = '';
+        }
+
+        let dmSearchTimer = null;
+        function scheduleDmUserSearch() {
+            clearTimeout(dmSearchTimer);
+            dmSearchTimer = setTimeout(runDmUserSearch, 280);
+        }
+
+        async function runDmUserSearch() {
+            const input = document.getElementById('dmUserSearch');
+            const box = document.getElementById('dmSearchResults');
+            if (!input || !box) return;
+            const q = (input.value || '').trim();
+            if (!q) {
+                box.innerHTML = '';
+                box.classList.remove('open');
+                return;
+            }
             try {
-                const res = await fetch(`${API_URL}/chat/users`, {
+                const res = await fetch(`${API_URL}/chat/users?q=${encodeURIComponent(q)}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const users = await res.json();
-                const listEl = document.getElementById('dmUserList');
+                if (!Array.isArray(users) || !users.length) {
+                    box.innerHTML = '<div class="dm-search-result-row" style="cursor:default;color:var(--text-light);">No users found</div>';
+                    box.classList.add('open');
+                    return;
+                }
+                box.innerHTML = users.map(u => {
+                    const displayName = u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.username;
+                    const safeName = (displayName || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    const safeUsername = (u.username || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    const initial = (u.firstName || u.username || '?')[0].toUpperCase();
+                    return `
+                        <div class="dm-search-result-row" role="option" onclick="openDmFromSearch(${u.id}, '${safeName}', '${safeUsername}')">
+                            <div class="dm-user-avatar">${initial}</div>
+                            <div>
+                                <div class="dm-user-name">${escapeHtml(displayName)}</div>
+                                <div class="dm-user-username">@${escapeHtml(u.username || '')}</div>
+                            </div>
+                        </div>`;
+                }).join('');
+                box.classList.add('open');
+            } catch (e) {
+                box.innerHTML = '<div class="dm-search-result-row" style="cursor:default;color:var(--coral);">Could not search</div>';
+                box.classList.add('open');
+            }
+        }
+
+        function openDmFromSearch(otherUserId, otherUserName, otherUsername) {
+            closeDmSearchUi();
+            openDm(otherUserId, otherUserName, otherUsername);
+            loadDmConversations();
+        }
+
+        document.getElementById('dmUserSearch').addEventListener('input', scheduleDmUserSearch);
+        document.getElementById('dmUserSearch').addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDmSearchUi();
+        });
+        document.addEventListener('click', (e) => {
+            const wrap = document.querySelector('.dm-search-wrap');
+            if (wrap && !wrap.contains(e.target)) {
+                const box = document.getElementById('dmSearchResults');
+                if (box) box.classList.remove('open');
+            }
+        });
+
+        function showSelectConversation() {
+            document.getElementById('chatTitle').textContent = 'DM';
+            document.getElementById('chatSubtitle').textContent = 'Search for someone new or open a conversation';
+            const vpb = document.getElementById('viewProfileBtn');
+            if (vpb) vpb.style.display = 'none';
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="select-conversation-msg">
+                    <p>Select a chat from the list, or search above to message someone.</p>
+                </div>
+            `;
+            document.getElementById('chatInputArea').style.display = 'none';
+            document.getElementById('teamMembersBtn').style.display = 'none';
+            document.getElementById('teamMembersList').style.display = 'none';
+        }
+        
+        async function loadDmConversations() {
+            const listEl = document.getElementById('dmUserList');
+            if (!listEl) return;
+            try {
+                const res = await fetch(`${API_URL}/chat/dm/partners`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await res.json();
+                if (!res.ok) {
+                    throw new Error(users.error || 'Failed to load');
+                }
                 if (!users.length) {
-                    listEl.innerHTML = '<p style="color: var(--text-light);">No other users yet.</p>';
+                    listEl.innerHTML = '<p style="color: var(--text-light);">No messages yet. Search above to find someone and say hi.</p>';
+                    await refreshUnreadUi();
                     return;
                 }
                 listEl.innerHTML = users.map(u => {
@@ -445,8 +835,9 @@
                         </div>
                     </div>
                 `}).join('');
+                await refreshUnreadUi();
             } catch (e) {
-                document.getElementById('dmUserList').innerHTML = '<p style="color: var(--coral);">Could not load users.</p>';
+                listEl.innerHTML = '<p style="color: var(--coral);">Could not load conversations.</p>';
             }
         }
         
@@ -455,13 +846,50 @@
             document.querySelectorAll('.dm-user-item').forEach(el => {
                 el.classList.toggle('active', parseInt(el.dataset.userId) === otherUserId);
             });
-            document.getElementById('chatTitle').textContent = otherUserName || 'Direct Message';
+            document.getElementById('chatTitle').textContent = otherUserName || 'DM';
             document.getElementById('chatSubtitle').textContent = `Chat with @${otherUsername || 'user'}`;
+            const viewProfileBtn = document.getElementById('viewProfileBtn');
+            if (viewProfileBtn) {
+                viewProfileBtn.href = `profile.html?userId=${otherUserId}`;
+                viewProfileBtn.style.display = 'inline-flex';
+            }
             document.getElementById('chatInputArea').style.display = 'flex';
             document.getElementById('generalCompose').style.display = 'none';
             document.getElementById('dmCompose').style.display = 'flex';
             document.getElementById('messageInput').placeholder = `Message ${otherUserName || 'user'}...`;
             loadDmMessages();
+        }
+
+        function showSelectTeam() {
+            document.getElementById('chatTitle').textContent = 'Team Chat';
+            document.getElementById('chatSubtitle').textContent = 'Select a team to start chatting';
+            const viewProfileBtn = document.getElementById('viewProfileBtn');
+            if (viewProfileBtn) viewProfileBtn.style.display = 'none';
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="select-conversation-msg">
+                    <p>👈 Pick a team from the list to open its chat</p>
+                </div>
+            `;
+            document.getElementById('chatInputArea').style.display = 'none';
+            document.getElementById('teamMembersBtn').style.display = 'none';
+            document.getElementById('teamMembersList').style.display = 'none';
+        }
+
+        function openTeamChat(teamId, teamName) {
+            currentTeamId = teamId;
+            // highlight active team row
+            document.querySelectorAll('.dm-user-item').forEach(el => {
+                const tid = el.dataset.teamId ? parseInt(el.dataset.teamId) : NaN;
+                el.classList.toggle('active', tid === teamId);
+            });
+            document.getElementById('chatTitle').textContent = teamName || 'Team Chat';
+            document.getElementById('chatSubtitle').textContent = `Chat with ${teamName || 'your team'}`;
+            document.getElementById('chatInputArea').style.display = 'flex';
+            document.getElementById('generalCompose').style.display = 'none';
+            document.getElementById('dmCompose').style.display = 'flex';
+            document.getElementById('messageInput').placeholder = `Message ${teamName || 'your team'}...`;
+            loadTeamMeta();
+            loadTeamMessages();
         }
         
         async function loadGeneralMessages() {
@@ -471,7 +899,9 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Failed to load');
-                renderMessages(Array.isArray(data) ? data : [], false);
+                lastGeneralMessages = Array.isArray(data) ? data : [];
+                renderMessages(lastGeneralMessages, false);
+                await markChatChannelRead('general');
             } catch (e) {
                 document.getElementById('chatMessages').innerHTML = `
                     <div class="chat-empty">
@@ -494,6 +924,7 @@
                     throw new Error(data.error || 'Failed to load messages');
                 }
                 renderMessages(Array.isArray(data) ? data : [], true);
+                await markChatChannelRead('dm', { otherUserId: selectedDmUserId });
             } catch (e) {
                 console.error('Load DM error:', e);
                 document.getElementById('chatMessages').innerHTML = `
@@ -501,6 +932,182 @@
                         <span class="icon">⚠️</span>
                         <p>Could not load messages. ${e.message || ''}</p>
                         <p style="font-size: 0.85rem; margin-top: 8px;">Make sure the server is running (npm start).</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadTeamMeta() {
+            try {
+                const teamIdParam = currentTeamId ? `?teamId=${currentTeamId}` : '';
+                const res = await fetch(`${API_URL}/chat/team/meta${teamIdParam}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    teamMeta = null;
+                    document.getElementById('teamMembersBtn').style.display = 'none';
+                    document.getElementById('teamMembersList').style.display = 'none';
+                    return;
+                }
+                teamMeta = data;
+                document.getElementById('teamMembersBtn').style.display = 'inline-flex';
+                const teamName = (teamMeta.team && teamMeta.team.name) || 'Team Chat';
+                if (currentMode === 'team') {
+                    document.getElementById('chatTitle').textContent = teamName;
+                    document.getElementById('chatSubtitle').textContent = `Chat with ${teamName}`;
+                }
+                renderTeamMembersList(false);
+            } catch (e) {
+                console.error('Load team meta error:', e);
+                teamMeta = null;
+                document.getElementById('teamMembersBtn').style.display = 'none';
+                document.getElementById('teamMembersList').style.display = 'none';
+            }
+        }
+
+        function renderTeamMembersList(show) {
+            const listEl = document.getElementById('teamMembersList');
+            if (!teamMeta || !Array.isArray(teamMeta.members) || !teamMeta.members.length) {
+                listEl.innerHTML = '<span class="team-member-pill">No members found</span>';
+            } else {
+                listEl.innerHTML = teamMeta.members.map(m => {
+                    const name = ((m.firstName || '') + ' ' + (m.lastName || '')).trim() || m.username;
+                    return `<span class="team-member-pill">${name}</span>`;
+                }).join('');
+            }
+            listEl.style.display = show ? 'flex' : 'none';
+        }
+
+        function toggleTeamMembers() {
+            if (!teamMeta) {
+                loadTeamMeta();
+                return;
+            }
+            const listEl = document.getElementById('teamMembersList');
+            const isVisible = listEl.style.display !== 'none';
+            renderTeamMembersList(!isVisible);
+        }
+
+        // Load all teams the user belongs to for Team Chat mode
+        async function loadUserTeamsForChat() {
+            document.getElementById('teamMembersBtn').style.display = 'none';
+            document.getElementById('teamMembersList').style.display = 'none';
+            currentTeamId = null;
+            teamMeta = null;
+
+            const listEl = document.getElementById('dmUserList');
+            if (listEl) {
+                listEl.innerHTML = '<p style="color: var(--text-light);">Loading teams...</p>';
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/chat/team/list`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    hasTeamChat = false;
+                    if (listEl) {
+                        listEl.innerHTML = '<p style="color: var(--text-light);">No teams found.</p>';
+                    }
+                    document.getElementById('chatMessages').innerHTML = `
+                        <div class="chat-empty">
+                            <span class="icon">👥</span>
+                            <p>${data.error || 'You’re not in a team yet, or team chat is unavailable.'}</p>
+                        </div>
+                    `;
+                    document.getElementById('chatInputArea').style.display = 'none';
+                    return;
+                }
+
+                userTeams = Array.isArray(data) ? data : [];
+                if (!userTeams.length) {
+                    hasTeamChat = false;
+                    if (listEl) {
+                        listEl.innerHTML = '<p style="color: var(--text-light);">You are not in any teams yet.</p>';
+                    }
+                    document.getElementById('chatMessages').innerHTML = `
+                        <div class="chat-empty">
+                            <span class="icon">👥</span>
+                            <p>You’re not in a team yet, or team chat is unavailable.</p>
+                        </div>
+                    `;
+                    document.getElementById('chatInputArea').style.display = 'none';
+                    return;
+                }
+
+                // Render teams in sidebar like a messaging app
+                if (listEl) {
+                    listEl.innerHTML = userTeams.map(t => {
+                        const name = t.name || 'Team';
+                        const safeName = name.replace(/'/g, "\\'");
+                        const initial = name.charAt(0).toUpperCase();
+                        return `
+                            <div class="dm-user-item" data-team-id="${t.id}" onclick="openTeamChat(${t.id}, '${safeName}')">
+                                <div class="dm-user-avatar">${initial}</div>
+                                <div>
+                                    <div class="dm-user-name">${name}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // If only one team, auto-open it
+                if (userTeams.length === 1) {
+                    openTeamChat(userTeams[0].id, userTeams[0].name || 'Team Chat');
+                } else {
+                    showSelectTeam();
+                }
+            } catch (e) {
+                console.error('Error loading user teams for chat:', e);
+                if (listEl) {
+                    listEl.innerHTML = '<p style="color: var(--coral);">Could not load team chats.</p>';
+                }
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="chat-empty">
+                        <span class="icon">⚠️</span>
+                        <p>Could not load team chats. ${e.message || ''}</p>
+                    </div>
+                `;
+                document.getElementById('chatInputArea').style.display = 'none';
+            } finally {
+                await refreshUnreadUi();
+            }
+        }
+
+        async function loadTeamMessages() {
+            try {
+                const teamIdParam = currentTeamId ? `?teamId=${currentTeamId}` : '';
+                const res = await fetch(`${API_URL}/chat/team${teamIdParam}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    hasTeamChat = false;
+                    document.getElementById('chatMessages').innerHTML = `
+                        <div class="chat-empty">
+                            <span class="icon">👥</span>
+                            <p>You’re not in a team yet, or team chat is unavailable.</p>
+                            <p style="font-size: 0.85rem; margin-top: 8px;">Join a team on the Teams tab to start a team chat.</p>
+                        </div>
+                    `;
+                    document.getElementById('chatInputArea').style.display = 'none';
+                    return;
+                }
+                hasTeamChat = true;
+                document.getElementById('chatInputArea').style.display = 'flex';
+                renderMessages(Array.isArray(data) ? data : [], true); // DM-style bubbles
+                if (currentTeamId) {
+                    await markChatChannelRead('team', { teamId: currentTeamId });
+                }
+            } catch (e) {
+                console.error('Load team chat error:', e);
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="chat-empty">
+                        <span class="icon">⚠️</span>
+                        <p>Could not load team messages. ${e.message || ''}</p>
                     </div>
                 `;
             }
@@ -522,7 +1129,9 @@
             if (isDm) {
                 container.innerHTML = messages.map(m => {
                     const isSent = parseInt(m.senderId) === parseInt(user.id);
-                    const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    const timeStr = m.createdAt
+                        ? new Date(m.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+                        : '';
                     return `
                         <div class="chat-message ${isSent ? 'sent' : 'received'}">
                             <div class="text">${escapeHtml(m.text)}</div>
@@ -531,18 +1140,57 @@
                     `;
                 }).join('');
             } else {
-                // General chat: post-style cards with optional images + delete for own posts
-                container.innerHTML = messages.map(m => {
-                    const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
-                    const textHtml = m.text ? `<div class="post-text">${escapeHtml(m.text)}</div>` : '';
-                    const mime = m.imageMimeType || 'image/jpeg';
-                    const imgHtml = m.imageBase64 ? `<img class="post-image" src="data:${mime};base64,${m.imageBase64}" alt="Post" onclick="window.open(this.src)">` : '';
-                    const isOwn = parseInt(m.senderId) === parseInt(user.id);
-                    const deleteBtn = isOwn ? `<button type="button" class="post-delete-btn" onclick="deleteOwnPost('${String(m.id).replace(/'/g, "\\'")}')" title="Delete your post"> Delete</button>` : '';
+                // General chat: roots (no parentMessageId) + replies grouped by parent
+                const hadReplyFocus = openReplyPostId && document.activeElement && document.activeElement.id === 'replyInputForOpen';
+                if (openReplyPostId) {
+                    const inp = document.getElementById('replyInputForOpen');
+                    if (inp) replyDraft = inp.value;
+                }
+                const roots = messages.filter(m => !m.parentMessageId).sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+                if (roots.length === 0) {
+                    container.innerHTML = `
+                        <div class="chat-empty">
+                            <span class="icon">💬</span>
+                            <p>No messages yet. Be the first to post!</p>
+                        </div>
+                    `;
+                    container.scrollTop = container.scrollHeight;
+                    return;
+                }
+                const repliesByParent = {};
+                messages.filter(m => m.parentMessageId).forEach(r => {
+                    const pid = r.parentMessageId;
+                    if (!repliesByParent[pid]) repliesByParent[pid] = [];
+                    repliesByParent[pid].push(r);
+                });
+                Object.keys(repliesByParent).forEach(pid => {
+                    repliesByParent[pid].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+                });
+                const safeId = (id) => String(id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                container.innerHTML = roots.map(root => {
+                    const timeStr = root.createdAt ? new Date(root.createdAt).toLocaleString() : '';
+                    const textHtml = root.text ? `<div class="post-text">${escapeHtml(root.text)}</div>` : '';
+                    const mime = root.imageMimeType || 'image/jpeg';
+                    const imgHtml = root.imageBase64 ? `<img class="post-image" src="data:${mime};base64,${root.imageBase64}" alt="Post" onclick="window.open(this.src)">` : '';
+                    const isOwn = parseInt(root.senderId) === parseInt(user.id);
+                    const deleteBtn = isOwn ? `<button type="button" class="post-delete-btn" onclick="deleteOwnPost('${safeId(root.id)}')" title="Delete your post"> Delete</button>` : '';
+                    const likedBy = root.likedBy || [];
+                    const likeCount = likedBy.length;
+                    const isLiked = likedBy.some(uid => parseInt(uid) === parseInt(user.id));
+                    const likeClass = isLiked ? 'post-like-btn liked' : 'post-like-btn';
+                    const likeLabel = isLiked ? '❤️' : '🤍';
+                    const replies = (repliesByParent[root.id] || []);
+                    const replyRows = replies.map(r => {
+                        const rTime = r.createdAt ? new Date(r.createdAt).toLocaleString() : '';
+                        return `<div class="chat-reply"><div class="reply-to">Replying to @${escapeHtml(root.senderUsername || 'unknown')}</div><div class="reply-text">${escapeHtml(r.text || '')}</div><div class="reply-meta">@${escapeHtml(r.senderUsername || 'unknown')} · ${rTime}</div></div>`;
+                    }).join('');
+                    const showReplyForm = String(openReplyPostId) === String(root.id);
+                    const draftVal = showReplyForm ? escapeHtml(replyDraft) : '';
+                    const replyFormHtml = showReplyForm ? `<div class="post-reply-form"><input type="text" id="replyInputForOpen" placeholder="Write a reply..." maxlength="2000" autocomplete="off" value="${draftVal}" oninput="replyDraft=this.value"><button type="button" class="chat-send-btn" style="padding: 10px 18px;" onclick="submitReply('${safeId(root.id)}')">Send</button><button type="button" onclick="cancelReply()" style="background: var(--sand); color: var(--text-dark); border: none;">Cancel</button></div>` : '';
                     return `
-                        <div class="chat-post">
+                        <div class="chat-post" data-root-id="${escapeHtml(root.id)}">
                             <div class="post-header">
-                                <span class="post-author">@${escapeHtml(m.senderUsername || 'unknown')}</span>
+                                <span class="post-author">@${escapeHtml(root.senderUsername || 'unknown')}</span>
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <span class="post-time">${timeStr}</span>
                                     ${deleteBtn}
@@ -550,9 +1198,19 @@
                             </div>
                             ${textHtml}
                             ${imgHtml}
+                            <div class="post-actions">
+                                <button type="button" class="${likeClass}" onclick="likePost('${safeId(root.id)}')" title="Like">${likeLabel} ${likeCount}</button>
+                                <button type="button" class="post-reply-btn" onclick="openReplyForm('${safeId(root.id)}')" title="Reply">💬 Reply</button>
+                            </div>
+                            ${replyRows}
+                            ${replyFormHtml}
                         </div>
                     `;
                 }).join('');
+                if (hadReplyFocus) {
+                    const inp = document.getElementById('replyInputForOpen');
+                    if (inp) inp.focus();
+                }
             }
             container.scrollTop = container.scrollHeight;
         }
@@ -572,6 +1230,63 @@
                 }
             } catch (e) {
                 alert('Could not delete post');
+            }
+        }
+        
+        async function likePost(messageId) {
+            try {
+                const res = await fetch(`${API_URL}/chat/messages/${messageId}/like`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    loadGeneralMessages();
+                } else {
+                    alert(data.error || 'Could not update like');
+                }
+            } catch (e) {
+                alert('Could not update like');
+            }
+        }
+        
+        function openReplyForm(postId) {
+            openReplyPostId = postId;
+            replyDraft = '';
+            renderMessages(lastGeneralMessages, false);
+            const input = document.getElementById('replyInputForOpen');
+            if (input) input.focus();
+        }
+        
+        function cancelReply() {
+            openReplyPostId = null;
+            replyDraft = '';
+            renderMessages(lastGeneralMessages, false);
+        }
+        
+        async function submitReply(postId) {
+            const input = document.getElementById('replyInputForOpen');
+            const text = ((input && input.value) ? input.value : replyDraft).trim();
+            if (!text) return;
+            try {
+                const res = await fetch(`${API_URL}/chat/general`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text, parentMessageId: postId })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    openReplyPostId = null;
+                    replyDraft = '';
+                    loadGeneralMessages();
+                } else {
+                    alert(data.error || 'Failed to send reply');
+                }
+            } catch (e) {
+                alert('Could not send reply');
             }
         }
         
@@ -623,15 +1338,28 @@
                     return;
                 }
                 body = { text: text || '', imageBase64: selectedImageBase64 || undefined, imageMimeType: selectedImageMimeType || 'image/jpeg' };
-            } else {
+            } else if (currentMode === 'dm') {
                 if (!selectedDmUserId) { sendBtn.disabled = false; return; }
                 text = (document.getElementById('messageInput').value || '').trim();
                 if (!text) { sendBtn.disabled = false; return; }
                 body = { text };
+            } else if (currentMode === 'team') {
+                text = (document.getElementById('messageInput').value || '').trim();
+                if (!text) { sendBtn.disabled = false; return; }
+                body = currentTeamId
+                    ? { text, teamId: currentTeamId }
+                    : { text };
             }
             
             try {
-                let url = currentMode === 'general' ? `${API_URL}/chat/general` : `${API_URL}/chat/dm/${selectedDmUserId}`;
+                let url;
+                if (currentMode === 'general') {
+                    url = `${API_URL}/chat/general`;
+                } else if (currentMode === 'dm') {
+                    url = `${API_URL}/chat/dm/${selectedDmUserId}`;
+                } else {
+                    url = `${API_URL}/chat/team`;
+                }
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: {
@@ -647,9 +1375,13 @@
                         document.getElementById('postText').value = '';
                         clearPostImage();
                         loadGeneralMessages();
-                    } else {
+                    } else if (currentMode === 'dm') {
                         document.getElementById('messageInput').value = '';
                         loadDmMessages();
+                        loadDmConversations();
+                    } else {
+                        document.getElementById('messageInput').value = '';
+                        loadTeamMessages();
                     }
                 } else {
                     alert('Failed to send: ' + (data.error || res.statusText || 'Unknown error'));
@@ -667,10 +1399,20 @@
         document.getElementById('postText').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
         });
+        document.getElementById('chatMessages').addEventListener('keydown', (e) => {
+            if (e.target.id === 'replyInputForOpen' && e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (openReplyPostId) submitReply(openReplyPostId);
+            }
+        });
         
         function poll() {
             if (currentMode === 'general') loadGeneralMessages();
-            else if (selectedDmUserId) loadDmMessages();
+            else if (currentMode === 'dm') {
+                if (selectedDmUserId) loadDmMessages();
+                else loadDmConversations();
+            } else if (currentMode === 'team' && currentTeamId) loadTeamMessages();
+            else void refreshUnreadUi();
         }
         
         function startPolling() {
@@ -683,11 +1425,17 @@
             pollInterval = null;
         }
         
-        // Initial load
-        document.getElementById('chatSidebar').classList.add('hidden');
-        loadGeneralMessages();
-        loadDmUsers();
-        startPolling();
+        async function bootChatPage() {
+            showGreenGoalsPageLoader('Loading chat…');
+            try {
+                document.getElementById('chatSidebar').classList.add('hidden');
+                await loadGeneralMessages();
+                startPolling();
+            } finally {
+                hideGreenGoalsPageLoader();
+            }
+        }
+        bootChatPage();
         
         window.addEventListener('visibilitychange', () => {
             if (document.hidden) stopPolling();

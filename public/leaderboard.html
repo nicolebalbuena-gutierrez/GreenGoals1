@@ -2,13 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
     <title>GreenGoals - Leaderboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
     <script src="auth-check.js"></script>
+    <script src="nav-drawer.js"></script>
+    <script src="page-loader.js"></script>
     <style>
         .leaderboard-card {
             background: var(--cream);
@@ -43,6 +55,7 @@
         }
         .rank-item:last-child { border-bottom: none; }
         .rank-item:hover { background: var(--sand); }
+        .users-table tbody tr.user-row-hover:hover { background: var(--sand); }
         .rank-number {
             width: 40px;
             height: 40px;
@@ -265,6 +278,7 @@
             <a href="leaderboard.html" class="tab-link active">Leaderboard</a>
             <a href="teams.html" class="tab-link">Teams</a>
             <a href="chat.html" class="tab-link">Chat</a>
+            <a href="news.html" class="tab-link">News</a>
             <a href="profile.html" class="tab-link">Profile</a>
         </div>
 
@@ -274,9 +288,7 @@
             <div class="leaderboard-header">
                 <h2>Top Eco Warriors</h2>
             </div>
-            <div class="leaderboard-list" id="userLeaderboard">
-                <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
-            </div>
+            <div class="leaderboard-list" id="userLeaderboard"></div>
         </div>
 
         <!-- Top Teams -->
@@ -284,9 +296,7 @@
             <div class="leaderboard-header">
                 <h2>Top Teams</h2>
             </div>
-            <div class="leaderboard-list" id="teamLeaderboard">
-                <div class="rank-item"><span style="color: var(--text-light);">Loading...</span></div>
-            </div>
+            <div class="leaderboard-list" id="teamLeaderboard"></div>
         </div>
 
         <!-- All Users Table -->
@@ -304,15 +314,13 @@
                         <th>Points</th>
                     </tr>
                 </thead>
-                <tbody id="usersTableBody">
-                    <tr><td colspan="5">Loading...</td></tr>
-                </tbody>
+                <tbody id="usersTableBody"></tbody>
             </table>
         </div>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = window.getGreenGoalsApiUrl();
 
         // Show username
         const user = getCurrentUser();
@@ -320,15 +328,66 @@
             document.getElementById('userWelcome').textContent = `Hi, ${user.username}! `;
         }
 
+        function leaderboardRankSkeletonRows(count) {
+            let h = '<p class="gg-loading-hint">Loading leaderboard…</p>';
+            for (let i = 0; i < count; i++) {
+                h += `
+                    <div class="rank-item" style="pointer-events: none;" aria-busy="true">
+                        <div class="rank-number gg-skeleton"></div>
+                        <div class="rank-avatar" style="background: transparent; overflow: visible;">
+                            <div class="gg-skeleton gg-skel-circle"></div>
+                        </div>
+                        <div class="rank-info" style="flex: 1;">
+                            <div class="gg-skeleton gg-skel-line"></div>
+                            <div class="gg-skeleton gg-skel-line-sm"></div>
+                        </div>
+                        <div class="rank-points">
+                            <div class="gg-skeleton gg-skel-num"></div>
+                        </div>
+                    </div>`;
+            }
+            return h;
+        }
+
+        function leaderboardTableSkeleton(n) {
+            let rows = '';
+            for (let i = 0; i < n; i++) {
+                rows += `<tr aria-busy="true">
+                    <td><div class="gg-skeleton gg-skel-circle-sm"></div></td>
+                    <td><div class="gg-skeleton gg-skel-line"></div></td>
+                    <td><div class="gg-skeleton gg-skel-line" style="max-width:100px"></div></td>
+                    <td><div class="gg-skeleton gg-skel-line-sm"></div></td>
+                    <td><div class="gg-skeleton gg-skel-line" style="max-width:72px"></div></td>
+                </tr>`;
+            }
+            return rows;
+        }
+
+        function setLeaderboardLoading() {
+            document.getElementById('userLeaderboard').innerHTML = leaderboardRankSkeletonRows(6);
+            document.getElementById('teamLeaderboard').innerHTML = leaderboardRankSkeletonRows(4);
+            document.getElementById('usersTableBody').innerHTML = leaderboardTableSkeleton(8);
+        }
+
         async function loadLeaderboards() {
+            showGreenGoalsPageLoader('Loading leaderboard…');
+            setLeaderboardLoading();
             try {
-                // Load user leaderboard (filter out admins)
-                const usersRes = await fetch(`${API_URL}/leaderboard`);
+                const [usersRes, teamsRes] = await Promise.all([
+                    fetch(`${API_URL}/leaderboard`),
+                    fetch(`${API_URL}/leaderboard/teams`)
+                ]);
+
+                if (!usersRes.ok) throw new Error('Failed to load leaderboard');
+
                 const allUsers = await usersRes.json();
                 const users = allUsers.filter(u => u.role !== 'super_admin' && u.role !== 'admin');
                 
                 const userList = document.getElementById('userLeaderboard');
-                userList.innerHTML = users.map((user, index) => {
+                if (users.length === 0) {
+                    userList.innerHTML = '<div class="rank-item"><span style="color: var(--text-light);">No participants yet.</span></div>';
+                } else {
+                    userList.innerHTML = users.map((user, index) => {
                     let avatarContent = '🌿';
                     if (user.profilePicture) {
                         if (user.profilePicture.startsWith('http')) {
@@ -340,7 +399,7 @@
                     const classYearBadge = user.classYear ? `<span class="class-badge">'${user.classYear.slice(-2)}</span>` : '';
                     
                     return `
-                    <div class="rank-item rank-${index + 1}">
+                    <a href="profile.html?userId=${user.id}" class="rank-item rank-${index + 1}" style="text-decoration:none;color:inherit;display:flex;">
                         <div class="rank-number">${index + 1}</div>
                         <div class="rank-avatar">${avatarContent}</div>
                         <div class="rank-info">
@@ -355,13 +414,16 @@
                             <div class="rank-points-value">${user.points}</div>
                             <div class="rank-points-label">points</div>
                         </div>
-                    </div>
+                    </a>
                 `}).join('');
+                }
 
-                // Load all users table (filter out admins)
                 const usersTableBody = document.getElementById('usersTableBody');
                 const nonAdminUsers = users.filter(u => u.role !== 'super_admin' && u.role !== 'admin');
-                usersTableBody.innerHTML = nonAdminUsers.map(u => {
+                if (nonAdminUsers.length === 0) {
+                    usersTableBody.innerHTML = '<tr><td colspan="5" style="color: var(--text-light); padding: 24px;">No participants yet.</td></tr>';
+                } else {
+                    usersTableBody.innerHTML = nonAdminUsers.map(u => {
                     // Determine avatar content
                     let avatarContent = (u.firstName || u.username || '?').charAt(0).toUpperCase();
                     let avatarStyle = 'width: 50px; height: 50px; border-radius: 50%; background: var(--sand); display: flex; align-items: center; justify-content: center; color: var(--text-light); font-weight: 600; font-size: 1.5rem;';
@@ -374,7 +436,7 @@
                         }
                     }
                     return `
-                    <tr>
+                    <tr onclick="window.location.href='profile.html?userId=${u.id}'" style="cursor:pointer;" class="user-row-hover">
                         <td style="width: 60px;"><div style="${avatarStyle}">${avatarContent}</div></td>
                         <td><strong>${u.firstName}</strong></td>
                         <td>${u.lastName}</td>
@@ -382,11 +444,9 @@
                         <td><span class="points-badge">${u.points} pts</span></td>
                     </tr>
                 `}).join('');
-
-                // Load team leaderboard
-                const teamsRes = await fetch(`${API_URL}/leaderboard/teams`);
-                const teams = await teamsRes.json();
+                }
                 
+                const teams = teamsRes.ok ? await teamsRes.json() : [];
                 const teamList = document.getElementById('teamLeaderboard');
                 if (teams.length > 0) {
                     teamList.innerHTML = teams.map((team, index) => `
@@ -407,11 +467,16 @@
                 }
 
             } catch (error) {
-                document.getElementById('userLeaderboard').innerHTML = `
+                const errHtml = `
                     <div class="rank-item" style="color: var(--coral);">
-                        ❌ Server not running. Run: npm start
-                    </div>
-                `;
+                        Could not load leaderboard. Check your connection or run <code style="font-size:0.85rem;">npm start</code> locally.
+                    </div>`;
+                document.getElementById('userLeaderboard').innerHTML = errHtml;
+                document.getElementById('teamLeaderboard').innerHTML = errHtml;
+                document.getElementById('usersTableBody').innerHTML =
+                    `<tr><td colspan="5" style="color: var(--coral); padding: 20px;">Could not load participants.</td></tr>`;
+            } finally {
+                hideGreenGoalsPageLoader();
             }
         }
 

@@ -1,10 +1,9 @@
 // Firebase Authentication Helper Functions
 // This file provides authentication functions using Firebase Auth
 
-// API URL - same as page, or localhost:3000 if opened as file
-const API_URL = (window.location.origin && window.location.origin !== 'file://' && window.location.origin !== 'null')
-    ? window.location.origin + '/api'
-    : 'http://localhost:3000/api';
+const API_URL = typeof window.getGreenGoalsApiUrl === 'function'
+    ? window.getGreenGoalsApiUrl()
+    : (window.location.origin || 'http://localhost:3000') + '/api';
 
 // Initialize Firebase Auth only if Firebase is loaded (avoids errors if scripts fail to load)
 var auth = null;

@@ -2,13 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
     <title>GreenGoals - My Profile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
     <script src="auth-check.js"></script>
+    <script src="nav-drawer.js"></script>
+    <script src="page-loader.js"></script>
     <style>
         .profile-card {
             background: var(--cream);
@@ -105,6 +117,23 @@
         .edit-profile-btn:hover {
             background: rgba(255,255,255,0.3);
         }
+        .change-preferences-link {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .change-preferences-link:hover {
+            background: rgba(255,255,255,0.3);
+        }
         .profile-stats {
             display: flex;
             justify-content: center;
@@ -124,6 +153,30 @@
             font-size: 0.8rem;
             opacity: 0.8;
             text-transform: uppercase;
+        }
+        .follow-btn {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--forest), var(--forest-light));
+            color: var(--cream);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .follow-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(87, 117, 96, 0.4);
+        }
+        .follow-btn.following {
+            background: var(--sand);
+            color: var(--text-dark);
+        }
+        .follow-btn.following:hover {
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--coral);
         }
         .profile-body {
             padding: 32px;
@@ -334,6 +387,165 @@
             background: var(--gold);
             color: var(--forest);
         }
+        .profile-sub-tabs {
+            display: none;
+            flex-direction: row;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .profile-sub-tab {
+            flex: 1;
+            padding: 10px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(87, 117, 96, 0.28);
+            background: var(--cream);
+            color: var(--forest);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .profile-sub-tab:hover {
+            border-color: var(--forest-light);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .profile-sub-tab.active {
+            background: var(--forest);
+            color: var(--cream);
+            border-color: var(--forest);
+        }
+        .find-people-panel {
+            background: var(--cream);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px var(--shadow);
+            padding: 24px 28px 28px;
+            margin-bottom: 24px;
+        }
+        .find-people-panel h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--text-dark);
+            margin: 0 0 8px 0;
+            font-size: 1.35rem;
+        }
+        .find-people-panel .find-people-hint {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin: 0 0 18px 0;
+        }
+        #findPeopleSearch {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(87, 117, 96, 0.25);
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 18px;
+            background: #fff;
+        }
+        #findPeopleSearch:focus {
+            outline: none;
+            border-color: var(--forest);
+            box-shadow: 0 0 0 3px rgba(87, 117, 96, 0.15);
+        }
+        .find-people-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: min(70vh, 520px);
+            overflow-y: auto;
+        }
+        .find-people-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            background: var(--sand);
+            border-radius: 14px;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.2s, transform 0.15s;
+            border: 1px solid transparent;
+        }
+        .find-people-row:hover {
+            background: #ebe5db;
+            transform: translateY(-1px);
+            border-color: rgba(87, 117, 96, 0.2);
+        }
+        .find-people-row-main {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+            flex: 1;
+        }
+        .find-people-row-trail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .find-people-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .find-people-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .find-people-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .find-people-meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .find-people-points {
+            font-weight: 700;
+            color: var(--gold);
+            font-size: 1rem;
+            flex-shrink: 0;
+            min-width: 6.75rem;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .find-people-chevron {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            width: 1.25rem;
+            text-align: center;
+        }
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
         .empty-state {
             text-align: center;
             padding: 32px;
@@ -368,6 +580,7 @@
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
+            position: relative;
         }
         .modal h2 {
             font-family: 'Playfair Display', serif;
@@ -470,6 +683,97 @@
             margin: 12px 0;
             font-size: 0.85rem;
         }
+        .see-more-link {
+            display: block;
+            text-align: center;
+            padding: 12px 20px;
+            margin-top: 12px;
+            color: var(--forest);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: rgba(135, 168, 120, 0.15);
+            border-radius: 12px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .see-more-link:hover {
+            background: rgba(135, 168, 120, 0.25);
+        }
+        .see-more-modal .modal {
+            max-width: 560px;
+            max-height: 80vh;
+        }
+        .see-more-modal .challenge-list {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .evidence-history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .evidence-history-card {
+            background: var(--cream);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px var(--shadow);
+            border: 2px solid var(--sand);
+            transition: transform 0.2s ease;
+        }
+        .evidence-history-card:hover {
+            transform: translateY(-2px);
+        }
+        .evidence-history-card.approved {
+            border-color: var(--sage);
+            box-shadow: 0 8px 24px rgba(135, 168, 120, 0.2);
+        }
+        .evidence-history-card.rejected {
+            border-color: var(--coral);
+            box-shadow: 0 8px 24px rgba(224, 122, 95, 0.2);
+        }
+        .evidence-history-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        .evidence-history-card-content {
+            padding: 14px;
+        }
+        .evidence-history-card-content h4 {
+            margin: 0 0 6px 0;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            font-family: 'Playfair Display', serif;
+        }
+        .evidence-history-card-content p {
+            margin: 0;
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+        .evidence-history-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .evidence-history-badge.approved {
+            background: rgba(135, 168, 120, 0.25);
+            color: var(--forest);
+        }
+        .evidence-history-badge.rejected {
+            background: rgba(224, 122, 95, 0.25);
+            color: var(--coral);
+        }
+        .evidence-history-card .review-notes {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            font-style: italic;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -483,9 +787,12 @@
         <div class="dashboard-header">
             <div class="logo">
                 <span class="logo-icon">👤</span>
-                <h1>My Profile</h1>
+                <h1 id="profilePageTitle">My Profile</h1>
             </div>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <a href="profile.html" id="backToMyProfileLink" style="display: none; padding: 10px 18px; background: rgba(255,255,255,0.2); color: var(--cream); border-radius: 12px; text-decoration: none; font-weight: 500; font-size: 0.9rem;">← My Profile</a>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
         </div>
 
         <!-- Navigation -->
@@ -495,12 +802,20 @@
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
             <a href="teams.html" class="tab-link">Teams</a>
             <a href="chat.html" class="tab-link">Chat</a>
+            <a href="news.html" class="tab-link">News</a>
             <a href="profile.html" class="tab-link active">Profile</a>
         </div>
 
+        <div id="profileSubTabsBar" class="profile-sub-tabs" aria-label="Profile sections">
+            <button type="button" class="profile-sub-tab active" id="profileSubTabMe" data-profile-tab="me">My profile</button>
+            <button type="button" class="profile-sub-tab" id="profileSubTabPeople" data-profile-tab="people">Find people</button>
+        </div>
+
+        <div id="profileTabPanelMe">
         <!-- Profile Card -->
         <div class="profile-card">
             <div class="profile-header">
+                <a href="survey.html?from=profile" class="change-preferences-link" id="changePreferencesLink" style="display: none;">Change preferences</a>
                 <button class="edit-profile-btn" onclick="openEditModal()"> Edit Profile</button>
                 <div class="profile-avatar" id="profileAvatar">
                     🌿
@@ -509,23 +824,31 @@
                 <p class="profile-username" id="profileUsername"></p>
                 <span class="profile-class-year" id="profileClassYear" style="display: none;"></span>
                 <div class="profile-bio" id="profileBio" style="display: none;"></div>
+                <div id="followBtnContainer" style="display: none; margin-top: 12px;">
+                    <button id="followBtn" class="follow-btn" onclick="toggleFollow()">Follow</button>
+                </div>
                 <div class="profile-stats">
                     <div class="profile-stat">
-                        <div class="profile-stat-value" id="profilePoints">0</div>
-                        <div class="profile-stat-label">Points</div>
+                        <div class="profile-stat-value" id="profileFollowersCount">0</div>
+                        <div class="profile-stat-label">Followers</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profileFollowingCount">0</div>
+                        <div class="profile-stat-label">Following</div>
                     </div>
                     <div class="profile-stat">
                         <div class="profile-stat-value" id="profileCO2">0kg</div>
                         <div class="profile-stat-label">CO₂ Saved</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-value" id="profileChallengesCount">0</div>
-                        <div class="profile-stat-label">Completed</div>
+                        <div class="profile-stat-value" id="profilePoints">0</div>
+                        <div class="profile-stat-label">Points</div>
                     </div>
                 </div>
             </div>
             <div class="profile-body">
-                <!-- Team Section -->
+                <!-- Teams Section -->
+                <div class="section-label">Teams</div>
                 <div id="teamSection"></div>
 
                 <!-- In Progress Challenges -->
@@ -545,7 +868,23 @@
                         <p>No completed challenges yet</p>
                     </div>
                 </div>
+
+                <!-- Evidence History (approved & declined) - own profile only -->
+                <div id="evidenceHistorySection" style="margin-top: 32px; display: none;">
+                    <div class="section-label">📷 Evidence History</div>
+                    <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 16px;">Photos you've uploaded and their AI review results.</p>
+                    <div id="evidenceHistoryGrid" class="evidence-history-grid"></div>
+                </div>
             </div>
+        </div>
+        </div>
+
+        <div id="profileTabPanelPeople" class="find-people-panel" style="display: none;" aria-hidden="true">
+            <h3>Find people</h3>
+            <p class="find-people-hint">Browse members and open their public profile. Your stats and activity stay under <strong>My profile</strong>.</p>
+            <label for="findPeopleSearch" class="visually-hidden">Search people</label>
+            <input type="search" id="findPeopleSearch" autocomplete="off" placeholder="Search by name or username…">
+            <div id="findPeopleList" class="find-people-list"></div>
         </div>
     </div>
 
@@ -594,6 +933,15 @@
         </div>
     </div>
 
+    <!-- See More Modal (for challenges) -->
+    <div class="modal-overlay see-more-modal" id="seeMoreModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeSeeMoreModal()">×</button>
+            <h2 style="margin-top: 0;" id="seeMoreModalTitle"></h2>
+            <div class="challenge-list" id="seeMoreModalContent"></div>
+        </div>
+    </div>
+
     <!-- Evidence Upload Modal -->
     <div class="modal-overlay" id="evidenceModal">
         <div class="modal">
@@ -625,9 +973,221 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = window.getGreenGoalsApiUrl();
         let currentUserData = null;
         let selectedAvatar = '';
+        let currentActiveChallenges = [];
+        let currentCompletedChallenges = [];
+        let isOwnProfile = false;
+        let findPeopleLoaded = false;
+
+        const PROFILE_ACTIVE_EMPTY = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🎯</div>
+                <p>No challenges in progress. <a href="challenges.html">Accept one!</a></p>
+            </div>`;
+        const PROFILE_COMPLETED_EMPTY = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🏆</div>
+                <p>No completed challenges yet</p>
+            </div>`;
+
+        function findPeopleSkeletonList(count) {
+            let h = '<p class="gg-loading-hint" style="padding-left:0;">Loading members…</p>';
+            for (let i = 0; i < count; i++) {
+                h += `
+                    <div class="find-people-row" style="pointer-events: none;" aria-busy="true">
+                        <div class="find-people-row-main">
+                            <div class="find-people-avatar" style="background: transparent;">
+                                <div class="gg-skeleton gg-skel-circle-sm"></div>
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <div class="gg-skeleton gg-skel-line" style="max-width:140px"></div>
+                                <div class="gg-skeleton gg-skel-line-sm" style="max-width:180px;margin-top:10px"></div>
+                            </div>
+                        </div>
+                        <div class="find-people-row-trail">
+                            <div class="gg-skeleton" style="width:48px;height:14px"></div>
+                        </div>
+                    </div>`;
+            }
+            return h;
+        }
+
+        function evidenceHistorySkeletonCards(n) {
+            let h = '';
+            for (let i = 0; i < n; i++) {
+                h += `
+                    <div class="evidence-history-card" style="pointer-events:none" aria-busy="true">
+                        <div class="gg-skeleton" style="height:160px;border-radius:12px"></div>
+                        <div class="evidence-history-card-content" style="padding-top:12px">
+                            <div class="gg-skeleton gg-skel-line-wide" style="max-width:90%"></div>
+                            <div class="gg-skeleton gg-skel-line-sm" style="margin-top:12px;max-width:50%"></div>
+                        </div>
+                    </div>`;
+            }
+            return h;
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+        }
+
+        function updateSubTabPanels(tab) {
+            const tabMeBtn = document.getElementById('profileSubTabMe');
+            const tabPeopleBtn = document.getElementById('profileSubTabPeople');
+            const panelMe = document.getElementById('profileTabPanelMe');
+            const panelPeople = document.getElementById('profileTabPanelPeople');
+            if (!tabMeBtn || !tabPeopleBtn || !panelMe || !panelPeople) return;
+
+            const onSomeoneElse = tab === 'other';
+            tabMeBtn.classList.toggle('active', tab === 'me');
+            tabPeopleBtn.classList.toggle('active', tab === 'people');
+            tabMeBtn.setAttribute('aria-pressed', tab === 'me' ? 'true' : 'false');
+            tabPeopleBtn.setAttribute('aria-pressed', tab === 'people' ? 'true' : 'false');
+
+            const showProfileCard = tab === 'me' || onSomeoneElse;
+            const showPeoplePanel = tab === 'people';
+            panelMe.style.display = showProfileCard ? '' : 'none';
+            panelPeople.style.display = showPeoplePanel ? '' : 'none';
+            panelMe.setAttribute('aria-hidden', showProfileCard ? 'false' : 'true');
+            panelPeople.setAttribute('aria-hidden', showPeoplePanel ? 'false' : 'true');
+        }
+
+        function applyProfileSubTabStateFromUrl() {
+            const subBar = document.getElementById('profileSubTabsBar');
+            const panelMe = document.getElementById('profileTabPanelMe');
+            const panelPeople = document.getElementById('profileTabPanelPeople');
+            if (!subBar || !panelMe || !panelPeople) return;
+
+            subBar.style.display = 'flex';
+
+            if (!isOwnProfile) {
+                updateSubTabPanels('other');
+                return;
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const tab = (params.get('tab') === 'people' || params.get('tab') === 'find') ? 'people' : 'me';
+            updateSubTabPanels(tab);
+            if (tab === 'people') loadFindPeople();
+        }
+
+        function setProfileSubTab(tab) {
+            if (!isOwnProfile) {
+                if (tab === 'people') {
+                    window.location.assign('profile.html?tab=people');
+                } else {
+                    window.location.assign('profile.html');
+                }
+                return;
+            }
+            const params = new URLSearchParams(window.location.search);
+            params.delete('userId');
+            if (tab === 'people') {
+                params.set('tab', 'people');
+            } else {
+                params.delete('tab');
+            }
+            const qs = params.toString();
+            history.replaceState(null, '', 'profile.html' + (qs ? '?' + qs : ''));
+            updateSubTabPanels(tab);
+            if (tab === 'people') loadFindPeople();
+        }
+
+        function renderFindPeopleList(query) {
+            const listEl = document.getElementById('findPeopleList');
+            if (!listEl) return;
+            const q = (query || '').trim().toLowerCase();
+            const all = window.__findPeopleUsers;
+            if (!Array.isArray(all)) {
+                listEl.innerHTML = findPeopleSkeletonList(5);
+                return;
+            }
+            const users = all.filter(u => {
+                if (!q) return true;
+                const name = `${u.firstName || ''} ${u.lastName || ''}`.trim().toLowerCase();
+                const un = (u.username || '').toLowerCase();
+                return name.includes(q) || un.includes(q);
+            });
+
+            if (users.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <p>${all.length === 0 ? 'No other members yet.' : 'No one matches that search.'}</p>
+                    </div>`;
+                return;
+            }
+
+            listEl.innerHTML = users.map(u => {
+                const displayName = (u.firstName && u.lastName)
+                    ? `${u.firstName} ${u.lastName}`
+                    : (u.username || 'Member');
+                const pic = u.profilePicture || '';
+                const avatarInner = pic
+                    ? (String(pic).startsWith('http')
+                        ? `<img src="${escapeHtml(pic)}" alt="">`
+                        : escapeHtml(pic))
+                    : '🌿';
+                return `
+                    <a class="find-people-row" href="profile.html?userId=${u.id}">
+                        <div class="find-people-row-main">
+                            <div class="find-people-avatar">${avatarInner}</div>
+                            <div style="min-width:0">
+                                <div class="find-people-name">${escapeHtml(displayName)}</div>
+                                <div class="find-people-meta">@${escapeHtml(u.username || '')}${u.classYear ? ` · Class of ${escapeHtml(u.classYear)}` : ''}</div>
+                            </div>
+                        </div>
+                        <div class="find-people-row-trail">
+                            <span class="find-people-points">${u.points ?? 0} pts</span>
+                            <span class="find-people-chevron" aria-hidden="true">›</span>
+                        </div>
+                    </a>`;
+            }).join('');
+        }
+
+        async function loadFindPeople() {
+            const listEl = document.getElementById('findPeopleList');
+            if (!listEl) return;
+
+            if (findPeopleLoaded && Array.isArray(window.__findPeopleUsers)) {
+                renderFindPeopleList(document.getElementById('findPeopleSearch')?.value || '');
+                return;
+            }
+
+            listEl.innerHTML = findPeopleSkeletonList(6);
+
+            try {
+                const res = await fetch(`${API_URL}/users`);
+                if (!res.ok) throw new Error('Failed');
+                const users = await res.json();
+                const me = getCurrentUser()?.id;
+                window.__findPeopleUsers = Array.isArray(users)
+                    ? users.filter(u => Number(u.id) !== Number(me))
+                    : [];
+                findPeopleLoaded = true;
+                renderFindPeopleList(document.getElementById('findPeopleSearch')?.value || '');
+            } catch (e) {
+                console.error(e);
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <p>Could not load members. Try again later.</p>
+                    </div>`;
+            }
+        }
+
+        async function initProfilePage() {
+            const loggedInUser = getCurrentUser();
+            if (!loggedInUser) return;
+            const params = new URLSearchParams(window.location.search);
+            const viewedUserIdParam = params.get('userId');
+            const viewedUserId = viewedUserIdParam ? parseInt(viewedUserIdParam, 10) : loggedInUser.id;
+            isOwnProfile = !viewedUserIdParam || viewedUserId === loggedInUser.id;
+            applyProfileSubTabStateFromUrl();
+            await loadProfile(true);
+        }
         
         const categoryIcons = {
             'Reduce': '♻️',
@@ -637,14 +1197,110 @@
             'Energy': '⚡'
         };
 
-        async function loadProfile() {
-            const user = getCurrentUser();
-            if (!user) return;
+        function renderActiveChallengeItem(c) {
+            const nameJson = JSON.stringify(c.name || '');
+            return `
+                <div class="challenge-item">
+                    <div class="challenge-item-info">
+                        <span class="challenge-item-icon">${categoryIcons[c.category] || '🌱'}</span>
+                        <div>
+                            <div class="challenge-item-name">${(c.name || '').replace(/</g, '&lt;')}</div>
+                            <div class="challenge-item-meta">${c.co2Saved}kg CO₂</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.2rem; font-weight: 700; color: var(--gold); line-height: 1;">${c.points}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-light); text-transform: uppercase;">points</div>
+                        </div>
+                        ${isOwnProfile ? `<button class="evidence-btn" onclick="openEvidenceModal(${c.id}, ${nameJson})">Upload Evidence</button>` : '<span class="in-progress-badge">In progress</span>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCompletedChallengeItem(c) {
+            return `
+                <div class="challenge-item">
+                    <div class="challenge-item-info">
+                        <span class="challenge-item-icon">${categoryIcons[c.category] || '🌱'}</span>
+                        <div>
+                            <div class="challenge-item-name">${(c.name || '').replace(/</g, '&lt;')}</div>
+                            <div class="challenge-item-meta">${c.points} pts · ${c.co2Saved}kg CO₂</div>
+                        </div>
+                    </div>
+                    <span class="completed-badge">✓ Completed</span>
+                </div>
+            `;
+        }
+
+        async function loadProfile(fullPageLoader = false) {
+            const loggedInUser = getCurrentUser();
+            if (!loggedInUser) return;
+
+            if (fullPageLoader) showGreenGoalsPageLoader('Loading profile…');
+
+            const params = new URLSearchParams(window.location.search);
+            const viewedUserIdParam = params.get('userId');
+            const viewedUserId = viewedUserIdParam ? parseInt(viewedUserIdParam, 10) : loggedInUser.id;
+            isOwnProfile = !viewedUserIdParam || viewedUserId === loggedInUser.id;
+
+            document.getElementById('profileName').textContent = 'Loading profile…';
+            document.getElementById('profileUsername').textContent = '';
+            document.getElementById('profileFollowersCount').textContent = '—';
+            document.getElementById('profileFollowingCount').textContent = '—';
+            document.getElementById('profileCO2').textContent = '—';
+            document.getElementById('profilePoints').textContent = '—';
+            document.getElementById('teamSection').innerHTML = '<p class="gg-loading-hint" style="padding:0 0 12px;">Loading teams…</p>';
+            document.getElementById('activeChallenges').innerHTML = '<p class="gg-loading-hint" style="padding:16px;text-align:center;">Loading challenges…</p>';
+            document.getElementById('completedChallenges').innerHTML = '<p class="gg-loading-hint" style="padding:16px;text-align:center;">Loading challenges…</p>';
 
             try {
-                const res = await fetch(`${API_URL}/user/${user.id}`);
+                const token = getToken();
+                const res = await fetch(`${API_URL}/user/${viewedUserId}`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
                 const fullUser = await res.json();
                 currentUserData = fullUser;
+
+                // Follow button (when viewing someone else)
+                const followContainer = document.getElementById('followBtnContainer');
+                const followBtn = document.getElementById('followBtn');
+                if (followContainer && followBtn && !isOwnProfile) {
+                    followContainer.style.display = 'block';
+                    followBtn.textContent = fullUser.isFollowing ? 'Following' : 'Follow';
+                    followBtn.classList.toggle('following', fullUser.isFollowing);
+                } else if (followContainer) {
+                    followContainer.style.display = 'none';
+                }
+
+                // Followers / Following counts
+                document.getElementById('profileFollowersCount').textContent = fullUser.followersCount ?? 0;
+                document.getElementById('profileFollowingCount').textContent = fullUser.followingCount ?? 0;
+
+                // Header title and back link
+                const headerTitle = document.getElementById('profilePageTitle') || document.querySelector('.dashboard-header h1');
+                const backLink = document.getElementById('backToMyProfileLink');
+                if (headerTitle) {
+                    const displayNameForTitle = fullUser.firstName && fullUser.lastName
+                        ? `${fullUser.firstName} ${fullUser.lastName}`
+                        : fullUser.username;
+                    headerTitle.textContent = isOwnProfile ? 'My Profile' : `${displayNameForTitle}'s Profile`;
+                }
+                if (backLink) {
+                    /* Sub-tabs always offer My profile / Find people; hide duplicate header link */
+                    backLink.style.display = 'none';
+                }
+
+                // Edit button and Change preferences link only for own profile
+                const editBtn = document.querySelector('.edit-profile-btn');
+                if (editBtn) {
+                    editBtn.style.display = isOwnProfile ? 'inline-flex' : 'none';
+                }
+                const prefsLink = document.getElementById('changePreferencesLink');
+                if (prefsLink) {
+                    prefsLink.style.display = isOwnProfile ? 'inline-block' : 'none';
+                }
 
                 // Update profile header
                 const fullName = fullUser.firstName && fullUser.lastName 
@@ -654,7 +1310,6 @@
                 document.getElementById('profileUsername').textContent = `@${fullUser.username}`;
                 document.getElementById('profilePoints').textContent = fullUser.points;
                 document.getElementById('profileCO2').textContent = fullUser.totalCO2Saved + 'kg';
-                document.getElementById('profileChallengesCount').textContent = fullUser.completedChallenges.length;
 
                 // Profile picture
                 const avatarEl = document.getElementById('profileAvatar');
@@ -680,60 +1335,170 @@
                     bioEl.style.display = 'block';
                 }
 
-                // Team section
-                if (fullUser.team) {
-                    document.getElementById('teamSection').innerHTML = `
-                        <div class="team-card">
-                            <div class="team-info">
-                                <h4>👥 ${fullUser.team.name}</h4>
-                                <p>Team Member</p>
+                // Teams
+                const teamSectionEl = document.getElementById('teamSection');
+                const userTeamIds = Array.isArray(fullUser.teamIds)
+                    ? fullUser.teamIds
+                    : (fullUser.teamId ? [fullUser.teamId] : []);
+
+                if (teamSectionEl) {
+                    const teamsRes = await fetch(`${API_URL}/teams`);
+                    const teams = await teamsRes.json();
+                    const userTeams = teams.filter(t => userTeamIds.includes(t.id));
+                    if (userTeams.length) {
+                        teamSectionEl.innerHTML = userTeams.map(t => `
+                            <div class="team-card">
+                                <div class="team-info">
+                                    <h4>👥 ${t.name}</h4>
+                                    <p>${t.description || 'No description yet'}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 600;">${t.memberCount || 1} members</div>
+                                    <div style="font-size: 0.8rem; color: var(--forest); opacity: 0.8;">${t.totalPoints || 0} team pts</div>
+                                </div>
                             </div>
-                            <span style="font-size: 2rem;">🏆</span>
-                        </div>
-                    `;
+                        `).join('');
+                    } else {
+                        teamSectionEl.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">👥</div>
+                                <p>No teams yet.</p>
+                            </div>
+                        `;
+                    }
                 }
 
-                // Active challenges (In Progress)
-                if (fullUser.activeChallenges.length > 0) {
-                    document.getElementById('activeChallenges').innerHTML = fullUser.activeChallenges.map(c => `
-                        <div class="challenge-item">
-                            <div class="challenge-item-info">
-                                <span class="challenge-item-icon">${categoryIcons[c.category] || '🌱'}</span>
-                                <div>
-                                    <div class="challenge-item-name">${c.name}</div>
-                                    <div class="challenge-item-meta">${c.co2Saved}kg CO₂</div>
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="text-align: center;">
-                                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--gold); line-height: 1;">${c.points}</div>
-                                    <div style="font-size: 0.7rem; color: var(--text-light); text-transform: uppercase;">points</div>
-                                </div>
-                                <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name}')">Upload Evidence</button>
-                            </div>
-                        </div>
-                    `).join('');
+                // Active challenges (In Progress) - show 3, "See more" if > 3
+                const active = Array.isArray(fullUser.activeChallenges) ? fullUser.activeChallenges : [];
+                currentActiveChallenges = active;
+                if (active.length > 0) {
+                    const activeShow = active.slice(0, 3);
+                    let html = activeShow.map(c => renderActiveChallengeItem(c)).join('');
+                    if (active.length > 3) {
+                        html += `<button type="button" class="see-more-link" onclick="openInProgressModal()">See more (${active.length} in progress)</button>`;
+                    }
+                    document.getElementById('activeChallenges').innerHTML = html;
+                } else {
+                    document.getElementById('activeChallenges').innerHTML = PROFILE_ACTIVE_EMPTY;
                 }
 
-                // Completed challenges
-                if (fullUser.completedChallenges.length > 0) {
-                    document.getElementById('completedChallenges').innerHTML = fullUser.completedChallenges.map(c => `
-                        <div class="challenge-item">
-                            <div class="challenge-item-info">
-                                <span class="challenge-item-icon">${categoryIcons[c.category] || '🌱'}</span>
-                                <div>
-                                    <div class="challenge-item-name">${c.name}</div>
-                                    <div class="challenge-item-meta">${c.points} pts · ${c.co2Saved}kg CO₂</div>
-                                </div>
-                            </div>
-                            <span class="completed-badge">✓ Completed</span>
-                        </div>
-                    `).join('');
+                // Completed challenges - show 3 most recent, "See more" if > 3
+                const completed = Array.isArray(fullUser.completedChallenges) ? fullUser.completedChallenges : [];
+                const recentCompleted = completed.slice().reverse(); // most recent first
+                currentCompletedChallenges = recentCompleted;
+                if (completed.length > 0) {
+                    const completedShow = recentCompleted.slice(0, 3);
+                    let html = completedShow.map(c => renderCompletedChallengeItem(c)).join('');
+                    if (completed.length > 3) {
+                        html += `<button type="button" class="see-more-link" onclick="openCompletedModal()">See more (${completed.length} completed)</button>`;
+                    }
+                    document.getElementById('completedChallenges').innerHTML = html;
+                } else {
+                    document.getElementById('completedChallenges').innerHTML = PROFILE_COMPLETED_EMPTY;
+                }
+
+                // Evidence history (own profile only)
+                if (isOwnProfile) {
+                    await loadEvidenceHistory();
+                } else {
+                    document.getElementById('evidenceHistorySection').style.display = 'none';
                 }
 
             } catch (error) {
                 console.error('Error loading profile:', error);
+            } finally {
+                if (fullPageLoader) hideGreenGoalsPageLoader();
             }
+        }
+
+        async function loadEvidenceHistory() {
+            const section = document.getElementById('evidenceHistorySection');
+            const grid = document.getElementById('evidenceHistoryGrid');
+            const token = getToken();
+            if (!token) return;
+
+            section.style.display = 'block';
+            grid.innerHTML = evidenceHistorySkeletonCards(3);
+
+            try {
+                const res = await fetch(`${API_URL}/user/evidence-history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const evidence = await res.json();
+
+                if (!Array.isArray(evidence) || evidence.length === 0) {
+                    section.style.display = 'none';
+                    grid.innerHTML = '';
+                    return;
+                }
+
+                section.style.display = 'block';
+                grid.innerHTML = evidence.map(e => `
+                    <div class="evidence-history-card ${e.status}">
+                        ${e.imageBase64 ? `<img src="data:image/jpeg;base64,${e.imageBase64}" alt="Evidence">` : '<div style="height:160px;background:var(--sand);display:flex;align-items:center;justify-content:center;color:var(--text-light);font-size:3rem">📷</div>'}
+                        <div class="evidence-history-card-content">
+                            <h4>${(categoryIcons[e.challengeCategory] || '🌱')} ${(e.challengeName || 'Challenge').replace(/</g, '&lt;')}</h4>
+                            <p>${e.reviewedAt ? new Date(e.reviewedAt).toLocaleDateString() : 'N/A'}</p>
+                            <span class="evidence-history-badge ${e.status}">${e.status === 'approved' ? '✓ Approved' : '✕ Declined'}</span>
+                            ${e.status === 'approved' && e.challengePoints ? `<p style="margin-top:6px;font-weight:600;color:var(--gold);">+${e.challengePoints} pts</p>` : ''}
+                            ${e.reviewNotes ? `<p class="review-notes">${String(e.reviewNotes).replace(/</g, '&lt;').replace(/"/g, '&quot;').slice(0, 120)}${String(e.reviewNotes).length > 120 ? '…' : ''}</p>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading evidence history:', e);
+                section.style.display = 'none';
+                grid.innerHTML = '';
+            }
+        }
+
+        async function toggleFollow() {
+            const params = new URLSearchParams(window.location.search);
+            const viewedUserId = params.get('userId') ? parseInt(params.get('userId'), 10) : null;
+            if (!viewedUserId || !currentUserData) return;
+            const token = getToken();
+            if (!token) return;
+
+            const followBtn = document.getElementById('followBtn');
+            const isCurrentlyFollowing = currentUserData.isFollowing;
+            followBtn.disabled = true;
+
+            try {
+                const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
+                const res = await fetch(`${API_URL}/user/${viewedUserId}/follow`, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    currentUserData.isFollowing = data.following;
+                    currentUserData.followersCount = (currentUserData.followersCount || 0) + (data.following ? 1 : -1);
+                    followBtn.textContent = data.following ? 'Following' : 'Follow';
+                    followBtn.classList.toggle('following', data.following);
+                    document.getElementById('profileFollowersCount').textContent = currentUserData.followersCount;
+                } else {
+                    alert(data.error || 'Something went wrong');
+                }
+            } catch (e) {
+                alert('Could not update follow status');
+            }
+            followBtn.disabled = false;
+        }
+
+        function openInProgressModal() {
+            document.getElementById('seeMoreModalTitle').textContent = 'In Progress';
+            document.getElementById('seeMoreModalContent').innerHTML = currentActiveChallenges.map(c => renderActiveChallengeItem(c)).join('');
+            document.getElementById('seeMoreModal').classList.add('active');
+        }
+
+        function openCompletedModal() {
+            document.getElementById('seeMoreModalTitle').textContent = 'Completed Challenges';
+            document.getElementById('seeMoreModalContent').innerHTML = currentCompletedChallenges.map(c => renderCompletedChallengeItem(c)).join('');
+            document.getElementById('seeMoreModal').classList.add('active');
+        }
+
+        function closeSeeMoreModal() {
+            document.getElementById('seeMoreModal').classList.remove('active');
         }
 
         function openEditModal() {
@@ -917,6 +1682,7 @@
                         <strong>${data.message}</strong>
                         <p style="margin-top: 8px; font-size: 0.9rem;">${data.reason || ''}</p>
                         ${data.pointsEarned ? `<p style="margin-top: 8px;"><strong>+${data.pointsEarned} points earned!</strong></p>` : ''}
+                        <button class="save-btn" style="margin-top: 16px;" onclick="closeEvidenceModal(); loadProfile();">Close</button>
                     `;
                     
                     // Update local storage
@@ -925,12 +1691,6 @@
                         user.points = (user.points || 0) + data.pointsEarned;
                         localStorage.setItem('user', JSON.stringify(user));
                     }
-                    
-                    // Close modal after 3 seconds and reload
-                    setTimeout(() => {
-                        closeEvidenceModal();
-                        loadProfile();
-                    }, 3000);
                 } else {
                     statusDiv.className = 'verification-status rejected';
                     statusDiv.innerHTML = `
@@ -976,7 +1736,31 @@
             }
         });
 
-        loadProfile();
+        // Close see more modal on outside click
+        document.getElementById('seeMoreModal').addEventListener('click', (e) => {
+            if (e.target.id === 'seeMoreModal') {
+                closeSeeMoreModal();
+            }
+        });
+
+        document.getElementById('profileSubTabMe')?.addEventListener('click', () => setProfileSubTab('me'));
+        document.getElementById('profileSubTabPeople')?.addEventListener('click', () => setProfileSubTab('people'));
+        document.getElementById('findPeopleSearch')?.addEventListener('input', (e) => {
+            renderFindPeopleList(e.target.value);
+        });
+
+        window.addEventListener('popstate', () => {
+            const loggedInUser = getCurrentUser();
+            if (!loggedInUser) return;
+            const params = new URLSearchParams(window.location.search);
+            const viewedUserIdParam = params.get('userId');
+            const viewedUserId = viewedUserIdParam ? parseInt(viewedUserIdParam, 10) : loggedInUser.id;
+            isOwnProfile = !viewedUserIdParam || viewedUserId === loggedInUser.id;
+            applyProfileSubTabStateFromUrl();
+            loadProfile(true);
+        });
+
+        initProfilePage();
     </script>
 </body>
 </html>

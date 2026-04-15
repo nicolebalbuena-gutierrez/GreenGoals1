@@ -1,0 +1,11 @@
+{
+  "appId": "com.greengoals.app",
+  "appName": "GreenGoals",
+  "webDir": "public",
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

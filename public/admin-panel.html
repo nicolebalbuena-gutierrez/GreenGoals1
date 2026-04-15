@@ -2,13 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
     <title>GreenGoals - Admin Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
     <script src="auth-check.js"></script>
+    <script src="page-loader.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #2d3436 0%, #4a5568 100%);
@@ -261,6 +272,21 @@
             cursor: pointer;
             transition: all 0.3s;
         }
+        .json-preview {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            max-height: 70vh;
+        }
+        .json-preview pre {
+            color: #7fdbca;
+            font-family: Monaco, ui-monospace, monospace;
+            font-size: 0.85rem;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
         .btn-danger {
             padding: 8px 16px;
             background: var(--coral);
@@ -383,6 +409,318 @@
             display: flex;
             gap: 12px;
         }
+        .approved-evidence-wrap {
+            margin-top: 8px;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+        .approved-challenge-group {
+            margin-bottom: 12px;
+            border: 1px solid var(--sand);
+            border-radius: 14px;
+            background: var(--cream);
+            overflow: hidden;
+        }
+        .approved-challenge-group summary {
+            cursor: pointer;
+            padding: 14px 16px;
+            font-weight: 600;
+            color: var(--forest);
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .approved-challenge-group summary::-webkit-details-marker {
+            display: none;
+        }
+        .approved-challenge-group[open] summary {
+            border-bottom: 1px solid var(--sand);
+            background: white;
+        }
+        .approved-evidence-row {
+            display: flex;
+            gap: 14px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--sand);
+            align-items: flex-start;
+            background: white;
+        }
+        .approved-evidence-thumb {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+            background: var(--sand);
+        }
+        .approved-evidence-meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+
+        .ai-pending-panel {
+            margin-top: 20px;
+            padding: 18px 20px;
+            border-radius: 16px;
+            border: 2px solid rgba(212, 168, 83, 0.45);
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(250, 248, 245, 0.98));
+        }
+        .ai-pending-panel h4 {
+            margin: 0 0 6px 0;
+            color: var(--forest);
+            font-family: 'Playfair Display', serif;
+        }
+        .ai-pending-panel .hint {
+            font-size: 0.88rem;
+            color: var(--text-light);
+            margin: 0 0 16px 0;
+        }
+        .ai-pending-category-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 12px 16px 16px;
+            background: #fff;
+            border-top: 1px solid rgba(26, 58, 47, 0.1);
+        }
+        .ai-draft-card {
+            border: 2px solid rgba(26, 58, 47, 0.35);
+            border-radius: 16px;
+            background: #fff;
+            overflow: hidden;
+            box-shadow: 0 4px 0 rgba(26, 58, 47, 0.12), 0 8px 24px rgba(26, 58, 47, 0.08);
+            outline: 1px solid rgba(255, 255, 255, 0.8);
+            outline-offset: -1px;
+        }
+        .ai-draft-card:hover {
+            border-color: rgba(26, 58, 47, 0.5);
+            box-shadow: 0 4px 0 rgba(212, 168, 83, 0.35), 0 12px 28px rgba(26, 58, 47, 0.1);
+        }
+        .ai-draft-card summary {
+            cursor: pointer;
+            padding: 14px 18px;
+            list-style: none;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: nowrap;
+            background: linear-gradient(180deg, rgba(250, 248, 245, 0.98) 0%, rgba(255, 255, 255, 1) 100%);
+            border-left: 4px solid var(--forest);
+        }
+        .ai-draft-summary-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+        .ai-draft-summary-left .challenge-category-chevron {
+            margin-top: 0.2em;
+        }
+        .ai-draft-title {
+            font-weight: 600;
+            line-height: 1.35;
+            min-width: 0;
+            word-break: break-word;
+        }
+        .ai-draft-summary-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .ai-draft-meta {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-light);
+            line-height: 1.3;
+            text-align: right;
+            max-width: 260px;
+        }
+        .ai-draft-card summary::-webkit-details-marker { display: none; }
+        .ai-draft-card summary::marker { content: ''; }
+        .ai-draft-card[open] .challenge-category-chevron {
+            transform: rotate(180deg);
+        }
+        .ai-draft-card[open] summary {
+            border-bottom: 2px solid rgba(26, 58, 47, 0.12);
+            background: linear-gradient(180deg, rgba(200, 230, 201, 0.35) 0%, rgba(255, 255, 255, 0.95) 100%);
+        }
+        .ai-draft-body {
+            padding: 18px 18px 16px;
+            display: grid;
+            gap: 12px;
+            background: #faf9f7;
+            border-top: 1px solid rgba(26, 58, 47, 0.08);
+        }
+        .ai-draft-body .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .ai-draft-body label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        .ai-draft-body input,
+        .ai-draft-body select,
+        .ai-draft-body textarea {
+            font-family: 'Outfit', sans-serif;
+            padding: 8px 10px;
+            border: 1px solid rgba(26, 58, 47, 0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: #fff;
+        }
+        .ai-draft-body input:focus,
+        .ai-draft-body select:focus,
+        .ai-draft-body textarea:focus {
+            outline: none;
+            border-color: var(--forest);
+            box-shadow: 0 0 0 2px rgba(26, 58, 47, 0.12);
+        }
+        .ai-draft-body textarea { min-height: 72px; resize: vertical; }
+        .ai-draft-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .badge-pending-ai {
+            background: rgba(212, 168, 83, 0.35);
+            color: var(--forest);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .challenges-by-category {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .challenge-category-group {
+            border: 2px solid rgba(26, 58, 47, 0.2);
+            border-radius: 14px;
+            background: var(--cream);
+            overflow: hidden;
+        }
+        .challenge-category-group summary {
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 18px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--forest);
+            background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(245, 240, 232, 0.9) 100%);
+            border-left: 4px solid var(--forest);
+        }
+        .challenge-category-group summary::-webkit-details-marker {
+            display: none;
+        }
+        .challenge-category-group summary::marker {
+            content: '';
+        }
+        .challenge-category-group[open] summary {
+            border-bottom: 2px solid rgba(26, 58, 47, 0.1);
+        }
+        .challenge-category-group summary .cat-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .challenge-category-chevron {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.5rem;
+            height: 1.5rem;
+            flex-shrink: 0;
+            font-size: 0.55rem;
+            line-height: 1;
+            color: var(--forest);
+            opacity: 0.9;
+            transition: transform 0.2s ease;
+        }
+        /* Only the category row chevron — not nested AI draft chevrons */
+        .challenge-category-group[open] > summary .cat-left .challenge-category-chevron {
+            transform: rotate(180deg);
+        }
+        .challenge-category-count {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+            background: rgba(255,255,255,0.9);
+            padding: 4px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(26, 58, 47, 0.15);
+        }
+        .challenge-category-table-wrap {
+            overflow-x: auto;
+            background: white;
+        }
+        .challenge-category-table-wrap .data-table {
+            margin: 0;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .challenge-category-table-wrap .data-table th:first-child,
+        .challenge-category-table-wrap .data-table td:first-child {
+            padding-left: 18px;
+            width: auto;
+        }
+        .challenge-category-table-wrap .data-table th:last-child,
+        .challenge-category-table-wrap .data-table td:last-child {
+            padding-right: 18px;
+            width: 200px;
+            text-align: right;
+            vertical-align: middle;
+        }
+        /* Override global .actions { display:flex } so text-align:right works on the cell */
+        .challenge-category-table-wrap .data-table td.actions.challenge-row-actions {
+            display: table-cell;
+            text-align: right;
+        }
+        .challenge-row-actions {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .challenge-action-btns {
+            display: inline-flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-end;
+            vertical-align: middle;
+        }
+        .challenge-action-btns button {
+            margin: 0;
+            flex: 0 0 78px;
+            min-width: 78px;
+            max-width: 78px;
+            text-align: center;
+            padding: 8px 4px;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+        }
         
         /* Recent Activity */
         .activity-item {
@@ -444,6 +782,72 @@
             padding: 40px;
             color: var(--text-light);
         }
+
+        /* Chat monitor — channel tabs */
+        .chat-monitor-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .chat-monitor-tab {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid var(--sand);
+            background: white;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .chat-monitor-tab:hover {
+            border-color: var(--forest-light);
+            background: var(--cream);
+        }
+        .chat-monitor-tab.active {
+            border-color: var(--forest);
+            background: rgba(87, 117, 96, 0.12);
+            color: var(--forest);
+            box-shadow: 0 2px 8px rgba(87, 117, 96, 0.15);
+        }
+        .chat-tab-count {
+            display: inline-block;
+            min-width: 1.5rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: rgba(87, 117, 96, 0.2);
+            color: var(--forest);
+        }
+        .chat-monitor-tab.active .chat-tab-count {
+            background: var(--forest);
+            color: white;
+        }
+        .chat-monitor-list {
+            border-top: 1px solid var(--sand);
+            padding-top: 16px;
+        }
+        .chat-monitor-channel-note {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            padding: 12px 14px;
+            background: var(--sand);
+            border-radius: 10px;
+            margin-bottom: 14px;
+        }
+        .chat-msg-badge-general { background: rgba(135, 168, 120, 0.35) !important; color: var(--forest) !important; }
+        .chat-msg-badge-dm { background: rgba(99, 102, 241, 0.28) !important; color: #4338ca !important; }
+        .chat-msg-badge-team { background: rgba(212, 168, 83, 0.4) !important; color: #7c5e12 !important; }
+        .chat-msg-badge-other { background: rgba(120, 120, 120, 0.22) !important; color: var(--text-dark) !important; }
     </style>
 </head>
 <body>
@@ -474,6 +878,7 @@
                 <button class="admin-nav-btn" data-section="teams">Manage Teams</button>
                 <button class="admin-nav-btn" data-section="challenges">Manage Challenges</button>
                 <button class="admin-nav-btn" data-section="updates">Campus Updates</button>
+                <button class="admin-nav-btn" data-section="database">Raw database</button>
             </div>
 
             <!-- Dashboard Section -->
@@ -523,6 +928,10 @@
                         <div class="icon">➕</div>
                         <div class="label">Add Challenge</div>
                     </div>
+                    <div class="quick-action-btn" onclick="showSection('challenges')">
+                        <div class="icon">🤖</div>
+                        <div class="label">AI Challenges</div>
+                    </div>
                     <div class="quick-action-btn" onclick="showSection('users')">
                         <div class="icon">👤</div>
                         <div class="label">View Users</div>
@@ -550,11 +959,16 @@
             <div class="admin-section" id="section-chat">
                 <div class="admin-card">
                     <h3>Chat Monitoring</h3>
-                    <p style="color: var(--text-light); margin-bottom: 20px;">Monitor general chat and direct messages. Delete inappropriate content.</p>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">Browse by channel: <strong>General</strong> (public feed), <strong>Direct messages</strong> (1:1), and <strong>Team chat</strong>. Delete inappropriate content as needed.</p>
                     <div style="margin-bottom: 16px;">
-                        <button class="btn-secondary" onclick="loadChatMessages()">🔄 Refresh</button>
+                        <button type="button" class="btn-secondary" onclick="loadChatMessages()">🔄 Refresh</button>
                     </div>
-                    <div id="chatMessagesList" style="max-height: 600px; overflow-y: auto;">
+                    <div class="chat-monitor-tabs" role="tablist" aria-label="Chat channel">
+                        <button type="button" role="tab" class="chat-monitor-tab active" id="chatTabGeneral" data-chat-tab="general" aria-selected="true">💬 General <span class="chat-tab-count" id="chatCountGeneral">0</span></button>
+                        <button type="button" role="tab" class="chat-monitor-tab" id="chatTabDm" data-chat-tab="dm" aria-selected="false">✉️ Direct messages <span class="chat-tab-count" id="chatCountDm">0</span></button>
+                        <button type="button" role="tab" class="chat-monitor-tab" id="chatTabTeam" data-chat-tab="team" aria-selected="false">🏅 Team chat <span class="chat-tab-count" id="chatCountTeam">0</span></button>
+                    </div>
+                    <div id="chatMessagesList" class="chat-monitor-list" style="max-height: 600px; overflow-y: auto;">
                         <p style="color: var(--text-light);">Loading messages...</p>
                     </div>
                 </div>
@@ -564,9 +978,17 @@
             <div class="admin-section" id="section-evidence">
                 <div class="admin-card">
                     <h3>Pending Evidence Review</h3>
-                    <p style="color: var(--text-light); margin-bottom: 20px;">Review user submissions and approve or reject them.</p>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">Review user submissions that still need a manual decision (e.g. when AI review is off or left pending).</p>
                     <div id="pendingEvidenceList">
                         <p style="color: var(--text-light);">Loading...</p>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <h3>Approved evidence by challenge</h3>
+                    <p style="color: var(--text-light); margin-bottom: 12px;">All <strong>approved</strong> submissions (AI or admin), grouped by challenge. Thumbnails show when the image is still stored; older admin approvals may show 📷 only.</p>
+                    <button type="button" class="btn-secondary" onclick="loadApprovedEvidenceGrouped()">Refresh list</button>
+                    <div id="approvedEvidenceByChallenge" class="approved-evidence-wrap">
+                        <p style="color: var(--text-light);">Open this tab to load.</p>
                     </div>
                 </div>
             </div>
@@ -609,6 +1031,17 @@
 
             <!-- Challenges Section -->
             <div class="admin-section" id="section-challenges">
+                <div class="admin-card">
+                    <h3>AI Challenge Generation</h3>
+                    <p style="color: var(--text-light); margin-bottom: 12px;">Generate 6 college-friendly challenges (3 daily + 3 weekly) with OpenAI. New runs are saved as <strong>drafts</strong> — review, edit, then publish or decline before students see them. Scheduled jobs also create drafts only.</p>
+                    <button type="button" class="btn-secondary" id="generateAIChallengesBtn" onclick="generateAIChallenges()">🤖 Generate AI Challenges</button>
+                    <span id="generateAIStatus" style="margin-left: 12px; font-size: 0.9rem; color: var(--text-light);"></span>
+                    <div id="aiPendingReviewPanel" class="ai-pending-panel" hidden>
+                        <h4>Pending AI challenges</h4>
+                        <p class="hint">Edit any field, then <strong>Publish to users</strong> or <strong>Decline</strong> (deletes the draft).</p>
+                        <div id="aiPendingReviewList" class="challenges-by-category"></div>
+                    </div>
+                </div>
                 <div class="admin-card">
                     <h3>Add New Challenge</h3>
                     <form id="addChallengeForm">
@@ -660,22 +1093,9 @@
 
                 <div class="admin-card">
                     <h3>All Challenges</h3>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Category</th>
-                                    <th>Points</th>
-                                    <th>CO₂</th>
-                                    <th>Difficulty</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="challengesTableBody">
-                                <tr><td colspan="6">Loading...</td></tr>
-                            </tbody>
-                        </table>
+                    <p style="color: var(--text-light); font-size: 0.9rem; margin: 0 0 14px 0;"><strong>Published</strong> challenges only — grouped by category. AI drafts that need publishing are in <strong>Pending AI challenges</strong> above.</p>
+                    <div id="challengesByCategory" class="challenges-by-category">
+                        <p style="color: var(--text-light);">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -719,6 +1139,18 @@
                     <p style="color: var(--text-light); margin-bottom: 20px;">These updates appear on the user's Home page.</p>
                     <div id="updatesContainer">
                         <p style="color: var(--text-light);">Loading updates...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Raw database (debug) -->
+            <div class="admin-section" id="section-database">
+                <div class="admin-card">
+                    <h3>Raw database</h3>
+                    <p style="color: var(--text-light); margin-bottom: 16px;">JSON snapshot for debugging. User passwords are stripped server-side.</p>
+                    <button type="button" class="btn-secondary" onclick="loadRawDatabase()">Refresh</button>
+                    <div class="json-preview" style="margin-top: 16px;">
+                        <pre id="rawDatabasePreview">Open this tab to load.</pre>
                     </div>
                 </div>
             </div>
@@ -827,7 +1259,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = window.getGreenGoalsApiUrl();
         
         // Check if user is admin
         const user = getCurrentUser();
@@ -839,21 +1271,28 @@
         }
 
         function initAdmin() {
-            // Admin sub-navigation
             document.querySelectorAll('.admin-nav-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     showSection(btn.dataset.section);
                 });
             });
 
-            // Load all data
-            loadStats();
-            loadPendingEvidence();
-            loadChallenges();
-            loadUsers();
-            loadTeams();
-            loadRecentActivity();
-            loadUpdates();
+            (async function loadAdminInitialData() {
+                showGreenGoalsPageLoader('Loading admin…');
+                try {
+                    await Promise.all([
+                        loadStats(),
+                        loadPendingEvidence(),
+                        loadChallenges(),
+                        loadUsers(),
+                        loadTeams(),
+                        loadRecentActivity(),
+                        loadUpdates()
+                    ]);
+                } finally {
+                    hideGreenGoalsPageLoader();
+                }
+            })();
         }
 
         function showSection(sectionName) {
@@ -864,6 +1303,35 @@
             document.getElementById(`section-${sectionName}`).classList.add('active');
             
             if (sectionName === 'chat') loadChatMessages();
+            if (sectionName === 'teams') loadTeams();
+            if (sectionName === 'users') loadUsers();
+            if (sectionName === 'challenges') loadChallenges();
+            if (sectionName === 'evidence') {
+                loadPendingEvidence();
+                loadApprovedEvidenceGrouped();
+            }
+            if (sectionName === 'updates') loadUpdates();
+            if (sectionName === 'database') loadRawDatabase();
+        }
+
+        async function loadRawDatabase() {
+            const el = document.getElementById('rawDatabasePreview');
+            if (!el) return;
+            el.textContent = 'Loading…';
+            try {
+                const res = await fetch(`${API_URL}/database/raw`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    el.textContent = (data && data.error) ? data.error : 'Could not load database (' + res.status + ')';
+                    return;
+                }
+                el.textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                console.error(e);
+                el.textContent = 'Error loading database.';
+            }
         }
 
         const categoryIcons = {
@@ -965,16 +1433,132 @@
             }
         }
 
+        function evidenceImageDataUrlPanel(e) {
+            const raw = e.imageBase64;
+            if (!raw || typeof raw !== 'string' || raw.length < 100) return null;
+            if (raw.startsWith('[APPROVED') || raw.startsWith('[')) return null;
+            const mime = e.imageMimeType && String(e.imageMimeType).startsWith('image/') ? e.imageMimeType : 'image/jpeg';
+            return `data:${mime};base64,${raw}`;
+        }
+
+        async function loadApprovedEvidenceGrouped() {
+            const container = document.getElementById('approvedEvidenceByChallenge');
+            if (!container) return;
+            container.innerHTML = '<p style="color: var(--text-light);">Loading…</p>';
+            try {
+                const res = await fetch(`${API_URL}/admin/all-evidence`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to load');
+
+                const approved = Array.isArray(data) ? data.filter((e) => e.status === 'approved') : [];
+
+                if (!approved.length) {
+                    container.innerHTML = `
+                        <div class="no-evidence">
+                            <p>No approved evidence yet.</p>
+                            <p style="font-size: 0.85rem;">Approved AI submissions and manual approvals appear here by challenge.</p>
+                        </div>`;
+                    return;
+                }
+
+                const groups = new Map();
+                for (const e of approved) {
+                    const cid = e.challengeId != null ? Number(e.challengeId) : NaN;
+                    const key = Number.isFinite(cid) ? `id:${cid}` : `name:${e.challengeName || 'unknown'}`;
+                    if (!groups.has(key)) {
+                        groups.set(key, {
+                            challengeId: Number.isFinite(cid) ? cid : null,
+                            challengeName: e.challengeName || `Challenge ${key}`,
+                            challengeCategory: e.challengeCategory || '',
+                            items: []
+                        });
+                    }
+                    groups.get(key).items.push(e);
+                }
+
+                const list = Array.from(groups.values()).sort((a, b) =>
+                    (a.challengeName || '').localeCompare(b.challengeName || '', undefined, { sensitivity: 'base' }));
+
+                for (const g of list) {
+                    g.items.sort((a, b) => {
+                        const ta = new Date(a.reviewedAt || a.submittedAt || 0).getTime();
+                        const tb = new Date(b.reviewedAt || b.submittedAt || 0).getTime();
+                        return tb - ta;
+                    });
+                }
+
+                container.innerHTML = list.map((g) => {
+                    const icon = categoryIcons[g.challengeCategory] || '🌱';
+                    const title = escapeAdminHtml(g.challengeName);
+                    const rows = g.items.map((e) => {
+                        const when = e.reviewedAt || e.submittedAt;
+                        const dateStr = when ? new Date(when).toLocaleString() : '—';
+                        const userLine = escapeAdminHtml(`${e.firstName || ''} ${e.lastName || ''}`.trim() || e.username || 'User');
+                        const notes = escapeAdminHtml((e.reviewNotes || '').slice(0, 280));
+                        const imgUrl = evidenceImageDataUrlPanel(e);
+                        const thumb = imgUrl
+                            ? `<img class="approved-evidence-thumb" src="${imgUrl}" alt="">`
+                            : '<div class="approved-evidence-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem" title="No image stored">📷</div>';
+                        return `
+                            <div class="approved-evidence-row">
+                                ${thumb}
+                                <div class="approved-evidence-meta">
+                                    <strong>@${escapeAdminHtml(e.username || '')}</strong> · ${userLine}<br>
+                                    <span style="opacity:0.85">${dateStr}</span>
+                                    ${notes ? `<br><span style="font-style:italic">${notes}${(e.reviewNotes || '').length > 280 ? '…' : ''}</span>` : ''}
+                                </div>
+                            </div>`;
+                    }).join('');
+                    return `
+                        <details class="approved-challenge-group" open>
+                            <summary>${icon} ${title} <span style="font-weight:500;opacity:0.75">(${g.items.length})</span></summary>
+                            ${rows}
+                        </details>`;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<p style="color: var(--coral);">Could not load approved evidence. ${escapeAdminHtml(err.message || '')}</p>`;
+            }
+        }
+
+        function pendingEvidenceSkeleton(count) {
+            let h = '<p class="gg-loading-hint" style="color: var(--text-light); margin-bottom: 8px;">Loading pending evidence…</p>';
+            for (let i = 0; i < count; i++) {
+                h += `
+                    <div class="evidence-card pending" style="pointer-events: none;" aria-busy="true">
+                        <div class="evidence-header">
+                            <div class="evidence-user">
+                                <div class="gg-skeleton gg-skel-circle" style="width:48px;height:48px;"></div>
+                                <div style="flex:1;min-width:0">
+                                    <div class="gg-skeleton gg-skel-line" style="max-width:160px;margin-bottom:10px"></div>
+                                    <div class="gg-skeleton gg-skel-line-sm" style="max-width:220px"></div>
+                                </div>
+                            </div>
+                            <div class="gg-skeleton" style="width:72px;height:28px;border-radius:20px"></div>
+                        </div>
+                        <div class="gg-skeleton" style="height:140px;border-radius:12px;margin:12px 0"></div>
+                        <div class="evidence-actions" style="gap:12px">
+                            <div class="gg-skeleton" style="flex:1;height:44px;border-radius:10px"></div>
+                            <div class="gg-skeleton" style="flex:1;height:44px;border-radius:10px"></div>
+                        </div>
+                    </div>`;
+            }
+            return h;
+        }
+
         // Load pending evidence
         async function loadPendingEvidence() {
+            const container = document.getElementById('pendingEvidenceList');
+            if (container) container.innerHTML = pendingEvidenceSkeleton(2);
+
             try {
                 const res = await fetch(`${API_URL}/admin/pending-evidence`, {
                     headers: { 'Authorization': `Bearer ${getToken()}` }
                 });
                 const evidence = await res.json();
-                
-                const container = document.getElementById('pendingEvidenceList');
-                
+
                 if (!evidence.length) {
                     container.innerHTML = `
                         <div class="no-evidence">
@@ -1017,6 +1601,10 @@
                 `).join('');
             } catch (e) {
                 console.error('Error loading evidence:', e);
+                const errBox = document.getElementById('pendingEvidenceList');
+                if (errBox) {
+                    errBox.innerHTML = '<p style="color: var(--coral); padding: 12px;">Could not load pending evidence. Try refreshing.</p>';
+                }
             }
         }
         
@@ -1037,6 +1625,7 @@
                 if (res.ok) {
                     alert('Evidence approved!');
                     loadPendingEvidence();
+                    loadApprovedEvidenceGrouped();
                     loadStats();
                 } else {
                     alert('Error: ' + data.error);
@@ -1063,6 +1652,7 @@
                 if (res.ok) {
                     alert('Evidence rejected.');
                     loadPendingEvidence();
+                    loadApprovedEvidenceGrouped();
                     loadStats();
                 }
             } catch (e) {
@@ -1071,29 +1661,277 @@
         }
 
         // Load challenges
-        // Store challenges for editing
+        // Store challenges for editing (includes AI drafts; use admin API)
         let allChallenges = [];
-        
-        async function loadChallenges() {
+
+        function escAttr(s) {
+            return String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;');
+        }
+
+        const challengeCategoryOrder = ['Reduce', 'Nature', 'Transport', 'Food', 'Energy', 'Other'];
+
+        function challengeCategoryKey(c) {
+            const cat = String(c.category || '').trim();
+            if (challengeCategoryOrder.includes(cat)) return cat;
+            return 'Other';
+        }
+
+        const _aiDraftCategorySelectValues = ['Reduce', 'Nature', 'Transport', 'Food', 'Energy'];
+
+        function renderAiDraftCardHtml(c) {
+            const id = c.id;
+            const catOpts = _aiDraftCategorySelectValues.map((cat) =>
+                `<option value="${cat}" ${(c.category === cat) ? 'selected' : ''}>${cat}</option>`
+            ).join('');
+            const d = c.difficulty || 'Medium';
+            return `
+                <details class="ai-draft-card">
+                    <summary>
+                        <span class="ai-draft-summary-left">
+                            <span class="challenge-category-chevron" aria-hidden="true">▼</span>
+                            <span class="ai-draft-title">${escapeAdminHtml(c.name || 'Challenge')}</span>
+                        </span>
+                        <span class="ai-draft-summary-right">
+                            <span class="badge-pending-ai">Pending review</span>
+                            <span class="ai-draft-meta">ID ${id} · ${escapeAdminHtml(c.cadence || '')}</span>
+                        </span>
+                    </summary>
+                    <div class="ai-draft-body">
+                        <form id="aiDraftForm_${id}" onsubmit="return false;">
+                            <label>Name <input name="name" type="text" value="${escAttr(c.name)}"></label>
+                            <div class="form-row">
+                                <label>Category <select name="category">${catOpts}</select></label>
+                                <label>Difficulty <select name="difficulty">
+                                    <option value="Easy" ${d === 'Easy' ? 'selected' : ''}>Easy</option>
+                                    <option value="Medium" ${d === 'Medium' ? 'selected' : ''}>Medium</option>
+                                    <option value="Hard" ${d === 'Hard' ? 'selected' : ''}>Hard</option>
+                                </select></label>
+                                <label>Cadence <input name="cadence" type="text" value="${escAttr(c.cadence || '')}" placeholder="daily / weekly"></label>
+                            </div>
+                            <div class="form-row">
+                                <label>Points <input name="points" type="number" value="${escAttr(String(c.points ?? ''))}"></label>
+                                <label>CO₂ (kg) <input name="co2Saved" type="number" step="0.1" value="${escAttr(String(c.co2Saved ?? ''))}"></label>
+                                <label>Duration <input name="duration" type="text" value="${escAttr(c.duration || '')}"></label>
+                            </div>
+                            <label>Description <textarea name="description">${escapeAdminHtml(c.description || '')}</textarea></label>
+                        </form>
+                        <div class="ai-draft-actions">
+                            <button type="button" class="btn-primary" onclick="publishAiDraftFromForm(${id})">Publish to users</button>
+                            <button type="button" class="btn-secondary" onclick="openEditChallengeModal(${id})">Edit in modal</button>
+                            <button type="button" class="btn-danger" onclick="declineAiDraft(${id})">Decline</button>
+                        </div>
+                    </div>
+                </details>`;
+        }
+
+        function renderAiPendingReviewCards(challengeList) {
+            const panel = document.getElementById('aiPendingReviewPanel');
+            const listEl = document.getElementById('aiPendingReviewList');
+            if (!panel || !listEl) return;
+            if (!challengeList || !challengeList.length) {
+                listEl.innerHTML = '';
+                panel.hidden = true;
+                return;
+            }
+            panel.hidden = false;
+
+            const groups = {};
+            for (const c of challengeList) {
+                const k = challengeCategoryKey(c);
+                if (!groups[k]) groups[k] = [];
+                groups[k].push(c);
+            }
+            for (const k of Object.keys(groups)) {
+                groups[k].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
+            }
+
+            let keys = challengeCategoryOrder.filter((k) => (groups[k] && groups[k].length));
+            const extra = Object.keys(groups).filter((k) => !challengeCategoryOrder.includes(k));
+            keys = keys.concat(extra.sort());
+
+            listEl.innerHTML = keys.map((cat) => {
+                const list = groups[cat];
+                const icon = categoryIcons[cat === 'Other' ? '' : cat] || (cat === 'Other' ? '📁' : '🌱');
+                const label = cat === 'Other' ? 'Other / uncategorized' : cat;
+                const cards = list.map(renderAiDraftCardHtml).join('');
+                return `
+                    <details class="challenge-category-group">
+                        <summary>
+                            <span class="cat-left">
+                                <span class="challenge-category-chevron" aria-hidden="true">▼</span>
+                                <span style="font-size:1.35rem;line-height:1;" aria-hidden="true">${icon}</span>
+                                <span>${escapeAdminHtml(label)}</span>
+                            </span>
+                            <span class="challenge-category-count">${list.length} draft${list.length === 1 ? '' : 's'}</span>
+                        </summary>
+                        <div class="ai-pending-category-cards">${cards}</div>
+                    </details>`;
+            }).join('');
+        }
+
+        async function publishAiDraftFromForm(id) {
+            const form = document.getElementById('aiDraftForm_' + id);
+            if (!form) return;
+            const body = {};
+            new FormData(form).forEach((v, k) => { body[k] = v; });
             try {
-                const res = await fetch(`${API_URL}/challenges`);
-                allChallenges = await res.json();
-                
-                document.getElementById('challengesTableBody').innerHTML = allChallenges.map(c => `
-                    <tr>
-                        <td>${c.name}</td>
-                        <td>${categoryIcons[c.category] || ''} ${c.category}</td>
-                        <td>${c.points}</td>
-                        <td>${c.co2Saved}kg</td>
-                        <td><span class="badge badge-${c.difficulty.toLowerCase()}">${c.difficulty}</span></td>
-                        <td class="actions">
-                            <button class="btn-secondary" onclick="openEditChallengeModal(${c.id})">Edit</button>
-                            <button class="btn-danger" onclick="deleteChallenge(${c.id})">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
+                const res = await fetch(`${API_URL}/admin/challenges/${id}/publish-ai`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    alert('Challenge is now live for users.');
+                    loadChallenges();
+                    loadStats();
+                } else {
+                    alert(data.error || 'Could not publish');
+                }
             } catch (e) {
-                console.error('Error loading challenges');
+                alert('Could not connect to server');
+            }
+        }
+
+        async function publishAiChallengeQuick(id) {
+            try {
+                const res = await fetch(`${API_URL}/admin/challenges/${id}/publish-ai`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: '{}'
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    alert('Published!');
+                    loadChallenges();
+                    loadStats();
+                } else {
+                    alert(data.error || 'Could not publish');
+                }
+            } catch (e) {
+                alert('Could not connect to server');
+            }
+        }
+
+        async function declineAiDraft(id) {
+            if (!confirm('Decline this AI draft? It will be permanently deleted.')) return;
+            try {
+                const res = await fetch(`${API_URL}/admin/challenges/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                if (res.ok) {
+                    loadChallenges();
+                    loadStats();
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    alert(data.error || 'Could not delete');
+                }
+            } catch (e) {
+                alert('Could not connect to server');
+            }
+        }
+
+        function renderLiveChallengeRowHtml(c) {
+            const diffRaw = (c.difficulty || 'Easy').toLowerCase();
+            const actions = `
+                <div class="challenge-action-btns">
+                    <button type="button" class="btn-secondary" onclick="openEditChallengeModal(${c.id})">Edit</button>
+                    <button type="button" class="btn-danger" onclick="deleteChallenge(${c.id})">Delete</button>
+                </div>`;
+            return `
+                <tr>
+                    <td>${escapeAdminHtml(c.name || '')}</td>
+                    <td>${c.points}</td>
+                    <td>${c.co2Saved}kg</td>
+                    <td><span class="badge badge-${diffRaw}">${escapeAdminHtml(c.difficulty || '')}</span></td>
+                    <td class="actions challenge-row-actions">${actions}</td>
+                </tr>`;
+        }
+
+        async function loadChallenges() {
+            const container = document.getElementById('challengesByCategory');
+            if (!container) return;
+            try {
+                const res = await fetch(`${API_URL}/admin/challenges`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                allChallenges = await res.json();
+                if (!res.ok) {
+                    throw new Error(allChallenges.error || 'Failed to load');
+                }
+
+                const pending = allChallenges.filter((c) => c.aiApprovalStatus === 'pending_admin');
+                renderAiPendingReviewCards(pending);
+
+                const publishedOnly = allChallenges.filter((c) => c.aiApprovalStatus !== 'pending_admin');
+                const groups = {};
+                for (const c of publishedOnly) {
+                    const k = challengeCategoryKey(c);
+                    if (!groups[k]) groups[k] = [];
+                    groups[k].push(c);
+                }
+                for (const k of Object.keys(groups)) {
+                    groups[k].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
+                }
+
+                let keys = challengeCategoryOrder.filter((k) => (groups[k] && groups[k].length));
+                const extra = Object.keys(groups).filter((k) => !challengeCategoryOrder.includes(k));
+                keys = keys.concat(extra.sort());
+
+                if (!keys.length) {
+                    const hint = pending.length
+                        ? 'No published challenges yet. Publish drafts from <strong>Pending AI challenges</strong> above.'
+                        : 'No challenges yet.';
+                    container.innerHTML = `<p style="color: var(--text-light);">${hint}</p>`;
+                    return;
+                }
+
+                container.innerHTML = keys.map((cat) => {
+                    const list = groups[cat];
+                    const icon = categoryIcons[cat === 'Other' ? '' : cat] || (cat === 'Other' ? '📁' : '🌱');
+                    const label = cat === 'Other' ? 'Other / uncategorized' : cat;
+                    const rows = list.map(renderLiveChallengeRowHtml).join('');
+                    return `
+                    <details class="challenge-category-group">
+                        <summary>
+                            <span class="cat-left">
+                                <span class="challenge-category-chevron" aria-hidden="true">▼</span>
+                                <span style="font-size:1.35rem;line-height:1;" aria-hidden="true">${icon}</span>
+                                <span>${escapeAdminHtml(label)}</span>
+                            </span>
+                            <span class="challenge-category-count">${list.length} challenge${list.length === 1 ? '' : 's'}</span>
+                        </summary>
+                        <div class="challenge-category-table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Points</th>
+                                        <th>CO₂</th>
+                                        <th>Difficulty</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    </details>`;
+                }).join('');
+            } catch (e) {
+                console.error('Error loading challenges', e);
+                if (container) {
+                    container.innerHTML = '<p style="color: var(--coral);">Could not load challenges. Are you signed in as super admin?</p>';
+                }
             }
         }
         
@@ -1195,6 +2033,43 @@
             }
         });
 
+        // Generate AI challenges
+        async function generateAIChallenges() {
+            const btn = document.getElementById('generateAIChallengesBtn');
+            const status = document.getElementById('generateAIStatus');
+            if (btn.disabled) return;
+            btn.disabled = true;
+            status.textContent = 'Generating drafts…';
+            try {
+                const res = await fetch(`${API_URL}/admin/generate-challenges`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const n = data.created ?? 0;
+                    const parts = [];
+                    if (data.skipped > 0) parts.push(`${data.skipped} skipped total`);
+                    if (data.skippedDuplicate > 0) {
+                        parts.push(`${data.skippedDuplicate} too similar to live challenges`);
+                    }
+                    const sk = parts.length ? ` (${parts.join('; ')})` : '';
+                    status.textContent = `✅ ${n} draft(s) saved for review${sk}`;
+                    await loadChallenges();
+                    loadStats();
+                    const panel = document.getElementById('aiPendingReviewPanel');
+                    if (panel && !panel.hidden) {
+                        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                } else {
+                    status.textContent = '❌ ' + (data.error || 'Failed');
+                }
+            } catch (e) {
+                status.textContent = '❌ Could not connect';
+            }
+            btn.disabled = false;
+        }
+
         // Delete challenge
         async function deleteChallenge(id) {
             if (!confirm('Delete this challenge?')) return;
@@ -1258,16 +2133,26 @@
             }
         }
 
-        // Load teams
+        // Load teams (same data as teams.html, plus members/leader — requires admin API)
         async function loadTeams() {
+            const container = document.getElementById('teamsContainer');
+            if (!container) return;
             try {
                 const res = await fetch(`${API_URL}/admin/teams`, {
                     headers: { 'Authorization': `Bearer ${getToken()}` }
                 });
-                const teams = await res.json();
-                
-                const container = document.getElementById('teamsContainer');
-                
+                const data = await res.json();
+
+                if (!res.ok) {
+                    container.innerHTML = `<p style="text-align: center; color: var(--coral);">Could not load teams: ${escapeAdminHtml(data.error || res.statusText || 'Request failed')}. Check that you are logged in as a super admin.</p>`;
+                    return;
+                }
+                if (!Array.isArray(data)) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--coral);">Invalid response from server when loading teams.</p>';
+                    return;
+                }
+                const teams = data;
+
                 if (!teams.length) {
                     container.innerHTML = '<p style="text-align: center; color: var(--text-light);">No teams yet</p>';
                     return;
@@ -1283,6 +2168,7 @@
                                 </p>
                             </div>
                             <div style="display: flex; gap: 8px;">
+                                <button class="btn-secondary" onclick="addMemberToTeam(${team.id}, '${team.name.replace(/'/g, "\\'")}')">Add Member</button>
                                 <button class="btn-secondary" onclick="editTeam(${team.id}, '${team.name.replace(/'/g, "\\'")}', '${(team.description || '').replace(/'/g, "\\'")}')">Edit</button>
                                 <button class="btn-danger" onclick="deleteTeam(${team.id}, '${team.name.replace(/'/g, "\\'")}')">Delete</button>
                             </div>
@@ -1369,6 +2255,33 @@
                 }
             } catch (e) {
                 alert('Error removing member');
+            }
+        }
+
+        async function addMemberToTeam(teamId, teamName) {
+            const username = prompt(`Enter the username to add to "${teamName}":`);
+            if (!username) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/teams/${teamId}/add-member`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: username.trim() })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Member added!');
+                    loadTeams();
+                    loadUsers();
+                } else {
+                    alert('Error: ' + (data.error || 'Could not add member'));
+                }
+            } catch (e) {
+                alert('Error adding member');
             }
         }
 
@@ -1518,47 +2431,204 @@
             }
         });
         
+        let adminChatMessagesCache = [];
+        let adminChatMonitorTab = 'general';
+        /** @type {Record<number, string>} */
+        let adminChatTeamNameById = {};
+
+        function adminTeamDisplayNameFromConvId(conversationId) {
+            const raw = String(conversationId || '').replace(/^team_/, '');
+            const tid = parseInt(raw, 10);
+            if (Number.isNaN(tid)) return 'Team (unknown id)';
+            const name = adminChatTeamNameById[tid];
+            if (name) return name;
+            return `Team #${tid} (name not found)`;
+        }
+
+        function getAdminMessageChannel(m) {
+            const cid = String(m.conversationId || '');
+            if (cid === 'general') return 'general';
+            if (cid.startsWith('dm_')) return 'dm';
+            if (cid.startsWith('team_')) return 'team';
+            return 'other';
+        }
+
+        function adminConvDetailLabel(m) {
+            const cid = String(m.conversationId || '');
+            const ch = getAdminMessageChannel(m);
+            if (ch === 'general') return 'Public feed';
+            if (ch === 'dm') {
+                const inner = cid.replace(/^dm_/, '');
+                const parts = inner.split('_');
+                if (parts.length >= 2) {
+                    return `Conversation dm_${parts[0]}_${parts[1]} · sender @${m.senderUsername || '?'}${m.recipientId != null ? ` → user #${m.recipientId}` : ''}`;
+                }
+                return `${cid} · @${m.senderUsername || '?'}`;
+            }
+            if (ch === 'team') {
+                const tidStr = cid.replace(/^team_/, '');
+                const tid = parseInt(tidStr, 10);
+                const teamLabel = adminTeamDisplayNameFromConvId(cid);
+                return `Team chat · ${teamLabel}${!Number.isNaN(tid) ? ` (id ${tid})` : ''} · @${m.senderUsername || '?'}`;
+            }
+            return (cid || 'Unknown channel') + ` · @${m.senderUsername || '?'}`;
+        }
+
+        function adminConvBadgeClass(ch) {
+            if (ch === 'general') return 'chat-msg-badge-general';
+            if (ch === 'dm') return 'chat-msg-badge-dm';
+            if (ch === 'team') return 'chat-msg-badge-team';
+            return 'chat-msg-badge-other';
+        }
+
+        function adminConvBadgeText(m) {
+            const ch = getAdminMessageChannel(m);
+            const cid = String(m.conversationId || '');
+            if (ch === 'general') return '💬 General';
+            if (ch === 'dm') {
+                const inner = cid.replace(/^dm_/, '');
+                const parts = inner.split('_');
+                if (parts.length >= 2) return `✉️ DM · #${parts[0]} & #${parts[1]}`;
+                return '✉️ DM';
+            }
+            if (ch === 'team') return `🏅 ${adminTeamDisplayNameFromConvId(cid)}`;
+            return '❓ Other';
+        }
+
+        function renderAdminChatMessageCard(m) {
+            const ch = getAdminMessageChannel(m);
+            const convLabel = adminConvBadgeText(m);
+            const detail = adminConvDetailLabel(m);
+            const badgeClass = adminConvBadgeClass(ch);
+            const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+            const textEscaped = (m.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const safeId = String(m.id || '').replace(/'/g, "\\'");
+            return `
+                <div class="evidence-card" style="margin-bottom: 12px;">
+                    <div class="evidence-header" style="flex-wrap: wrap; gap: 12px;">
+                        <div class="evidence-user">
+                            <span style="font-weight: 600;">@${m.senderUsername || 'unknown'}</span>
+                            <span class="badge ${badgeClass}" style="color: inherit;">${escapeAdminHtml(convLabel)}</span>
+                        </div>
+                        <span style="font-size: 0.8rem; color: var(--text-light);">${timeStr}</span>
+                    </div>
+                    <p style="margin: 8px 0 0 0; font-size: 0.8rem; color: var(--text-light); word-break: break-word;">${escapeAdminHtml(detail)}</p>
+                    ${textEscaped ? `<p style="margin: 12px 0; word-break: break-word;">${textEscaped}</p>` : ''}
+                    ${m.imageBase64 ? `<img src="data:${m.imageMimeType || 'image/jpeg'};base64,${m.imageBase64}" alt="Post image" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 12px; display: block;">` : ''}
+                    <div class="evidence-actions">
+                        <button type="button" class="btn-danger" onclick="deleteChatMessage('${safeId}')">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeAdminHtml(s) {
+            return String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function updateChatMonitorCounts() {
+            const gen = adminChatMessagesCache.filter((m) => getAdminMessageChannel(m) === 'general').length;
+            const dm = adminChatMessagesCache.filter((m) => getAdminMessageChannel(m) === 'dm').length;
+            const team = adminChatMessagesCache.filter((m) => getAdminMessageChannel(m) === 'team').length;
+            const other = adminChatMessagesCache.filter((m) => getAdminMessageChannel(m) === 'other').length;
+            const elG = document.getElementById('chatCountGeneral');
+            const elD = document.getElementById('chatCountDm');
+            const elT = document.getElementById('chatCountTeam');
+            if (elG) elG.textContent = String(gen + other);
+            if (elD) elD.textContent = String(dm);
+            if (elT) elT.textContent = String(team);
+        }
+
+        function renderChatMonitorList() {
+            const container = document.getElementById('chatMessagesList');
+            if (!container) return;
+            const tab = adminChatMonitorTab;
+            let rows = [];
+            let note = '';
+
+            if (tab === 'general') {
+                const general = adminChatMessagesCache.filter((m) => getAdminMessageChannel(m) === 'general');
+                const other = adminChatMessagesCache.filter((m) => getAdminMessageChannel(m) === 'other');
+                rows = general;
+                if (other.length) {
+                    note = `<div class="chat-monitor-channel-note">Some messages use a non-standard <code>conversationId</code> (${other.length} total). They appear below for review.</div>`;
+                    rows = rows.concat(other);
+                }
+            } else if (tab === 'dm') {
+                rows = adminChatMessagesCache.filter((m) => getAdminMessageChannel(m) === 'dm');
+            } else if (tab === 'team') {
+                rows = adminChatMessagesCache.filter((m) => getAdminMessageChannel(m) === 'team');
+            }
+
+            if (!adminChatMessagesCache.length) {
+                container.innerHTML = '<p style="color: var(--text-light);">No messages loaded. Click Refresh.</p>';
+                return;
+            }
+            if (!rows.length) {
+                container.innerHTML = note + `<p style="color: var(--text-light);">No messages in this channel.</p>`;
+                return;
+            }
+            container.innerHTML = note + rows.map((m) => renderAdminChatMessageCard(m)).join('');
+        }
+
+        function initChatMonitorTabs() {
+            document.querySelectorAll('.chat-monitor-tab').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    adminChatMonitorTab = btn.getAttribute('data-chat-tab') || 'general';
+                    document.querySelectorAll('.chat-monitor-tab').forEach((b) => {
+                        const on = b.getAttribute('data-chat-tab') === adminChatMonitorTab;
+                        b.classList.toggle('active', on);
+                        b.setAttribute('aria-selected', on ? 'true' : 'false');
+                    });
+                    renderChatMonitorList();
+                });
+            });
+        }
+
         // Load chat messages (admin moderation)
         async function loadChatMessages() {
             const container = document.getElementById('chatMessagesList');
             if (!container) return;
             container.innerHTML = '<p style="color: var(--text-light);">Loading messages...</p>';
             try {
-                const res = await fetch(`${API_URL}/admin/chat/messages`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
-                });
+                const token = getToken();
+                const headers = { 'Authorization': `Bearer ${token}` };
+                const [res, teamsRes] = await Promise.all([
+                    fetch(`${API_URL}/admin/chat/messages`, { headers }),
+                    fetch(`${API_URL}/admin/teams`, { headers })
+                ]);
                 const messages = await res.json();
                 if (!res.ok) throw new Error(messages.error || 'Failed to load');
-                if (!messages || messages.length === 0) {
+                adminChatTeamNameById = {};
+                if (teamsRes.ok) {
+                    const teams = await teamsRes.json();
+                    if (Array.isArray(teams)) {
+                        teams.forEach((t) => {
+                            if (t && t.id != null) {
+                                adminChatTeamNameById[Number(t.id)] = String(t.name || '').trim() || `Team #${t.id}`;
+                            }
+                        });
+                    }
+                }
+                adminChatMessagesCache = Array.isArray(messages) ? messages : [];
+                updateChatMonitorCounts();
+                if (!adminChatMessagesCache.length) {
                     container.innerHTML = '<p style="color: var(--text-light);">No messages yet.</p>';
                     return;
                 }
-                container.innerHTML = messages.map(m => {
-                    const isGeneral = (m.conversationId || '') === 'general';
-                    const convLabel = isGeneral ? '💬 General' : `✉️ DM (${m.senderUsername || '?'} → user ${m.recipientId || '?'})`;
-                    const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
-                    const textEscaped = (m.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                    return `
-                        <div class="evidence-card" style="margin-bottom: 12px;">
-                            <div class="evidence-header" style="flex-wrap: wrap; gap: 12px;">
-                                <div class="evidence-user">
-                                    <span style="font-weight: 600;">@${m.senderUsername || 'unknown'}</span>
-                                    <span class="badge" style="background: ${isGeneral ? 'rgba(135,168,120,0.3)' : 'rgba(87,117,96,0.3)'}; color: var(--forest);">${convLabel}</span>
-                                </div>
-                                <span style="font-size: 0.8rem; color: var(--text-light);">${timeStr}</span>
-                            </div>
-                            ${textEscaped ? `<p style="margin: 12px 0; word-break: break-word;">${textEscaped}</p>` : ''}
-                            ${m.imageBase64 ? `<img src="data:${m.imageMimeType || 'image/jpeg'};base64,${m.imageBase64}" alt="Post image" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 12px; display: block;">` : ''}
-                            <div class="evidence-actions">
-                                <button class="btn-danger" onclick="deleteChatMessage('${String(m.id || '').replace(/'/g, "\\'")}')">🗑️ Delete</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+                renderChatMonitorList();
             } catch (e) {
+                adminChatMessagesCache = [];
+                adminChatTeamNameById = {};
+                updateChatMonitorCounts();
                 container.innerHTML = `<p style="color: var(--coral);">Error: ${e.message || 'Could not load messages'}</p>`;
             }
         }
+
+        initChatMonitorTabs();
         
         async function deleteChatMessage(id) {
             if (!confirm('Delete this message? This cannot be undone.')) return;

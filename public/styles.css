@@ -23,12 +23,29 @@
     box-sizing: border-box;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Media never spills past the viewport on small screens */
+img,
+video,
+canvas,
+svg {
+    max-width: 100%;
+    height: auto;
+}
+
 body {
     font-family: 'Outfit', sans-serif;
     background: linear-gradient(165deg, var(--forest) 0%, var(--forest-light) 40%, var(--sage) 100%);
     min-height: 100vh;
+    min-height: 100dvh;
     color: var(--text-dark);
     overflow-x: hidden;
+    -webkit-tap-highlight-color: rgba(26, 58, 47, 0.12);
 }
 
 /* ============================================
@@ -75,11 +92,35 @@ body {
     z-index: 1;
     max-width: 480px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 40px max(20px, env(safe-area-inset-right, 0px)) 40px max(20px, env(safe-area-inset-left, 0px));
+    padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+/* Unread total on main nav Chat tab (updated from auth-check + chat page) */
+a.tab-link[href="chat.html"] {
+    position: relative;
+}
+.chat-tab-unread-badge {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #e94560;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    box-sizing: border-box;
+    pointer-events: none;
 }
 
 .header {
@@ -390,7 +431,11 @@ body {
 
 .dashboard-container {
     max-width: 1000px;
-    padding: 40px 20px;
+    width: 100%;
+    min-width: 0;
+    padding: 40px max(20px, env(safe-area-inset-right, 0px)) 40px max(20px, env(safe-area-inset-left, 0px));
+    padding-top: max(40px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
     align-items: stretch;
 }
 
@@ -401,6 +446,225 @@ body {
     margin-bottom: 32px;
     flex-wrap: wrap;
     gap: 16px;
+}
+
+.dashboard-header .logo {
+    flex: 1;
+    min-width: 0;
+}
+
+.dashboard-header .header-right {
+    flex-shrink: 0;
+}
+
+/* ---- App side navigation (drawer) ---- */
+.gg-nav-toggle {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--cream);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.gg-nav-toggle:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.gg-nav-toggle:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.gg-nav-toggle-bars {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: var(--cream);
+    border-radius: 1px;
+    position: relative;
+}
+
+.gg-nav-toggle-bars::before,
+.gg-nav-toggle-bars::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 20px;
+    height: 2px;
+    background: var(--cream);
+    border-radius: 1px;
+}
+
+.gg-nav-toggle-bars::before {
+    top: -6px;
+}
+
+.gg-nav-toggle-bars::after {
+    top: 6px;
+}
+
+body.gg-nav-drawer-open {
+    overflow: hidden;
+    touch-action: none;
+}
+
+.gg-nav-drawer-root {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    pointer-events: none;
+    visibility: hidden;
+    transition: visibility 0.3s step-end;
+}
+
+.gg-nav-drawer-root.is-open {
+    pointer-events: auto;
+    visibility: visible;
+    transition: visibility 0s step-start;
+}
+
+.gg-nav-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(26, 58, 47, 0.45);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+}
+
+.gg-nav-drawer-root.is-open .gg-nav-drawer-backdrop {
+    opacity: 1;
+}
+
+.gg-nav-drawer-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(288px, calc(100vw - 48px));
+    max-width: 100%;
+    background: var(--cream);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.18);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.gg-nav-drawer-root.is-open .gg-nav-drawer-panel {
+    transform: translateX(0);
+}
+
+.gg-nav-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 2px solid var(--sand);
+    flex-shrink: 0;
+}
+
+.gg-nav-drawer-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--forest);
+}
+
+.gg-nav-drawer-close {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: var(--sand);
+    color: var(--forest);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.gg-nav-drawer-close:hover {
+    background: var(--mint);
+}
+
+.gg-nav-drawer-close:focus-visible {
+    outline: 2px solid var(--forest);
+    outline-offset: 2px;
+}
+
+.gg-nav-drawer-nav {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 12px 24px;
+}
+
+/* Vertical tab list inside drawer (overrides per-page horizontal .tab-bar rules) */
+aside.gg-nav-drawer-panel .tab-bar {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin: 0;
+    margin-bottom: 0;
+    width: 100%;
+    overflow: visible;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+aside.gg-nav-drawer-panel .tab-bar > .tab-link {
+    flex: none;
+    min-width: 0;
+    max-width: none;
+    white-space: normal;
+    text-align: left;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    background: rgba(26, 58, 47, 0.06);
+    color: var(--forest);
+    border: 1px solid rgba(26, 58, 47, 0.12);
+    position: relative;
+}
+
+aside.gg-nav-drawer-panel .tab-bar > .tab-link:hover {
+    background: rgba(135, 168, 120, 0.25);
+    color: var(--forest);
+}
+
+aside.gg-nav-drawer-panel .tab-bar > .tab-link.active {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+    color: var(--cream);
+    border-color: transparent;
+}
+
+/* Chat unread badge in drawer */
+aside.gg-nav-drawer-panel a.tab-link[href='chat.html'] {
+    padding-right: 40px;
+}
+
+aside.gg-nav-drawer-panel .chat-tab-unread-badge {
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
 }
 
 .back-btn {
@@ -545,6 +809,68 @@ body {
 }
 
 /* ============================================
+   LOADING & SKELETON LISTS (shared)
+   ============================================ */
+
+@keyframes gg-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.gg-skeleton {
+    background: linear-gradient(110deg, var(--sand) 8%, rgba(255, 255, 255, 0.65) 18%, var(--sand) 33%);
+    background-size: 200% 100%;
+    animation: gg-shimmer 1.25s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+.gg-loading-hint {
+    margin: 0;
+    padding: 12px 20px 8px;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.gg-skel-line {
+    height: 14px;
+    width: 100%;
+    max-width: 180px;
+}
+
+.gg-skel-line-sm {
+    height: 11px;
+    width: 100%;
+    max-width: 130px;
+    margin-top: 8px;
+}
+
+.gg-skel-line-wide {
+    height: 14px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.gg-skel-num {
+    height: 22px;
+    width: 40px;
+    margin-left: auto;
+}
+
+.gg-skel-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.gg-skel-circle-sm {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
@@ -565,6 +891,210 @@ body {
     .data-table td {
         padding: 10px 8px;
     }
+
+    /* Prevents iOS Safari zooming inputs on focus (needs ≥16px) */
+    .form-group input,
+    .form-group textarea,
+    .form-group select,
+    .auth-card input,
+    .auth-card textarea,
+    .auth-card select {
+        font-size: 1rem;
+    }
+}
+
+/* ============================================
+   MOBILE & PWA (Add to Home Screen, small iPhones)
+   Higher-specificity selectors override per-page <style> tabs.
+   ============================================ */
+
+@media (max-width: 640px) {
+    .container:not(.dashboard-container) {
+        padding-top: max(24px, env(safe-area-inset-top, 0px));
+    }
+
+    .auth-card {
+        padding: 22px 16px;
+    }
+
+    .logo h1 {
+        font-size: 2rem;
+    }
+
+    .tab-btn {
+        padding: 12px 10px;
+        font-size: 0.88rem;
+    }
+
+    div.container.dashboard-container {
+        padding-top: max(12px, env(safe-area-inset-top, 0px));
+        padding-left: max(12px, env(safe-area-inset-left, 0px));
+        padding-right: max(12px, env(safe-area-inset-right, 0px));
+        padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        max-width: 100%;
+    }
+
+    div.container.dashboard-container > .dashboard-header {
+        margin-bottom: 14px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+
+    div.container.dashboard-container > .dashboard-header .logo {
+        justify-content: flex-start;
+        flex: 1;
+        min-width: min(160px, 100%);
+    }
+
+    div.container.dashboard-container > .dashboard-header .logo h1 {
+        font-size: 1.55rem;
+    }
+
+    div.container.dashboard-container > .dashboard-header .header-right {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    div.container.dashboard-container > .dashboard-header .user-welcome {
+        font-size: 0.78rem;
+        max-width: 50vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    div.container.dashboard-container > .dashboard-header .logout-btn {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+    }
+
+    div.container.dashboard-container .section-title {
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+    }
+
+    div.container.dashboard-container #adminContent .admin-nav {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px;
+    }
+
+    div.container.dashboard-container #adminContent .admin-nav-btn {
+        flex: 1 1 calc(50% - 4px);
+        min-width: calc(50% - 4px);
+        padding: 10px 8px;
+        font-size: 0.7rem;
+        line-height: 1.2;
+    }
+
+    div.container.dashboard-container .profile-sub-tabs {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    div.container.dashboard-container .profile-sub-tab {
+        flex: 1 1 42%;
+        padding: 10px 12px;
+        font-size: 0.82rem;
+    }
+
+    div.container.dashboard-container .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 10px;
+        justify-content: stretch;
+    }
+
+    div.container.dashboard-container .profile-stat-value {
+        font-size: 1.35rem;
+    }
+
+    div.container.dashboard-container .profile-name {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .leaderboard-list .rank-item {
+        padding: 12px 14px;
+    }
+
+    .leaderboard-list .rank-name {
+        font-size: 0.95rem;
+    }
+
+    .leaderboard-list .rank-points-value {
+        font-size: 1.05rem;
+    }
+
+    .users-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ============================================
+   SHARED FULL-PAGE LOADER (page-loader.js)
+   ============================================ */
+
+.gg-page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(26, 58, 47, 0.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: opacity 0.28s ease, visibility 0.28s ease;
+}
+
+.gg-page-loader.gg-page-loader--done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.gg-page-loader-card {
+    background: var(--cream);
+    border-radius: 20px;
+    padding: 32px 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    max-width: 280px;
+    border: 2px solid rgba(26, 58, 47, 0.12);
+}
+
+.gg-page-loader-spinner {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 16px;
+    border: 3px solid var(--sand);
+    border-top-color: var(--forest);
+    border-right-color: var(--gold);
+    border-radius: 50%;
+    animation: gg-page-loader-spin 0.75s linear infinite;
+}
+
+@keyframes gg-page-loader-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.gg-page-loader-msg {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--forest);
 }
 
 

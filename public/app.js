@@ -2,10 +2,7 @@
 // GREENGOALS - Frontend JavaScript
 // ============================================
 
-// Use same host as the page, or localhost:3000 if opened as file
-const API_URL = (window.location.origin && window.location.origin !== 'file://' && window.location.origin !== 'null')
-    ? window.location.origin + '/api'
-    : 'http://localhost:3000/api';
+const API_URL = window.getGreenGoalsApiUrl();
 
 // If already logged in, redirect to home or admin
 const token = localStorage.getItem('token');
@@ -83,7 +80,8 @@ loginForm.addEventListener('submit', async (e) => {
     }
     
     showMessage('Signing in...', 'success');
-    
+    showGreenGoalsPageLoader('Signing in…');
+
     try {
         const res = await fetch(`${API_URL}/login`, {
             method: 'POST',
@@ -97,13 +95,21 @@ loginForm.addEventListener('submit', async (e) => {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             setTimeout(() => {
-                window.location.href = data.user.isAdmin ? 'admin-panel.html' : 'home.html';
+                if (data.user.isAdmin) {
+                    window.location.href = 'admin-panel.html';
+                } else if (!data.user.surveyCompleted) {
+                    window.location.href = 'survey.html';
+                } else {
+                    window.location.href = 'home.html';
+                }
             }, 500);
         } else {
             showMessage('❌ ' + (data.error || 'Login failed'), 'error');
         }
     } catch (err) {
         showMessage('❌ Cannot reach server. Run: npm start', 'error');
+    } finally {
+        hideGreenGoalsPageLoader();
     }
 });
 
@@ -126,6 +132,7 @@ registerForm.addEventListener('submit', async (e) => {
         return;
     }
     
+    showGreenGoalsPageLoader('Creating account…');
     try {
         const res = await fetch(`${API_URL}/register`, {
             method: 'POST',
@@ -138,12 +145,14 @@ registerForm.addEventListener('submit', async (e) => {
             showMessage(`Welcome to GreenGoals, ${data.user.username}!`, 'success');
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            setTimeout(() => { window.location.href = 'home.html'; }, 500);
+            setTimeout(() => { window.location.href = 'survey.html'; }, 500);
         } else {
             showMessage('❌ ' + (data.error || 'Registration failed'), 'error');
         }
     } catch (err) {
         showMessage('❌ Cannot reach server. Run: npm start', 'error');
+    } finally {
+        hideGreenGoalsPageLoader();
     }
 });
 
@@ -152,6 +161,7 @@ registerForm.addEventListener('submit', async (e) => {
 // ============================================
 
 async function loadStats() {
+    showGreenGoalsPageLoader('Loading…');
     try {
         const [usersRes, challengesRes] = await Promise.all([
             fetch(`${API_URL}/users`),
@@ -160,13 +170,17 @@ async function loadStats() {
         
         const users = await usersRes.json();
         const challenges = await challengesRes.json();
-        
-        document.getElementById('userCount').textContent = users.length;
-        document.getElementById('challengeCount').textContent = challenges.length;
+        const userCountEl = document.getElementById('userCount');
+        const challengeCountEl = document.getElementById('challengeCount');
+        if (userCountEl) userCountEl.textContent = users.length;
+        if (challengeCountEl) challengeCountEl.textContent = challenges.length;
     } catch (error) {
         console.log('Could not load stats - server may not be running');
+    } finally {
+        hideGreenGoalsPageLoader();
     }
 }
 
-// Load stats on page load
-loadStats();
+if (!(token && userData)) {
+    loadStats();
+}

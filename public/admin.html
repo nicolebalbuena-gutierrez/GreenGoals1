@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenGoals - Admin Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
+    <title>GreenGoals — Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
@@ -11,6 +20,7 @@
     <style>
         body {
             background: linear-gradient(165deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+            min-height: 100vh;
         }
         .admin-badge {
             background: linear-gradient(135deg, #e94560, #ff6b6b);
@@ -26,22 +36,70 @@
         }
         .auth-card {
             border: 2px solid rgba(233, 69, 96, 0.3);
+            max-width: 34rem;
         }
-        .submit-btn {
+        .admin-note {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.55;
+            margin: 0 0 1.25rem 0;
+        }
+        .admin-note a {
+            color: #f8b4c4;
+        }
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn-admin-primary {
+            display: inline-block;
+            padding: 12px 22px;
             background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .submit-btn:hover {
-            box-shadow: 0 12px 32px rgba(233, 69, 96, 0.4);
+        .btn-admin-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(233, 69, 96, 0.35);
+        }
+        .btn-admin-secondary {
+            display: inline-block;
+            padding: 12px 22px;
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .btn-admin-secondary:hover {
+            background: rgba(255,255,255,0.2);
         }
         .back-link {
             color: rgba(255,255,255,0.7);
             text-decoration: none;
             font-size: 0.9rem;
             display: inline-block;
-            margin-top: 20px;
+            margin-top: 24px;
         }
         .back-link:hover {
             color: white;
+        }
+        #alreadySignedInHint {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid rgba(40, 167, 69, 0.45);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            color: rgba(255,255,255,0.95);
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -49,89 +107,53 @@
     <div class="container">
         <header class="header">
             <div class="logo">
-                <span class="logo-icon"></span>
+                <span class="logo-icon" aria-hidden="true">🛡️</span>
                 <h1>GreenGoals</h1>
             </div>
-            <span class="admin-badge">Admin Portal</span>
-            <p class="tagline">Manage challenges, users, and more</p>
+            <span class="admin-badge">Admin</span>
+            <p class="tagline">One login for everyone — including staff</p>
         </header>
 
-        <div class="auth-card">
-            <form id="adminLoginForm" class="auth-form active">
-                <div class="form-group">
-                    <label for="adminEmail">Admin Email</label>
-                    <input type="email" id="adminEmail" placeholder="admin@greengoals.com" required>
-                    <span class="input-icon">📧</span>
-                </div>
-                <div class="form-group">
-                    <label for="adminPassword">Password</label>
-                    <input type="password" id="adminPassword" placeholder="••••••••" required>
-                    <span class="input-icon"></span>
-                </div>
-                <button type="submit" class="submit-btn">
-                    <span>Admin Login</span>
-                    <span class="btn-icon"></span>
-                </button>
-            </form>
-            <div id="message" class="message"></div>
+        <div class="auth-card" style="padding: 28px;">
+            <p id="alreadySignedInHint" hidden>
+                You appear to be signed in as an admin. You can open the panel directly.
+            </p>
+            <p class="admin-note">
+                Admin tools all live in the <strong>admin panel</strong>. Sign in on
+                <a href="index.html">the main login</a> with your <strong>super_admin</strong> account, then use the
+                <strong>Admin</strong> tab in the app, or open the
+                <a href="admin-panel.html">admin panel</a> directly once you are signed in.
+                AI-generated challenges show up there as <strong>drafts</strong> for approval before students see them.
+            </p>
+            <p class="admin-note" style="color: rgba(255,255,255,0.7); font-size: 0.88rem;">
+                The old separate admin password page and “admin token” are no longer used — everything shares your main session token.
+            </p>
+            <div class="action-row">
+                <a href="index.html" class="btn-admin-secondary">Main login</a>
+                <a href="admin-panel.html" class="btn-admin-primary">Open admin panel</a>
+            </div>
         </div>
 
-        <a href="index.html" class="back-link">← Back to User Login</a>
+        <a href="index.html" class="back-link">← Back to login</a>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        try {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('admin');
+        } catch (e) { /* ignore */ }
 
-        // Check if already logged in as admin
-        const adminToken = localStorage.getItem('adminToken');
-        if (adminToken) {
-            window.location.href = 'admin-dashboard.html';
-        }
-
-        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('adminEmail').value;
-            const password = document.getElementById('adminPassword').value;
-            const messageDiv = document.getElementById('message');
-            
+        (function () {
+            var raw = localStorage.getItem('user');
+            if (!raw) return;
             try {
-                const response = await fetch(`${API_URL}/admin/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    messageDiv.textContent = 'Login successful! Redirecting...';
-                    messageDiv.className = 'message success';
-                    localStorage.setItem('adminToken', data.token);
-                    localStorage.setItem('admin', JSON.stringify(data.admin));
-                    setTimeout(() => {
-                        window.location.href = 'admin-dashboard.html';
-                    }, 800);
-                } else {
-                    messageDiv.textContent = '❌ ' + data.error;
-                    messageDiv.className = 'message error';
+                var u = JSON.parse(raw);
+                if (u && u.isAdmin) {
+                    var el = document.getElementById('alreadySignedInHint');
+                    if (el) el.hidden = false;
                 }
-            } catch (error) {
-                messageDiv.textContent = 'Could not connect to server. Run: npm start';
-                messageDiv.className = 'message error';
-            }
-        });
+            } catch (e) { /* ignore */ }
+        })();
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-

@@ -2,13 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/greengoals-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/greengoals-icon.svg">
+    <meta name="theme-color" content="#1a3a2f">
+    <meta name="description" content="Social eco-challenges with friends.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GreenGoals">
+    <script src="pwa-register.js" defer></script>
     <title>GreenGoals - Challenges</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="api-url.js"></script>
     <script src="auth-check.js"></script>
+    <script src="nav-drawer.js"></script>
+    <script src="page-loader.js"></script>
     <style>
         .challenges-grid {
             display: grid;
@@ -20,13 +32,111 @@
         .challenges-grid > * {
             min-height: 100%;
         }
+        /* Keep layout height stable even while content loads */
+        #challengesGrid,
+        #inProgressGrid {
+            min-height: 400px; /* roughly one row of cards */
+        }
         @media (max-width: 900px) {
             .challenges-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        @media (max-width: 600px) {
+        /* Phone: two narrower cards per row + compact content */
+        @media (max-width: 640px) {
             .challenges-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+                margin-top: 16px;
+            }
+            #challengesPageLoader .challenges-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+            #challengesGrid,
+            #inProgressGrid {
+                min-height: 200px;
+            }
+            .challenge-card {
+                padding: 12px 10px 14px;
+                border-radius: 14px;
+            }
+            /* Phone: show only title + category, everything else moves to modal */
+            .challenge-summary-row {
+                display: flex;
+            }
+            .challenge-expand-btn {
+                top: 8px;
+                left: 8px;
+                width: 32px;
+                height: 32px;
+                border-radius: 12px;
+            }
+            .challenge-category {
+                top: 8px;
+                right: 6px;
+                padding: 3px 7px;
+                font-size: 0.58rem;
+                letter-spacing: 0.02em;
+                max-width: calc(100% - 12px);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            /* Hide verbose card content on phones (use modal instead) */
+            .challenge-icon,
+            .challenge-name,
+            .challenge-text-block,
+            .challenge-meta,
+            .challenge-footer,
+            .card-admin-actions {
+                display: none !important;
+            }
+            .challenge-card {
+                min-height: 84px;
+                justify-content: center;
+            }
+            .section-header .section-title {
+                font-size: 1.25rem;
+            }
+            .completed-card-image-wrap,
+            .completed-card-image-placeholder {
+                height: 90px;
+                border-radius: 14px 14px 0 0;
+            }
+            .completed-card {
+                border-radius: 14px;
+            }
+            .completed-card-body {
+                padding: 10px 10px 12px;
+            }
+            .completed-card .challenge-icon {
+                font-size: 1.2rem;
+            }
+            .completed-card .challenge-name {
+                font-size: 0.85rem;
+            }
+            .completed-card .challenge-meta {
+                font-size: 0.72rem;
+                margin-bottom: 8px;
+            }
+            .completed-card-footer {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .completed-status-badge {
+                padding: 6px 10px;
+                font-size: 0.72rem;
+                text-align: center;
+            }
+        }
+        /* Very small screens: one card per row */
+        @media (max-width: 360px) {
+            .challenges-grid {
+                grid-template-columns: 1fr;
+            }
+            #challengesPageLoader .challenges-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -41,6 +151,47 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+        }
+        .challenge-expand-btn {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            border: 1px solid rgba(26, 58, 47, 0.14);
+            background: rgba(26, 58, 47, 0.06);
+            color: var(--forest);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            line-height: 1;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .challenge-expand-btn:hover {
+            transform: translateY(-1px);
+            background: rgba(135, 168, 120, 0.22);
+            border-color: rgba(135, 168, 120, 0.5);
+        }
+        .challenge-expand-btn:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+        .challenge-summary-row {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+        }
+        .challenge-summary-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.02rem;
+            color: var(--text-dark);
+            line-height: 1.15;
         }
         .challenge-card:hover {
             transform: translateY(-5px);
@@ -72,12 +223,20 @@
             color: var(--text-dark);
             margin-bottom: 8px;
         }
+        .challenge-text-block {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-height: 0;
+        }
         .challenge-desc {
             color: var(--text-light);
             font-size: 0.95rem;
             line-height: 1.5;
-            margin-bottom: 16px;
-            flex-grow: 1;
+            margin-bottom: 0;
+            flex-grow: 0;
+            width: 100%;
         }
         .challenge-meta {
             display: flex;
@@ -203,6 +362,96 @@
             width: 100%;
             text-align: center;
         }
+        .evidence-example-wrap {
+            margin: 6px 0 10px;
+            text-align: left;
+        }
+        .evidence-example-link {
+            background: none;
+            border: none;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--forest-light);
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .evidence-example-link:hover {
+            color: var(--forest);
+        }
+        .modal-overlay.evidence-example-overlay {
+            z-index: 1100;
+        }
+        .evidence-example-modal .evidence-example-challenge {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+        .evidence-example-modal ul {
+            margin: 0 0 16px;
+            padding-left: 20px;
+            color: var(--text-light);
+            line-height: 1.55;
+            font-size: 0.95rem;
+        }
+        .evidence-example-modal .evidence-example-note {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.45;
+        }
+        /* Upload evidence modal: description + example link (tight stack, then divider, then boxes) */
+        #evidenceModal .evidence-modal-subtitle {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin: 0 0 12px;
+            line-height: 1.45;
+            text-align: left;
+        }
+        #evidenceModal .evidence-modal-top {
+            text-align: left;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--sand);
+        }
+        #evidenceModal .evidence-modal-description {
+            margin: 0 0 8px;
+            padding: 0;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            min-height: 1.25em;
+        }
+        /* Modal only: avoid generic button styles hiding or clipping the control */
+        #evidenceModal button.evidence-modal-example-link {
+            display: inline-block;
+            width: auto;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            text-align: left;
+            background: none;
+            border: none;
+            box-shadow: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--forest);
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            line-height: 1.4;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        #evidenceModal button.evidence-modal-example-link:hover {
+            color: var(--forest-light);
+        }
+        #evidenceModal .challenge-preview {
+            margin-top: 4px;
+        }
         .pending-review-badge {
             padding: 12px 24px;
             background: linear-gradient(135deg, #7c8798, #9aa5b4);
@@ -258,6 +507,7 @@
             font-family: 'Playfair Display', serif;
             color: var(--forest);
             margin-bottom: 8px;
+            text-align: left;
         }
         .upload-area {
             border: 2px dashed var(--sage);
@@ -455,7 +705,7 @@
         .form-group label {
             display: block;
             font-size: 0.8rem;
-            color: var(--text-light);
+            color: var(--text-dark);
             margin-bottom: 4px;
         }
         .form-group input, .form-group select, .form-group textarea {
@@ -581,75 +831,183 @@
             align-items: center;
             gap: 12px;
         }
-        /* Completed Challenges Styles */
-        .completed-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+        /* User Suggest Challenge Card */
+        .user-suggest-card {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            background: rgba(26, 58, 47, 0.85); /* dark forest green */
+            border-radius: 18px;
+            padding: 20px 22px;
+            border: 1px dashed rgba(255,255,255,0.4);
         }
+        .user-suggest-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--cream);
+            margin-bottom: 8px;
+        }
+        .user-suggest-card p {
+            color: var(--cream);
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        .user-suggest-card .form-group label {
+            color: var(--cream);
+        }
+        .user-suggest-form {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .user-suggest-form .form-group {
+            margin-bottom: 0;
+        }
+        .user-suggest-form input,
+        .user-suggest-form textarea,
+        .user-suggest-form select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 2px solid var(--sand);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+        }
+        .user-suggest-form textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+        .user-suggest-submit {
+            margin-top: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--gold), #e6b95e);
+            color: var(--forest);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .user-suggest-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(212, 168, 83, 0.4);
+        }
+
+        /* Completed Challenges - same card style as Available */
         .completed-card {
-            background: rgba(255,255,255,0.95);
+            background: var(--cream);
             border-radius: 20px;
+            padding: 0;
+            box-shadow: 0 10px 40px var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border: 3px solid var(--mint);
-            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         .completed-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 20px 50px var(--shadow);
         }
-        .completed-card-image {
+        .completed-card.approved { border: 2px solid var(--sage); }
+        .completed-card.rejected { border: 2px solid var(--coral); }
+        .completed-card-image-wrap {
             width: 100%;
-            height: 160px;
+            height: 140px;
+            overflow: hidden;
+            border-radius: 20px 20px 0 0;
+            background: var(--sand);
+        }
+        .completed-card-image-wrap img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
         }
-        .completed-card-content {
-            padding: 16px;
-        }
-        .completed-card-content h4 {
-            margin: 0 0 8px 0;
-            color: var(--deep-green);
-            font-size: 1rem;
-            font-family: 'Playfair Display', serif;
-        }
-        .completed-card-content p {
-            margin: 0;
+        .completed-card-image-placeholder {
+            width: 100%;
+            height: 140px;
+            background: var(--sand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
             color: var(--text-light);
+        }
+        .completed-card-body {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .completed-card .challenge-category {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+        }
+        .completed-card .challenge-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        .completed-card .challenge-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+        .completed-card .challenge-meta {
             font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 12px;
         }
         .completed-card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 16px;
-            background: linear-gradient(135deg, var(--mint), var(--sage));
+            padding-top: 12px;
+            border-top: 1px solid var(--sand);
+            margin-top: auto;
         }
-        .completed-badge {
-            background: white;
-            color: var(--deep-green);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .completed-status-badge {
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 0.85rem;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
-        .completed-points {
-            color: white;
-            font-weight: 700;
-            font-size: 1rem;
+        .completed-status-badge.approved {
+            background: rgba(135, 168, 120, 0.25);
+            color: var(--forest);
+        }
+        .completed-status-badge.rejected {
+            background: rgba(224, 122, 95, 0.25);
+            color: var(--coral);
         }
         .no-completed {
+            grid-column: 1 / -1;
             text-align: center;
             padding: 40px;
             background: rgba(255,255,255,0.1);
             border-radius: 16px;
             color: var(--text-light);
         }
+        .challenges-completed-loading-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin: 0 0 8px;
+        }
+        #challengesPageLoader .challenges-grid {
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
+    <script>
+        // Always start this page at the top so users see the main challenges section first
+        window.scrollTo(0, 0);
+        window.addEventListener('load', () => {
+            window.scrollTo(0, 0);
+        });
+    </script>
     <div class="bg-animation">
         <div class="leaf leaf-1">🌿</div>
         <div class="leaf leaf-2">🍃</div>
@@ -675,7 +1033,38 @@
             <a href="leaderboard.html" class="tab-link">Leaderboard</a>
             <a href="teams.html" class="tab-link">Teams</a>
             <a href="chat.html" class="tab-link">Chat</a>
+            <a href="news.html" class="tab-link">News</a>
             <a href="profile.html" class="tab-link">Profile</a>
+        </div>
+
+        <div id="challengesPageLoader" style="display: block;">
+            <p class="gg-loading-hint" style="color: var(--mint);">Loading challenges…</p>
+            <div class="challenges-grid" aria-busy="true">
+                <div class="challenge-card" style="pointer-events: none;">
+                    <div class="gg-skeleton" style="height: 22px; width: 45%; border-radius: 20px; margin-bottom: 14px;"></div>
+                    <div class="gg-skeleton" style="height: 52px; width: 52px; border-radius: 14px; margin-bottom: 14px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 18px; max-width: 88%; margin-bottom: 10px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 13px; max-width: 92%; margin-bottom: 8px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 13px; max-width: 72%; margin-bottom: 18px;"></div>
+                    <div class="gg-skeleton" style="height: 44px; width: 100%; border-radius: 12px;"></div>
+                </div>
+                <div class="challenge-card" style="pointer-events: none;">
+                    <div class="gg-skeleton" style="height: 22px; width: 40%; border-radius: 20px; margin-bottom: 14px;"></div>
+                    <div class="gg-skeleton" style="height: 52px; width: 52px; border-radius: 14px; margin-bottom: 14px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 18px; max-width: 80%; margin-bottom: 10px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 13px; max-width: 90%; margin-bottom: 8px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 13px; max-width: 68%; margin-bottom: 18px;"></div>
+                    <div class="gg-skeleton" style="height: 44px; width: 100%; border-radius: 12px;"></div>
+                </div>
+                <div class="challenge-card" style="pointer-events: none;">
+                    <div class="gg-skeleton" style="height: 22px; width: 50%; border-radius: 20px; margin-bottom: 14px;"></div>
+                    <div class="gg-skeleton" style="height: 52px; width: 52px; border-radius: 14px; margin-bottom: 14px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 18px; max-width: 85%; margin-bottom: 10px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 13px; max-width: 88%; margin-bottom: 8px;"></div>
+                    <div class="gg-skeleton gg-skel-line-wide" style="height: 13px; max-width: 75%; margin-bottom: 18px;"></div>
+                    <div class="gg-skeleton" style="height: 44px; width: 100%; border-radius: 12px;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- In Progress Section -->
@@ -685,6 +1074,57 @@
             </div>
             <p style="color: var(--mint); margin-bottom: 16px; font-size: 0.9rem;">Click "Upload Evidence" to submit proof and complete your challenge!</p>
             <div class="challenges-grid" id="inProgressGrid"></div>
+        </div>
+
+        <!-- Available Challenges Section (hidden until data is ready) -->
+        <div id="availableSection" style="display: none;">
+            <div class="section-header" style="margin-top: 32px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Available Challenges</h2>
+            </div>
+            <div class="filter-btns" style="margin-bottom: 16px;">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="Reduce">♻️ Reduce</button>
+                <button class="filter-btn" data-filter="Nature">🌳 Nature</button>
+                <button class="filter-btn" data-filter="Transport">🚲 Transport</button>
+                <button class="filter-btn" data-filter="Food">🥗 Food</button>
+                <button class="filter-btn" data-filter="Energy">⚡ Energy</button>
+            </div>
+
+            <!-- Available Challenges Grid -->
+            <div class="challenges-grid" id="challengesGrid"></div>
+        </div>
+
+        <!-- User: Suggest a Challenge -->
+        <div class="user-suggest-card" id="userAddChallenge" style="display: none;">
+            <h3>Have an idea for a new challenge?</h3>
+            <p>Suggest a challenge for the GreenGoals community. It must be something people can <strong>prove with a photo</strong> (e.g. reusable mug, bike at rack, meal)—not private habits like shower length. Keep it specific and positive; we’ll review and fill in category, difficulty, duration &amp; carbon footprint.</p>
+            <form id="userChallengeForm" class="user-suggest-form">
+                <div class="form-group">
+                    <label for="userChallengeName">Challenge Name</label>
+                    <input type="text" id="userChallengeName" required placeholder="e.g., Bring a reusable mug to class">
+                </div>
+                <div class="form-group">
+                    <label for="userChallengeDesc">Description</label>
+                    <textarea id="userChallengeDesc" required placeholder="What should someone do to complete this?"></textarea>
+                </div>
+            </form>
+            <button class="user-suggest-submit" id="userChallengeSubmitBtn" onclick="submitUserChallenge()">Submit Challenge Idea</button>
+        </div>
+
+        <!-- Completed Challenges Section (same format as Available) -->
+        <div id="completedSection" style="display: none; margin-top: 40px;">
+            <div class="section-header" style="margin-top: 32px;">
+                <h2 class="section-title" style="margin-bottom: 0;">🏆 Completed Challenges</h2>
+            </div>
+            <p style="color: var(--text-light); margin-bottom: 16px;">Challenges you submitted evidence for — approved or declined.</p>
+            <div class="filter-btns" style="margin-bottom: 16px;" id="completedFilterBtns">
+                <button class="filter-btn active" data-completed-filter="all">All</button>
+                <button class="filter-btn" data-completed-filter="approved">✓ Approved</button>
+                <button class="filter-btn" data-completed-filter="rejected">✕ Declined</button>
+            </div>
+            <div class="challenges-grid" id="completedGrid">
+                <!-- Completed challenges with evidence will be loaded here -->
+            </div>
         </div>
 
         <!-- Admin: Add Challenge Form (hidden for regular users) -->
@@ -738,44 +1178,17 @@
                 </form>
             </div>
         </div>
-
-        <!-- Available Challenges Section -->
-        <div class="section-header" style="margin-top: 32px;">
-            <h2 class="section-title" style="margin-bottom: 0;">Available Challenges</h2>
-        </div>
-        <div class="filter-btns" style="margin-bottom: 16px;">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="Reduce">♻️ Reduce</button>
-            <button class="filter-btn" data-filter="Nature">🌳 Nature</button>
-            <button class="filter-btn" data-filter="Transport">🚲 Transport</button>
-            <button class="filter-btn" data-filter="Food">🥗 Food</button>
-            <button class="filter-btn" data-filter="Energy">⚡ Energy</button>
-        </div>
-
-        <!-- Available Challenges Grid -->
-        <div class="challenges-grid" id="challengesGrid">
-            <div class="challenge-card">
-                <p style="color: var(--text-light);">Loading challenges...</p>
-            </div>
-        </div>
-
-        <!-- Completed Challenges Section -->
-        <div id="completedSection" style="display: none; margin-top: 40px;">
-            <div class="section-header">
-                <h2 class="section-title" style="margin-bottom: 0;">🏆 Completed Challenges</h2>
-            </div>
-            <p style="color: var(--text-light); margin-bottom: 20px;">Your successfully completed challenges and submitted evidence.</p>
-            <div class="completed-grid" id="completedGrid">
-                <!-- Completed challenges will be loaded here -->
-            </div>
-        </div>
     </div>
 
     <!-- Evidence Upload Modal -->
     <div class="modal-overlay" id="evidenceModal">
         <div class="modal">
             <h2>Upload Evidence</h2>
-            <p style="color: var(--text-light); margin-bottom: 16px;" id="evidenceModalDesc">Upload a photo to verify you completed the challenge</p>
+            <p class="evidence-modal-subtitle" id="evidenceModalSubtitle">Add a photo that shows you completed this challenge.</p>
+            <div class="evidence-modal-top">
+                <p class="evidence-modal-description" id="evidenceModalChallengeDesc"></p>
+                <button type="button" class="evidence-modal-example-link" onclick="openEvidenceExampleFromUploadModal()">See evidence example</button>
+            </div>
             
             <input type="hidden" id="evidenceChallengeId">
             
@@ -803,14 +1216,52 @@
             <div id="verificationStatus" class="verification-status" style="display: none;"></div>
             
             <button class="modal-btn primary" id="submitEvidenceBtn" onclick="submitEvidence()" disabled>
-                📤 Submit for Review
+                📤 Submit for AI Review
             </button>
             <button class="modal-btn secondary" onclick="closeEvidenceModal()">Cancel</button>
         </div>
     </div>
 
+    <!-- Evidence example / photo ideas (stacks above upload modal) -->
+    <div class="modal-overlay evidence-example-overlay" id="evidenceExampleModal">
+        <div class="modal evidence-example-modal">
+            <h2>Ways to prove it with a photo</h2>
+            <p class="evidence-example-challenge" id="evidenceExampleChallengeLine"></p>
+            <ul id="evidenceExampleList"></ul>
+            <p class="evidence-example-note">Use a real photo of something you did. The AI checks that your picture matches this challenge—not stock images or unrelated selfies.</p>
+            <button type="button" class="modal-btn secondary" onclick="closeEvidenceExampleModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Challenge details modal (mobile-friendly) -->
+    <div class="modal-overlay" id="challengeDetailsModal" aria-hidden="true">
+        <div class="modal">
+            <div style="display:flex; align-items:center; justify-content: space-between; gap: 12px; margin-bottom: 10px;">
+                <div id="challengeDetailsCategory"></div>
+                <button type="button" class="modal-btn secondary" style="width:auto;margin-top:0;padding:10px 14px;" onclick="closeChallengeDetailsModal()">Close</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom: 6px;">
+                <div class="challenge-icon" id="challengeDetailsIcon" style="margin:0;">🌱</div>
+                <div style="min-width:0;">
+                    <div style="font-family:'Playfair Display', serif; font-size: 1.55rem; color: var(--forest); margin: 6px 0 10px; line-height: 1.15;" id="challengeDetailsTitle">Challenge</div>
+                    <div style="display:flex; flex-wrap: wrap; gap: 8px; align-items:center;">
+                        <span class="difficulty-badge" id="challengeDetailsDifficulty"></span>
+                    </div>
+                </div>
+            </div>
+            <p style="color: var(--text-light); line-height: 1.55; margin: 0 0 14px; font-size: 0.95rem;" id="challengeDetailsDesc"></p>
+            <div style="display:flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;" id="challengeDetailsMeta"></div>
+            <div style="margin: 8px 0 14px;">
+                <button type="button" class="evidence-example-link" style="font-size:0.95rem;" onclick="openEvidenceExampleModalFromDetails()">See evidence example</button>
+            </div>
+            <input type="hidden" id="challengeDetailsId">
+            <input type="hidden" id="challengeDetailsMode">
+            <div style="display:grid; grid-template-columns: 1fr; gap: 10px;" id="challengeDetailsActions"></div>
+        </div>
+    </div>
+
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = window.getGreenGoalsApiUrl();
         let allChallenges = [];
         
         // Show username
@@ -827,22 +1278,195 @@
             'Energy': '⚡'
         };
 
+        function escapeHtml(s) {
+            if (s == null) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function parseChallengeDescription(description) {
+            const d = String(description || '').trim();
+            const idx = d.search(/\bPhoto:\s*/i);
+            if (idx >= 0) {
+                const main = d.slice(0, idx).trim();
+                const photoHint = d.slice(idx).replace(/^\s*Photo:\s*/i, '').trim();
+                return { main: main || d, photoHint };
+            }
+            return { main: d, photoHint: null };
+        }
+
+        const categoryEvidenceTips = {
+            Reduce: [
+                'Reusables in frame: travel mug, utensils, cloth bag, or food in your own container.',
+                'Recycling or compost sorting with campus bins or signage visible if you can.'
+            ],
+            Nature: [
+                'Litter you picked up on a walk, next to a trash or recycling bin.',
+                'Campus green space with you doing something helpful (cleanup, caring for a small area).'
+            ],
+            Transport: [
+                'Your bike locked at a campus rack, or you with your bike/helmet by a campus building.',
+                'Transit or smartphone transit app visible in a campus-relevant setting.'
+            ],
+            Food: [
+                'Your plant-based or meatless meal on a plate or dining hall tray.',
+                'Meal that matches the challenge with dining context visible.'
+            ],
+            Energy: [
+                'Power strip switched off, unplugged chargers laid out, or daylight study setup by a window.',
+                'Air-drying laundry on a rack or line if that matches what you did.'
+            ]
+        };
+
+        function getEvidenceTipBullets(challenge) {
+            const bullets = [];
+            const { photoHint } = parseChallengeDescription(challenge.description);
+            if (photoHint) {
+                bullets.push('From this challenge: ' + photoHint);
+                bullets.push('Your photo should clearly show what the challenge asked for—not a generic eco habit from a different task.');
+                return bullets;
+            }
+            const extras = categoryEvidenceTips[challenge.category] || categoryEvidenceTips.Reduce;
+            extras.forEach(t => bullets.push(t));
+            return bullets;
+        }
+
+        function openEvidenceExampleModal(challengeId) {
+            const challenge = allChallenges.find(x => Number(x.id) === Number(challengeId));
+            const modal = document.getElementById('evidenceExampleModal');
+            const listEl = document.getElementById('evidenceExampleList');
+            const lineEl = document.getElementById('evidenceExampleChallengeLine');
+            if (!modal || !listEl || !lineEl) return;
+
+            if (challenge) {
+                lineEl.textContent = `${challenge.name} · ${challenge.category || ''} · ${challenge.duration || ''}`;
+                listEl.innerHTML = getEvidenceTipBullets(challenge).map(b => `<li>${escapeHtml(b)}</li>`).join('');
+            } else {
+                lineEl.textContent = `Challenge #${challengeId}`;
+                listEl.innerHTML = categoryEvidenceTips.Reduce.map(b => `<li>${escapeHtml(b)}</li>`).join('');
+            }
+            modal.classList.add('active');
+        }
+
+        function closeEvidenceExampleModal() {
+            const el = document.getElementById('evidenceExampleModal');
+            if (el) el.classList.remove('active');
+        }
+
+        function openEvidenceExampleFromUploadModal() {
+            const id = document.getElementById('evidenceChallengeId').value;
+            if (id) openEvidenceExampleModal(parseInt(id, 10));
+        }
+
+        function openEvidenceExampleModalFromDetails() {
+            const id = document.getElementById('challengeDetailsId')?.value;
+            if (id) openEvidenceExampleModal(parseInt(id, 10));
+        }
+
+        function openChallengeDetailsModal(challengeId, mode) {
+            const c = allChallenges.find(x => Number(x.id) === Number(challengeId));
+            if (!c) return;
+
+            const modal = document.getElementById('challengeDetailsModal');
+            const idEl = document.getElementById('challengeDetailsId');
+            const modeEl = document.getElementById('challengeDetailsMode');
+            const catEl = document.getElementById('challengeDetailsCategory');
+            const iconEl = document.getElementById('challengeDetailsIcon');
+            const titleEl = document.getElementById('challengeDetailsTitle');
+            const diffEl = document.getElementById('challengeDetailsDifficulty');
+            const descEl = document.getElementById('challengeDetailsDesc');
+            const metaEl = document.getElementById('challengeDetailsMeta');
+            const actionsEl = document.getElementById('challengeDetailsActions');
+            if (!modal || !idEl || !modeEl || !catEl || !iconEl || !titleEl || !diffEl || !descEl || !metaEl || !actionsEl) return;
+
+            idEl.value = String(c.id);
+            modeEl.value = mode || 'available';
+
+            catEl.innerHTML = `<span class="challenge-category cat-${escapeHtml(c.category)}">${escapeHtml(c.category)}</span>`;
+            iconEl.textContent = categoryIcons[c.category] || '🌱';
+            titleEl.textContent = c.name || 'Challenge';
+            diffEl.className = `difficulty-badge diff-${escapeHtml(c.difficulty)}`;
+            diffEl.textContent = c.difficulty || '';
+
+            descEl.textContent = parseChallengeDescription(c.description).main || '';
+
+            metaEl.innerHTML = [
+                c.duration ? `<span class="meta-item">⏱️ ${escapeHtml(c.duration)}</span>` : '',
+                (c.co2Saved != null) ? `<span class="meta-item">🌱 ${escapeHtml(c.co2Saved)}kg CO₂</span>` : '',
+                (c.points != null) ? `<span class="meta-item">🏅 ${escapeHtml(c.points)} points</span>` : ''
+            ].filter(Boolean).join('');
+
+            const userIsAdmin = isAdmin();
+            const safeName = String(c.name || '').replace(/'/g, "\\'");
+            const isInProgress = userActiveChallenges.includes(c.id);
+
+            let actionsHtml = '';
+            if (userIsAdmin) {
+                actionsHtml += `
+                    <button class="modal-btn secondary" type="button" onclick="editChallenge(${c.id})">✏️ Edit</button>
+                    <button class="modal-btn secondary" type="button" style="background: rgba(224, 122, 95, 0.18); color: var(--coral);" onclick="deleteChallenge(${c.id})">🗑️ Delete</button>
+                `;
+            } else if (isInProgress || mode === 'inprogress') {
+                actionsHtml += `
+                    <button class="modal-btn primary" type="button" onclick="openEvidenceModal(${c.id}, '${safeName}', '${escapeHtml(c.category)}', ${Number(c.points)}, ${Number(c.co2Saved)}); closeChallengeDetailsModal();">📤 Upload Evidence</button>
+                    <button class="modal-btn secondary" type="button" onclick="abandonChallenge(${c.id}, '${safeName}'); closeChallengeDetailsModal();">Abandon Challenge</button>
+                `;
+            } else {
+                actionsHtml += `
+                    <button class="modal-btn primary" type="button" onclick="acceptChallenge(${c.id}); closeChallengeDetailsModal();">Accept Challenge</button>
+                `;
+            }
+            actionsHtml += `<button class="modal-btn secondary" type="button" onclick="closeChallengeDetailsModal()">Close</button>`;
+            actionsEl.innerHTML = actionsHtml;
+
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeChallengeDetailsModal() {
+            const modal = document.getElementById('challengeDetailsModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
         let userActiveChallenges = [];
         let userCompletedChallenges = [];
         let userPendingEvidence = []; // Track challenges with pending evidence
 
+        function challengeGridSkeleton(n) {
+            let h = '';
+            for (let i = 0; i < n; i++) {
+                h += `
+                    <div class="challenge-card" style="pointer-events: none;" aria-busy="true">
+                        <div class="gg-skeleton" style="height: 22px; width: 45%; border-radius: 20px; margin-bottom: 14px;"></div>
+                        <div class="gg-skeleton" style="height: 52px; width: 52px; border-radius: 14px; margin-bottom: 14px;"></div>
+                        <div class="gg-skeleton gg-skel-line-wide" style="height: 18px; max-width: 88%; margin-bottom: 10px;"></div>
+                        <div class="gg-skeleton gg-skel-line-wide" style="height: 13px; max-width: 92%; margin-bottom: 8px;"></div>
+                        <div class="gg-skeleton gg-skel-line-wide" style="height: 13px; max-width: 72%; margin-bottom: 18px;"></div>
+                        <div class="gg-skeleton" style="height: 44px; width: 100%; border-radius: 12px;"></div>
+                    </div>`;
+            }
+            return h;
+        }
+
         async function loadChallenges() {
+            const pageLoader = document.getElementById('challengesPageLoader');
+            if (pageLoader) pageLoader.style.display = 'block';
             try {
-                const res = await fetch(`${API_URL}/challenges`);
+                const res = await fetch(`${API_URL}/challenges`, { cache: 'no-store' });
                 allChallenges = await res.json();
                 
                 // Get user's challenge status
                 const user = getCurrentUser();
                 if (user) {
-                    const userRes = await fetch(`${API_URL}/user/${user.id}`);
+                    const userRes = await fetch(`${API_URL}/user/${user.id}`, { cache: 'no-store' });
                     const userData = await userRes.json();
-                    userActiveChallenges = userData.activeChallenges.map(c => c.id);
-                    userCompletedChallenges = userData.completedChallenges.map(c => c.id);
+                    userActiveChallenges = (userData.activeChallenges || []).map(c => c.id || c).filter(id => id != null);
+                    userCompletedChallenges = (userData.completedChallenges || []).map(c => c.id || c).filter(id => id != null);
                     
                     // Get user's pending evidence submissions
                     try {
@@ -865,15 +1489,34 @@
                         console.error('Error fetching pending evidence:', e);
                         userPendingEvidence = [];
                     }
+                    // Personalize: sort by user's preferred categories (from onboarding survey)
+                    const prefs = userData.surveyPreferences;
+                    if (prefs && Array.isArray(prefs.categories) && prefs.categories.length > 0) {
+                        const preferred = new Set(prefs.categories);
+                        allChallenges = [...allChallenges].sort((a, b) => {
+                            const aMatch = preferred.has(a.category) ? 1 : 0;
+                            const bMatch = preferred.has(b.category) ? 1 : 0;
+                            return bMatch - aMatch; // preferred first
+                        });
+                    }
                 }
                 
                 renderChallenges(allChallenges);
             } catch (error) {
-                document.getElementById('challengesGrid').innerHTML = `
-                    <div class="challenge-card" style="grid-column: 1 / -1;">
-                        <p style="color: var(--coral);">❌ Server not running. Run: npm start</p>
-                    </div>
-                `;
+                console.error('Error loading challenges:', error);
+                const grid = document.getElementById('challengesGrid');
+                if (grid) {
+                    grid.innerHTML = `
+                        <div class="challenge-card" style="grid-column: 1 / -1;">
+                            <p style="color: var(--coral);">Could not load challenges. Check your connection or run npm start locally.</p>
+                        </div>
+                    `;
+                }
+                const avail = document.getElementById('availableSection');
+                if (avail) avail.style.display = 'block';
+                document.getElementById('inProgressSection').style.display = 'none';
+            } finally {
+                if (pageLoader) pageLoader.style.display = 'none';
             }
         }
 
@@ -892,19 +1535,26 @@
             const inProgressGrid = document.getElementById('inProgressGrid');
             
             if (!userIsAdmin && inProgressChallenges.length > 0) {
-                inProgressSection.style.display = 'block';
                 inProgressGrid.innerHTML = inProgressChallenges.map(c => {
                     const hasPendingEvidence = userPendingEvidence.includes(c.id);
                     console.log(`Challenge ${c.id} (${c.name}): hasPendingEvidence = ${hasPendingEvidence}`);
+                    const descMain = escapeHtml(parseChallengeDescription(c.description).main);
                     return `
                     <div class="challenge-card in-progress-card" data-category="${c.category}">
+                        <button class="challenge-expand-btn" type="button" aria-label="View challenge details" onclick="openChallengeDetailsModal(${c.id}, 'inprogress')">ⓘ</button>
                         <span class="challenge-category cat-${c.category}">${c.category}</span>
+                        <div class="challenge-summary-row">
+                            <div class="challenge-summary-title">${escapeHtml(c.name)}</div>
+                        </div>
                         <div class="challenge-icon">${categoryIcons[c.category] || '🌱'}</div>
                         <h3 class="challenge-name">
                             ${c.name}
                             <span class="difficulty-badge diff-${c.difficulty}">${c.difficulty}</span>
                         </h3>
-                        <p class="challenge-desc">${c.description}</p>
+                        <div class="challenge-text-block">
+                            <p class="challenge-desc">${descMain}</p>
+                            <p class="evidence-example-wrap"><button type="button" class="evidence-example-link" onclick="openEvidenceExampleModal(${c.id})">See evidence example</button></p>
+                        </div>
                         <div class="challenge-meta">
                             <span class="meta-item">⏱️ ${c.duration}</span>
                             <span class="meta-item">🌱 ${c.co2Saved}kg CO₂</span>
@@ -915,37 +1565,39 @@
                                 <span class="points-label">points</span>
                             </div>
                             <div class="challenge-actions">
-                                ${hasPendingEvidence ? `
-                                    <div class="pending-review-badge">
-                                        <span class="spinner"></span>
-                                        Pending Review
-                                    </div>
-                                ` : `
-                                    <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.category}', ${c.points}, ${c.co2Saved})">Upload Evidence</button>
-                                `}
+                                <button class="evidence-btn" onclick="openEvidenceModal(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.category}', ${c.points}, ${c.co2Saved})">Upload Evidence</button>
                                 <button class="abandon-btn" onclick="abandonChallenge(${c.id}, '${c.name.replace(/'/g, "\\'")}')">Abandon Challenge</button>
                             </div>
                         </div>
                     </div>
                 `}).join('');
+                inProgressSection.style.display = 'block';
             } else {
                 inProgressSection.style.display = 'none';
             }
             
             // Render challenges
             const grid = document.getElementById('challengesGrid');
+            const availableSection = document.getElementById('availableSection');
             
             if (challengesToShow.length > 0) {
                 grid.innerHTML = challengesToShow.map(c => `
                     <div class="challenge-card" data-category="${c.category}">
                         ${userIsAdmin ? '<span class="admin-badge-card">ADMIN</span>' : ''}
+                        <button class="challenge-expand-btn" type="button" aria-label="View challenge details" onclick="openChallengeDetailsModal(${c.id}, 'available')">ⓘ</button>
                         <span class="challenge-category cat-${c.category}">${c.category}</span>
+                        <div class="challenge-summary-row">
+                            <div class="challenge-summary-title">${escapeHtml(c.name)}</div>
+                        </div>
                         <div class="challenge-icon">${categoryIcons[c.category] || '🌱'}</div>
                         <h3 class="challenge-name">
                             ${c.name}
                             <span class="difficulty-badge diff-${c.difficulty}">${c.difficulty}</span>
                         </h3>
-                        <p class="challenge-desc">${c.description}</p>
+                        <div class="challenge-text-block">
+                            <p class="challenge-desc">${escapeHtml(parseChallengeDescription(c.description).main)}</p>
+                            <p class="evidence-example-wrap"><button type="button" class="evidence-example-link" onclick="openEvidenceExampleModal(${c.id})">See evidence example</button></p>
+                        </div>
                         <div class="challenge-meta">
                             <span class="meta-item">⏱️ ${c.duration}</span>
                             <span class="meta-item">🌱 ${c.co2Saved}kg CO₂</span>
@@ -973,54 +1625,106 @@
                     </div>
                 `;
             }
+
+            // Now reveal the available section once content is ready
+            if (availableSection) {
+                availableSection.style.display = 'block';
+            }
         }
 
-        // Load and render completed challenges with evidence
+        let allEvidenceHistory = [];
+
+        // Load and render completed challenges with evidence (approved + declined)
         async function loadCompletedEvidence() {
-            const user = getUser();
+            const user = getCurrentUser();
+            const completedSection = document.getElementById('completedSection');
+            const completedGrid = document.getElementById('completedGrid');
             if (!user || isAdmin()) {
-                document.getElementById('completedSection').style.display = 'none';
+                completedSection.style.display = 'none';
+                return;
+            }
+
+            completedSection.style.display = 'block';
+            completedGrid.innerHTML = `
+                <p class="gg-loading-hint challenges-completed-loading-msg">Loading your evidence…</p>
+                ${challengeGridSkeleton(2)}
+            `;
+
+            try {
+                const res = await fetch(`${API_URL}/user/evidence-history`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const evidence = await res.json();
+
+                if (!Array.isArray(evidence) || evidence.length === 0) {
+                    completedSection.style.display = 'none';
+                    completedGrid.innerHTML = '';
+                    return;
+                }
+
+                allEvidenceHistory = evidence;
+                completedSection.style.display = 'block';
+                renderCompletedGrid(allEvidenceHistory);
+
+            } catch (e) {
+                console.error('Error loading completed evidence:', e);
+                completedSection.style.display = 'none';
+                completedGrid.innerHTML = '';
+            }
+        }
+
+        function renderCompletedGrid(evidence) {
+            const completedGrid = document.getElementById('completedGrid');
+            const filter = document.querySelector('[data-completed-filter].active')?.dataset.completedFilter || 'all';
+            const filtered = filter === 'all' ? evidence : evidence.filter(e => e.status === filter);
+            
+            if (filtered.length === 0) {
+                completedGrid.innerHTML = `
+                    <div class="no-completed">
+                        <div style="font-size: 3rem; margin-bottom: 12px;">📷</div>
+                        <p>${filter === 'all' ? 'No evidence yet' : `No ${filter === 'approved' ? 'approved' : 'declined'} evidence`}</p>
+                    </div>
+                `;
                 return;
             }
             
-            try {
-                const res = await fetch(`${API_URL}/user/completed-evidence`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
-                });
-                const completedEvidence = await res.json();
-                
-                const completedSection = document.getElementById('completedSection');
-                const completedGrid = document.getElementById('completedGrid');
-                
-                if (!Array.isArray(completedEvidence) || completedEvidence.length === 0) {
-                    completedSection.style.display = 'none';
-                    return;
-                }
-                
-                completedSection.style.display = 'block';
-                
-                // Sort by review date (newest first)
-                completedEvidence.sort((a, b) => new Date(b.reviewedAt) - new Date(a.reviewedAt));
-                
-                completedGrid.innerHTML = completedEvidence.map(e => `
-                    <div class="completed-card">
-                        <img src="data:image/jpeg;base64,${e.imageBase64}" class="completed-card-image" alt="Your evidence">
-                        <div class="completed-card-content">
-                            <h4>${categoryIcons[e.challengeCategory] || '🌱'} ${e.challengeName}</h4>
-                            <p>Completed ${e.reviewedAt ? new Date(e.reviewedAt).toLocaleDateString() : 'N/A'}</p>
-                        </div>
-                        <div class="completed-card-footer">
-                            <span class="completed-badge">✓ Approved</span>
-                            <span class="completed-points">+${e.challengePoints} pts</span>
+            completedGrid.innerHTML = filtered.map(e => {
+                const statusClass = e.status === 'approved' ? 'approved' : 'rejected';
+                const statusLabel = e.status === 'approved' ? '✓ Approved' : '✕ Declined';
+                const imgHtml = e.imageBase64
+                    ? `<img src="data:image/jpeg;base64,${e.imageBase64}" alt="Your evidence">`
+                    : '<div class="completed-card-image-placeholder">📷</div>';
+                return `
+                    <div class="completed-card ${statusClass}" data-completed-status="${e.status}">
+                        <div class="completed-card-image-wrap">${imgHtml}</div>
+                        <div class="completed-card-body">
+                            <span class="challenge-category cat-${e.challengeCategory || 'Reduce'}">${e.challengeCategory || 'Reduce'}</span>
+                            <div class="challenge-icon">${categoryIcons[e.challengeCategory] || '🌱'}</div>
+                            <h3 class="challenge-name">${(e.challengeName || 'Challenge').replace(/</g, '&lt;')}</h3>
+                            ${e.challengeId ? `<p class="evidence-example-wrap"><button type="button" class="evidence-example-link" onclick="openEvidenceExampleModal(${e.challengeId})">See evidence example</button></p>` : ''}
+                            <div class="challenge-meta">
+                                ${e.reviewedAt ? new Date(e.reviewedAt).toLocaleDateString() : 'N/A'}
+                                ${e.challengePoints && e.status === 'approved' ? ` · ${e.challengePoints} pts` : ''}
+                            </div>
+                            ${e.reviewNotes ? `<p style="font-size:0.8rem;color:var(--text-light);font-style:italic;margin:0;">${String(e.reviewNotes).replace(/</g, '&lt;').slice(0, 80)}${e.reviewNotes.length > 80 ? '…' : ''}</p>` : ''}
+                            <div class="completed-card-footer">
+                                <span class="completed-status-badge ${statusClass}">${statusLabel}</span>
+                                ${e.status === 'approved' && e.challengePoints ? `<span style="font-weight:700;color:var(--gold);">+${e.challengePoints} pts</span>` : ''}
+                            </div>
                         </div>
                     </div>
-                `).join('');
-                
-            } catch (e) {
-                console.error('Error loading completed evidence:', e);
-                document.getElementById('completedSection').style.display = 'none';
-            }
+                `;
+            }).join('');
         }
+
+        // Completed filter buttons
+        document.querySelectorAll('[data-completed-filter]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-completed-filter]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderCompletedGrid(allEvidenceHistory);
+            });
+        });
 
         async function acceptChallenge(id) {
             const token = getToken();
@@ -1096,7 +1800,12 @@
 
         function openEvidenceModal(challengeId, challengeName, category, points, co2Saved) {
             document.getElementById('evidenceChallengeId').value = challengeId;
-            document.getElementById('evidenceModalDesc').textContent = `Upload a photo showing you completed: "${challengeName}"`;
+            const ch = allChallenges.find(x => Number(x.id) === Number(challengeId));
+            const descEl = document.getElementById('evidenceModalChallengeDesc');
+            const mainDesc = (ch && ch.description)
+                ? parseChallengeDescription(ch.description).main.trim()
+                : '';
+            descEl.textContent = mainDesc || challengeName || 'Challenge details';
             document.getElementById('previewIcon').textContent = categoryIcons[category] || '🌱';
             document.getElementById('previewName').textContent = challengeName;
             document.getElementById('previewPoints').textContent = `${points} points · ${co2Saved}kg CO₂`;
@@ -1166,22 +1875,26 @@
                 
                 const data = await res.json();
                 
-                if (data.pending) {
-                    // Evidence submitted for admin review
+                if (data.approved) {
+                    // AI approved the evidence
+                    statusDiv.className = 'verification-status approved';
+                    statusDiv.innerHTML = `
+                        <div style="font-size: 2rem; margin-bottom: 8px;">🎉</div>
+                        <strong>${data.message}</strong>
+                        <p style="margin-top: 8px; font-size: 0.9rem;">${data.reason || ''}</p>
+                        ${data.pointsEarned ? `<p style="margin-top: 8px;"><strong>+${data.pointsEarned} points earned!</strong></p>` : ''}
+                        <button class="modal-btn primary" style="margin-top: 16px;" onclick="closeEvidenceModal(); loadChallenges(); loadCompletedEvidence();">Close</button>
+                    `;
+                } else if (data.pending) {
+                    // Evidence submitted for admin review (no AI key - fallback)
                     statusDiv.className = 'verification-status approved';
                     statusDiv.innerHTML = `
                         <div style="font-size: 2rem; margin-bottom: 8px;">📤</div>
                         <strong>${data.message}</strong>
                         <p style="margin-top: 8px; font-size: 0.9rem;">An admin will review your submission soon.</p>
                         <p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-light);">You'll receive points once approved!</p>
+                        <button class="modal-btn primary" style="margin-top: 16px;" onclick="closeEvidenceModal(); loadChallenges(); loadCompletedEvidence();">Close</button>
                     `;
-                    
-                    // Close modal after 3 seconds
-                    setTimeout(() => {
-                        closeEvidenceModal();
-                        loadChallenges();
-                        loadCompletedEvidence();
-                    }, 3000);
                 } else if (data.error) {
                     statusDiv.className = 'verification-status rejected';
                     statusDiv.innerHTML = `
@@ -1189,7 +1902,18 @@
                         <strong>${data.error}</strong>
                     `;
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Submit for Review';
+                    submitBtn.innerHTML = '📤 Submit for AI Review';
+                } else if (data.approved === false) {
+                    // AI rejected the evidence
+                    statusDiv.className = 'verification-status rejected';
+                    statusDiv.innerHTML = `
+                        <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
+                        <strong>${data.message || 'We could not verify this photo.'}</strong>
+                        <p style="margin-top: 8px; font-size: 0.9rem;">${data.reason || ''}</p>
+                        <p style="margin-top: 12px; font-size: 0.85rem;">Please try again with a clearer image.</p>
+                    `;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '📤 Submit for AI Review';
                 } else {
                     statusDiv.className = 'verification-status rejected';
                     statusDiv.innerHTML = `
@@ -1197,13 +1921,13 @@
                         <strong>Something went wrong. Please try again.</strong>
                     `;
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Submit for Review';
+                    submitBtn.innerHTML = '📤 Submit for AI Review';
                 }
             } catch (error) {
                 statusDiv.className = 'verification-status rejected';
                 statusDiv.innerHTML = '❌ Error connecting to server. Please try again.';
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Submit for Review';
+                submitBtn.innerHTML = '📤 Submit for AI Review';
             }
         }
 
@@ -1232,17 +1956,36 @@
                 closeEvidenceModal();
             }
         });
+        document.getElementById('evidenceExampleModal').addEventListener('click', (e) => {
+            if (e.target.id === 'evidenceExampleModal') {
+                closeEvidenceExampleModal();
+            }
+        });
+        document.getElementById('challengeDetailsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'challengeDetailsModal') {
+                closeChallengeDetailsModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeChallengeDetailsModal();
+            }
+        });
 
         // ============================================
         // ADMIN FUNCTIONS
         // ============================================
         
-        // Show admin controls if user is admin
+        // Show admin controls if user is admin; show user suggest card for regular users
         if (isAdmin()) {
             document.getElementById('adminAddChallenge').classList.add('visible');
+        } else {
+            const suggestCard = document.getElementById('userAddChallenge');
+            if (suggestCard) suggestCard.style.display = 'block';
         }
         
-        // Add challenge form
+        // Admin: Add challenge form
         document.getElementById('addChallengeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -1278,6 +2021,53 @@
                 alert('❌ Could not connect to server');
             }
         });
+
+        // User: Submit a suggested challenge 
+        async function submitUserChallenge() {
+            const name = document.getElementById('userChallengeName').value.trim();
+            const description = document.getElementById('userChallengeDesc').value.trim();
+
+            if (!name || !description) {
+                alert('Please provide a name and description for your challenge.');
+                return;
+            }
+
+            const challenge = { name, description };
+
+            const submitBtn = document.getElementById('userChallengeSubmitBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'AI reviewing your challenge...';
+
+            try {
+                const res = await fetch(`${API_URL}/challenges/custom`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(challenge)
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    const msg = data.aiEnriched
+                        ? 'Thanks! We reviewed your challenge, cleaned up the description, and picked the category, difficulty, duration & carbon footprint. It\'s now live for everyone!'
+                        : 'Thanks! Your challenge was added for everyone to see.';
+                    alert(msg);
+                    document.getElementById('userChallengeForm').reset();
+                    loadChallenges();
+                } else {
+                    const reason = data.reason ? `\n\nReason: ${data.reason}` : '';
+                    alert('❌ ' + (data.error || 'Could not create challenge') + reason);
+                }
+            } catch (error) {
+                alert('❌ Could not connect to server');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
         
         // Edit challenge
         function editChallenge(id) {
@@ -1327,8 +2117,16 @@
             });
         }
 
-        loadChallenges();
-        loadCompletedEvidence();
+        async function bootChallengesPage() {
+            showGreenGoalsPageLoader('Loading challenges…');
+            try {
+                await loadChallenges();
+                await loadCompletedEvidence();
+            } finally {
+                hideGreenGoalsPageLoader();
+            }
+        }
+        bootChallengesPage();
     </script>
 </body>
 </html>
