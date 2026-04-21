@@ -64,6 +64,12 @@
             /* Phone: show only title + category, everything else moves to modal */
             .challenge-summary-row {
                 display: flex;
+                align-items: flex-start;
+                justify-content: flex-start;
+                width: 100%;
+                min-height: 2.4em;
+                padding: 0 68px 0 34px;
+                margin-top: 2px;
             }
             .challenge-expand-btn {
                 top: 8px;
@@ -93,8 +99,20 @@
                 display: none !important;
             }
             .challenge-card {
-                min-height: 84px;
-                justify-content: center;
+                min-height: 108px;
+                justify-content: flex-start;
+                padding-top: 44px;
+            }
+            .challenge-summary-title {
+                display: -webkit-box;
+                line-clamp: 2;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                overflow: hidden;
+                font-size: 1.1rem;
+                line-height: 1.25;
+                font-weight: 700;
+                letter-spacing: 0.01em;
             }
             .section-header .section-title {
                 font-size: 1.25rem;

@@ -1,0 +1,3 @@
+# Replit: press Run to start the server. HTTPS URL appears in the webview / Deploy panel.
+# Docs: https://docs.replit.com/replit-workspace/configuring-repl
+run = "npm start"

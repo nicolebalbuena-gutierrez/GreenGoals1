@@ -23,6 +23,8 @@ function filterPublicChallenges(challenges) {
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+// Replit and many hosts require binding to all interfaces (not only 127.0.0.1).
+const HOST = process.env.HOST || '0.0.0.0';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-insecure-change-me';
 if (JWT_SECRET === 'dev-insecure-change-me') {
     console.warn('⚠️  JWT_SECRET is not set. Using an insecure dev default. Set JWT_SECRET in your environment for production.');
@@ -31,10 +33,14 @@ if (JWT_SECRET === 'dev-insecure-change-me') {
 // OpenAI API Key (from .env or fallback placeholder)
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'YOUR_OPENAI_API_KEY_HERE';
 
-// NewsAPI Key for fetching live sustainability news
+// News: prefer Gemini (curated JSON). Legacy NewsAPI optional if GEMINI_API_KEY is unset.
 const NEWS_API_KEY = process.env.NEWS_API_KEY || '';
-if (!NEWS_API_KEY) {
-    console.warn('ℹ️  NEWS_API_KEY is not set. /api/news will return a configuration error until you set NEWS_API_KEY.');
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_NEWS_MODEL = process.env.GEMINI_NEWS_MODEL || 'gemini-2.5-flash-lite';
+if (!GEMINI_API_KEY && !NEWS_API_KEY) {
+    console.warn(
+        'ℹ️  /api/news: set GEMINI_API_KEY (recommended) or legacy NEWS_API_KEY in .env — otherwise news will fail.'
+    );
 }
 
 // Middleware
@@ -2533,49 +2539,186 @@ app.delete('/api/admin/updates/:id', authenticateAdmin, async (req, res) => {
 });
 
 // ============================================
-// NEWS API ROUTES
+// NEWS (Gemini or legacy NewsAPI)
 // ============================================
 
-// Get live sustainability news
+function parseJsonFromGeminiText(text) {
+    if (text == null) return null;
+    let t = String(text).trim();
+    const fence = /^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(t);
+    if (fence) t = fence[1].trim();
+    return JSON.parse(t);
+}
+
+async function fetchNewsViaNewsApi() {
+    const searchTerms =
+        '("climate change" OR "global warming" OR "renewable energy" OR "carbon footprint" OR "electric vehicle" OR "solar energy" OR "wind power" OR "sustainability" OR "zero emissions")';
+    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchTerms)}&sortBy=relevancy&pageSize=12&language=en&apiKey=${NEWS_API_KEY}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === 'error') {
+        throw new Error(data.message || 'NewsAPI error');
+    }
+
+    const relevantKeywords = [
+        'climate',
+        'environment',
+        'sustainable',
+        'renewable',
+        'solar',
+        'wind',
+        'carbon',
+        'emission',
+        'electric vehicle',
+        'ev',
+        'green',
+        'eco',
+        'recycle',
+        'pollution',
+        'energy',
+    ];
+
+    return data.articles
+        .filter((article) => {
+            const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
+            return relevantKeywords.some((keyword) => text.includes(keyword));
+        })
+        .slice(0, 6)
+        .map((article) => ({
+            title: article.title,
+            description: article.description,
+            url: article.url,
+            image: article.urlToImage,
+            source: article.source.name,
+            publishedAt: article.publishedAt,
+        }));
+}
+
+async function fetchNewsViaGemini() {
+    const model = GEMINI_NEWS_MODEL;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        model
+    )}:generateContent`;
+    const url = `${endpoint}?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+    const prompt = `You curate recent English-language climate and sustainability news for a college eco app.
+
+Return ONLY valid JSON (no markdown, no commentary): an array of exactly 8 objects. Each object must have:
+- title: string (<= 120 characters)
+- description: string (1–2 sentences, <= 260 characters), neutral factual tone
+- url: string starting with https — prefer a direct article URL from a reputable outlet when you are confident it is valid; otherwise use a Google News search URL like https://news.google.com/search?q= plus a properly URL-encoded query for that story angle
+- source: string (publisher name, or "Google News" when the url is a Google News search)
+- image: string — direct https image URL if known, otherwise ""
+
+Cover varied topics among: climate policy and science, renewable energy, electrification and transport, nature and conservation, corporate climate or ESG, sustainable food/agriculture, oceans/plastics.
+
+Do not repeat the same story; diversify outlets/topics when possible.`;
+
+    const baseBody = {
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+            temperature: 0.35,
+            topP: 0.9,
+            maxOutputTokens: 8192,
+            responseMimeType: 'application/json',
+        },
+    };
+
+    const withSearch = {
+        ...baseBody,
+        tools: [{ googleSearch: {} }],
+    };
+
+    const doRequest = async (bodyObj) => {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyObj),
+        });
+        const raw = await res.text();
+        let data = null;
+        try {
+            data = JSON.parse(raw);
+        } catch {
+            // non-JSON body
+        }
+        return { ok: res.ok, status: res.status, raw, data };
+    };
+
+    let out = await doRequest(withSearch);
+    if (!out.ok) {
+        console.warn(
+            'Gemini news (googleSearch tool) failed:',
+            out.status,
+            (out.raw || '').slice(0, 400)
+        );
+        out = await doRequest(baseBody);
+    }
+    if (!out.ok) {
+        const msg =
+            out.data?.error?.message || (out.raw || '').slice(0, 700) || `HTTP ${out.status}`;
+        throw new Error(msg);
+    }
+
+    const data = out.data;
+    const blockReason = data?.promptFeedback?.blockReason;
+    if (blockReason) {
+        throw new Error(`Gemini blocked prompt: ${blockReason}`);
+    }
+
+    const parts = data?.candidates?.[0]?.content?.parts;
+    const rawText = Array.isArray(parts) ? parts.map((p) => p.text).join('') : '';
+    if (!String(rawText).trim()) {
+        throw new Error('Gemini returned empty news content');
+    }
+
+    let parsed;
+    try {
+        parsed = parseJsonFromGeminiText(rawText);
+    } catch (e) {
+        throw new Error(`Gemini news JSON parse failed: ${e.message}`);
+    }
+    if (!Array.isArray(parsed)) {
+        throw new Error('Gemini news response was not a JSON array');
+    }
+
+    const normalized = parsed
+        .map((a) => ({
+            title: String(a.title || '').trim(),
+            description: String(a.description || '').trim(),
+            url: String(a.url || '').trim(),
+            image: String(a.image || '').trim(),
+            source: String(a.source || '').trim() || 'News',
+            publishedAt: a.publishedAt != null ? String(a.publishedAt) : undefined,
+        }))
+        .filter((a) => a.title && /^https:\/\//i.test(a.url));
+
+    if (normalized.length === 0) {
+        throw new Error('Gemini returned no usable news rows (need https urls)');
+    }
+
+    return normalized.slice(0, 12);
+}
+
+// Get sustainability news (Gemini first, else NewsAPI)
 app.get('/api/news', async (req, res) => {
     try {
-        if (!NEWS_API_KEY) {
-            return res.status(500).json({ error: 'Server is missing NEWS_API_KEY configuration' });
+        if (GEMINI_API_KEY) {
+            const articles = await fetchNewsViaGemini();
+            return res.json(articles);
         }
-        // Search for environmental news with specific terms
-        const searchTerms = '("climate change" OR "global warming" OR "renewable energy" OR "carbon footprint" OR "electric vehicle" OR "solar energy" OR "wind power" OR "sustainability" OR "zero emissions")';
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchTerms)}&sortBy=relevancy&pageSize=12&language=en&apiKey=${NEWS_API_KEY}`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.status === 'error') {
-            console.error('NewsAPI error:', data.message);
-            return res.status(500).json({ error: data.message });
+        if (NEWS_API_KEY) {
+            const articles = await fetchNewsViaNewsApi();
+            return res.json(articles);
         }
-
-        // Filter and format articles - only keep relevant ones
-        const relevantKeywords = ['climate', 'environment', 'sustainable', 'renewable', 'solar', 'wind', 'carbon', 'emission', 'electric vehicle', 'ev', 'green', 'eco', 'recycle', 'pollution', 'energy'];
-
-        const articles = data.articles
-            .filter(article => {
-                const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-                return relevantKeywords.some(keyword => text.includes(keyword));
-            })
-            .slice(0, 6)
-            .map(article => ({
-                title: article.title,
-                description: article.description,
-                url: article.url,
-                image: article.urlToImage,
-                source: article.source.name,
-                publishedAt: article.publishedAt
-            }));
-
-        res.json(articles);
+        return res.status(500).json({
+            error: 'Server news is not configured. Set GEMINI_API_KEY (recommended) or NEWS_API_KEY in the server environment.',
+        });
     } catch (error) {
         console.error('Error fetching news:', error);
-        res.status(500).json({ error: 'Failed to fetch news' });
+        res.status(500).json({ error: error.message || 'Failed to fetch news' });
     }
 });
 
@@ -5047,50 +5190,6 @@ app.delete('/api/admin/updates/:id', authenticateAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error deleting update:', error);
         res.status(500).json({ error: 'Failed to delete update' });
-    }
-});
-
-// ============================================
-// NEWS API ROUTES
-// ============================================
-
-// Get live sustainability news
-app.get('/api/news', async (req, res) => {
-    try {
-        // Search for environmental news with specific terms
-        const searchTerms = '("climate change" OR "global warming" OR "renewable energy" OR "carbon footprint" OR "electric vehicle" OR "solar energy" OR "wind power" OR "sustainability" OR "zero emissions")';
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchTerms)}&sortBy=relevancy&pageSize=12&language=en&apiKey=${NEWS_API_KEY}`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.status === 'error') {
-            console.error('NewsAPI error:', data.message);
-            return res.status(500).json({ error: data.message });
-        }
-
-        // Filter and format articles - only keep relevant ones
-        const relevantKeywords = ['climate', 'environment', 'sustainable', 'renewable', 'solar', 'wind', 'carbon', 'emission', 'electric vehicle', 'ev', 'green', 'eco', 'recycle', 'pollution', 'energy'];
-
-        const articles = data.articles
-            .filter(article => {
-                const text = ((article.title || '') + ' ' + (article.description || '')).toLowerCase();
-                return relevantKeywords.some(keyword => text.includes(keyword));
-            })
-            .slice(0, 6)
-            .map(article => ({
-                title: article.title,
-                description: article.description,
-                url: article.url,
-                image: article.urlToImage,
-                source: article.source.name,
-                publishedAt: article.publishedAt
-            }));
-
-        res.json(articles);
-    } catch (error) {
-        console.error('Error fetching news:', error);
-        res.status(500).json({ error: 'Failed to fetch news' });
     }
 });
 
